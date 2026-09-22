@@ -101,6 +101,15 @@
                             <li class="dropdown"><a class="nav-link menu-title" href="profile.html"><i
                                     data-feather="user"></i><span>我的档案</span></a>
                             </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="notifications.html"><i
+                                    data-feather="bell"></i><span>消息通知</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="training.html"><i
+                                    data-feather="book-open"></i><span>培训与公告</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="show.html"><i
+                                    data-feather="image"></i><span>志愿秀</span></a>
+                            </li>
                             <li class="dropdown"><a class="nav-link menu-title" href="certificate.html"><i
                                     data-feather="award"></i><span>志愿服务证明</span></a>
                             </li>
@@ -131,17 +140,36 @@
                                             <th scope="col">活动地点</th>
                                             <th scope="col">报名时间</th>
                                             <th scope="col">报名状态</th>
+                                            <th scope="col">参加确认</th>
                                             <th scope="col">服务时长</th>
                                             <th scope="col">时长复核状态</th>
+                                            <th scope="col">记录来源</th>
                                             <th scope="col">操作</th>
                                         </tr>
                                         </thead>
                                         <tbody id="participation_table">
                                         <tr>
-                                            <td colspan="8" class="text-center text-muted">数据加载中……</td>
+                                            <td colspan="10" class="text-center text-muted">数据加载中……</td>
                                         </tr>
                                         </tbody>
                                     </table>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <span class="text-muted small" id="part_total">共 0 条</span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <nav class="float-end">
+                                            <ul class="pagination pagination-primary mb-0">
+                                                <li class="page-item" id="part_prev"><a class="page-link" href="#!"
+                                                        onclick="changePartPage(-1);return false;">上一页</a></li>
+                                                <li class="page-item disabled"><a class="page-link" href="#!"
+                                                        id="part_page_info">第 1 / 1 页</a></li>
+                                                <li class="page-item" id="part_next"><a class="page-link" href="#!"
+                                                        onclick="changePartPage(1);return false;">下一页</a></li>
+                                            </ul>
+                                        </nav>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -294,10 +322,90 @@
     }
 
     /**
-     * 操作列按钮：签到、签退、撤回报名（签到与签退互斥）
+     * 服务记录来源文案：1 平台签到、2 组织补录
+     */
+    function sourceHtml(item) {
+        if (item.checkinSource === null || item.checkinSource === undefined || item.checkinSource === "") {
+            return '<span class="text-muted">—</span>';
+        }
+        var source = String(item.checkinSource);
+        if (source === "1") {
+            return '<span class="badge badge-primary">平台签到</span>';
+        }
+        if (source === "2") {
+            return '<span class="badge badge-warning">组织补录</span>';
+        }
+        return '<span class="badge badge-secondary">' + source + '</span>';
+    }
+
+    /**
+     * 参加确认状态：空 待确认、1 已确认、2 已放弃
+     */
+    function confirmStateHtml(item) {
+        var text = item.participateConfirmstateText || "待确认";
+        if (item.participateConfirmstate === "1") {
+            return '<span class="text-success">' + text + '</span>';
+        }
+        if (item.participateConfirmstate === "2") {
+            return '<span class="text-danger">' + text + '</span>';
+        }
+        return '<span class="text-warning">' + text + '</span>';
+    }
+
+    /**
+     * 我的报名分页条件
+     */
+    var partPage = 1;
+    var partSize = 10;
+    var partTotal = 0;
+
+    /**
+     * 渲染分页控件：条数、页码信息与上一页/下一页可用状态
+     */
+    function renderPager(total, current, pageSize) {
+        partTotal = Number(total);
+        if (isNaN(partTotal) || partTotal < 0) {
+            partTotal = 0;
+        }
+        var currentPage = Number(current);
+        if (isNaN(currentPage) || currentPage < 1) {
+            currentPage = 1;
+        }
+        var currentSize = Number(pageSize);
+        if (isNaN(currentSize) || currentSize < 1) {
+            currentSize = partSize;
+        }
+        var totalPages = partTotal > 0 ? Math.ceil(partTotal / currentSize) : 1;
+        $("#part_total").text("共 " + partTotal + " 条");
+        $("#part_page_info").text("第 " + currentPage + " / " + totalPages + " 页");
+        $("#part_prev").toggleClass("disabled", currentPage <= 1);
+        $("#part_next").toggleClass("disabled", partTotal === 0 || currentPage >= totalPages);
+    }
+
+    /**
+     * 翻页：step 为 1 下一页、-1 上一页
+     */
+    function changePartPage(step) {
+        var nextPage = partPage + step;
+        var totalPages = partTotal > 0 ? Math.ceil(partTotal / partSize) : 1;
+        if (nextPage < 1 || nextPage > totalPages) {
+            return;
+        }
+        partPage = nextPage;
+        loadParticipations();
+    }
+
+    /**
+     * 操作列按钮：确认参加、放弃参加（待确认时）、签到、签退、撤回报名与公告入口
      */
     function actionHtml(item) {
         var buttons = "";
+        if (item.canConfirm) {
+            buttons += '<button class="btn btn-success btn-xs" type="button" onclick="confirmParticipation('
+                + item.participateNum + ', 1)">确认参加</button> ';
+            buttons += '<button class="btn btn-outline-warning btn-xs" type="button" onclick="confirmParticipation('
+                + item.participateNum + ', 2)">放弃参加</button> ';
+        }
         if (item.canCheckin) {
             buttons += '<button class="btn btn-primary btn-xs" type="button" onclick="prepareCheckin('
                 + item.activityNum + ')" data-bs-toggle="modal" data-bs-target="#checkinModal">签到</button> ';
@@ -308,9 +416,10 @@
         }
         if (item.canCancel) {
             buttons += '<button class="btn btn-outline-danger btn-xs" type="button" onclick="cancelParticipation('
-                + item.participateNum + ')">撤回报名</button>';
+                + item.participateNum + ')">撤回报名</button> ';
         }
-        return buttons ? buttons : "—";
+        buttons += '<a class="btn btn-outline-secondary btn-xs" href="training.html">查看公告</a>';
+        return buttons;
     }
 
     /**
@@ -319,7 +428,7 @@
     function renderParticipations(participations) {
         var html = "";
         if (!participations || participations.length === 0) {
-            html = '<tr><td colspan="8" class="text-center text-muted">暂无数据</td></tr>';
+            html = '<tr><td colspan="10" class="text-center text-muted">暂无数据</td></tr>';
         } else {
             $.each(participations, function (index, item) {
                 html += "<tr>"
@@ -328,9 +437,11 @@
                     + "<td>" + (item.activityLocation || "—") + "</td>"
                     + "<td>" + formatTime(item.participateApplytime) + "</td>"
                     + "<td>" + applyStateHtml(item) + "</td>"
+                    + "<td>" + confirmStateHtml(item) + "</td>"
                     + "<td>" + ((item.participateDuration === null || item.participateDuration === undefined)
                         ? "—" : formatHours(item.participateDuration) + " 小时") + "</td>"
                     + "<td>" + timecheckHtml(item.participateTimecheck) + "</td>"
+                    + "<td>" + sourceHtml(item) + "</td>"
                     + "<td>" + actionHtml(item) + "</td>"
                     + "</tr>";
             });
@@ -345,6 +456,7 @@
         $.ajax({
             url: "/volunteer/myParticipations",
             type: "GET",
+            data: {page: partPage, size: partSize},
             success: function (result) {
                 if (!result || result.code !== 100 || !result.extend) {
                     if (result && result.msg) {
@@ -352,7 +464,8 @@
                     }
                     return;
                 }
-                renderParticipations(result.extend.participations);
+                renderParticipations(result.extend.list);
+                renderPager(result.extend.total, result.extend.page, result.extend.size);
             },
             error: function (result) {
                 console.log(result);
@@ -477,6 +590,32 @@
             url: "/volunteer/cancel",
             type: "POST",
             data: {participateNum: participateNum},
+            success: function (result) {
+                alert((result && result.msg) ? result.msg : "操作完成");
+                loadParticipations();
+            },
+            error: function (result) {
+                console.log(result);
+                alert("网络异常，请稍后重试");
+                loadParticipations();
+            }
+        });
+    }
+
+    /**
+     * 确认参加或放弃参加已通过审核的报名（confirmState：1 确认参加、2 放弃参加）
+     */
+    function confirmParticipation(participateNum, confirmState) {
+        var tip = confirmState === 1
+            ? "确认参加该志愿活动？"
+            : "放弃参加后名额将释放给候补志愿者，确认放弃？";
+        if (!confirm(tip)) {
+            return;
+        }
+        $.ajax({
+            url: "/volunteer/confirm",
+            type: "POST",
+            data: {participateNum: participateNum, confirmState: confirmState},
             success: function (result) {
                 alert((result && result.msg) ? result.msg : "操作完成");
                 loadParticipations();

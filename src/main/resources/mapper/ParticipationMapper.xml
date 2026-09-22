@@ -20,6 +20,8 @@
             <result property="participateTimecheck" column="participate_timecheck" jdbcType="VARCHAR"/>
             <result property="participateNoshow" column="participate_noshow" jdbcType="INTEGER"/>
             <result property="participateCancelTime" column="participate_cancel_time" jdbcType="TIMESTAMP"/>
+            <result property="participateConfirmstate" column="participate_confirmstate" jdbcType="VARCHAR"/>
+            <result property="participateConfirmtime" column="participate_confirmtime" jdbcType="TIMESTAMP"/>
             <result property="participateIsdeleted" column="participate_isdeleted" jdbcType="INTEGER"/>
     </resultMap>
 
@@ -37,6 +39,8 @@
         <result property="participateTimecheck" column="participate_timecheck" jdbcType="VARCHAR"/>
         <result property="participateNoshow" column="participate_noshow" jdbcType="INTEGER"/>
         <result property="participateCancelTime" column="participate_cancel_time" jdbcType="TIMESTAMP"/>
+        <result property="participateConfirmstate" column="participate_confirmstate" jdbcType="VARCHAR"/>
+        <result property="participateConfirmtime" column="participate_confirmtime" jdbcType="TIMESTAMP"/>
         <result property="participateIsdeleted" column="participate_isdeleted" jdbcType="INTEGER"/>
         <association property="volunteer" javaType="com.evolunteer.entity.Volunteer">
             <id property="volunteerNum" column="volunteer_num" jdbcType="INTEGER"/>
@@ -52,7 +56,7 @@
         </association>
     </resultMap>
 
-    <!-- 志愿者本人报名记录的查询结果，关联活动信息与最近一次签到信息 -->
+    <!-- 志愿者本人报名记录的查询结果，关联活动信息与最近一次服务记录 -->
     <resultMap id="VolunteerParticipationResultMap" type="com.evolunteer.entity.VolunteerParticipationView">
         <id property="participateNum" column="participate_num" jdbcType="INTEGER"/>
         <result property="activityNum" column="activity_num" jdbcType="INTEGER"/>
@@ -66,6 +70,8 @@
         <result property="participateApplystate" column="participate_applystate" jdbcType="VARCHAR"/>
         <result property="participateDuration" column="participate_duration" jdbcType="FLOAT"/>
         <result property="participateTimecheck" column="participate_timecheck" jdbcType="VARCHAR"/>
+        <result property="participateConfirmstate" column="participate_confirmstate" jdbcType="VARCHAR"/>
+        <result property="participateConfirmtime" column="participate_confirmtime" jdbcType="TIMESTAMP"/>
         <result property="checkinBegintime" column="checkin_begintime" jdbcType="TIMESTAMP"/>
         <result property="checkinEndtime" column="checkin_endtime" jdbcType="TIMESTAMP"/>
         <result property="checkinDuration" column="checkin_duration" jdbcType="FLOAT"/>
@@ -73,6 +79,7 @@
         <result property="checkinFlag" column="checkin_flag" jdbcType="VARCHAR"/>
         <result property="checkinTimecheck" column="checkin_timecheck" jdbcType="VARCHAR"/>
         <result property="checkinRemark" column="checkin_remark" jdbcType="VARCHAR"/>
+        <result property="checkinSource" column="checkin_source" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -80,7 +87,8 @@
         participate_applytime,participate_applystate,participate_applychecktime,
         participate_training,participate_begintime,participate_endtime,
         participate_duration,participate_timecheck,participate_noshow,
-        participate_cancel_time,participate_isdeleted
+        participate_cancel_time,participate_confirmstate,participate_confirmtime,
+        participate_isdeleted
     </sql>
     <sql id="ParticipationWithVolunteer_Column_List">
         participate.participate_num,
@@ -89,7 +97,11 @@
         participate.participate_applystate,
         participate.participate_applychecktime,
         participate.activity_num,
+        participate.participate_duration,
+        participate.participate_timecheck,
         participate.participate_noshow,
+        participate.participate_confirmstate,
+        participate.participate_confirmtime,
         volunteer.volunteer_id,
         volunteer.volunteer_name,
         volunteer.volunteer_gender,
@@ -99,6 +111,25 @@
         volunteer.volunteer_noshow,
         volunteer.volunteer_totalduration
     </sql>
+    <sql id="VolunteerKeyword_Condition">
+        <if test="keyword != null and keyword != ''">
+            and (volunteer.volunteer_id like concat('%', #{keyword,jdbcType=VARCHAR}, '%')
+            or volunteer.volunteer_name like concat('%', #{keyword,jdbcType=VARCHAR}, '%')
+            or volunteer.volunteer_tel like concat('%', #{keyword,jdbcType=VARCHAR}, '%'))
+        </if>
+    </sql>
+
+    <!-- 按活动分页查询报名志愿者名单 -->
+    <select id="selectPageParticipateWithVolunteerByActivityNum" resultMap="WithVolunteerResultMap">
+        select
+        <include refid="ParticipationWithVolunteer_Column_List"/>
+        from participate, volunteer
+        where participate.activity_num=#{activityNum,jdbcType=NUMERIC}
+        and participate.volunteer_num=volunteer.volunteer_num
+        and participate.participate_isdeleted=0
+        <include refid="VolunteerKeyword_Condition"/>
+        order by participate.participate_applytime asc, participate.participate_num asc
+    </select>
 
     <select id="selectParticipateWithVolunteerByActivityNum" resultMap="WithVolunteerResultMap">
         select
@@ -109,8 +140,18 @@
         and participate.participate_isdeleted=0
     </select>
 
-    <!-- 查询志愿者本人的报名记录，关联活动信息与最近一次签到信息 -->
-    <select id="selectVolunteerParticipations" resultMap="VolunteerParticipationResultMap">
+    <!-- 查询指定活动已通过报名的志愿者登录账号，用于发送站内通知 -->
+    <select id="selectApprovedVolunteerAccounts" resultType="java.lang.String">
+        select volunteer.volunteer_id
+        from participate, volunteer
+        where participate.activity_num = #{activityNum,jdbcType=INTEGER}
+          and participate.volunteer_num = volunteer.volunteer_num
+          and participate.participate_applystate = '1'
+          and participate.participate_isdeleted = 0
+    </select>
+
+    <!-- 分页查询志愿者本人的报名记录，关联活动信息与最近一次服务记录 -->
+    <select id="selectPageVolunteerParticipations" resultMap="VolunteerParticipationResultMap">
         select
         p.participate_num,
         p.activity_num,
@@ -118,6 +159,8 @@
         p.participate_applystate,
         p.participate_duration,
         p.participate_timecheck,
+        p.participate_confirmstate,
+        p.participate_confirmtime,
         a.activity_id,
         a.activity_name,
         a.activity_state,
@@ -130,7 +173,8 @@
         c.checkin_distance,
         c.checkin_flag,
         c.checkin_timecheck,
-        c.checkin_remark
+        c.checkin_remark,
+        c.checkin_source
         from participate p
         join activity a on a.activity_num = p.activity_num
         left join checkin c on c.checkin_num = (select max(c2.checkin_num)
@@ -141,18 +185,19 @@
         order by a.activity_begintime desc, p.participate_num desc
     </select>
 
-    <!-- 查询志愿者经志愿者组织复核通过的服务记录，用于生成志愿服务证明 -->
+    <!-- 查询志愿者经复核通过的服务记录，用于生成志愿服务证明 -->
     <select id="selectApprovedServiceRecords" resultType="com.evolunteer.entity.ServiceRecord">
         select
         a.activity_name as activityName,
         a.activity_id as activityId,
         date_format(a.activity_begintime, '%Y-%m-%d') as serviceDate,
-        p.participate_duration as duration
-        from participate p
+        c.checkin_duration as duration
+        from checkin c
+        join participate p on p.participate_num = c.participate_num
         join activity a on a.activity_num = p.activity_num
         where p.volunteer_num = #{volunteerNum,jdbcType=INTEGER}
         and p.participate_applystate = '1'
-        and p.participate_timecheck = '1'
+        and c.checkin_timecheck = '1'
         and p.participate_isdeleted = 0
         order by a.activity_begintime desc
     </select>
@@ -175,6 +220,16 @@
         }
     </insert>
 
+    <!-- 调用数据库存储过程 volunteer_confirm_participate 完成参加确认 -->
+    <insert id="volunteer_confirm_participate" statementType="CALLABLE">
+        {call volunteer_confirm_participate(#{participateNum,mode=IN,jdbcType=INTEGER},
+                                            #{volunteerNum,mode=IN,jdbcType=INTEGER},
+                                            #{confirmState,mode=IN,jdbcType=INTEGER},
+                                            #{msg,mode=OUT,jdbcType=VARCHAR},
+                                            #{ok,mode=OUT,jdbcType=INTEGER})
+        }
+    </insert>
+
     <!-- 调用数据库存储过程 organization_check_volunteer 写入报名审核结果 -->
     <insert id="organization_check_volunteer" statementType="CALLABLE">
         {call organization_check_volunteer(#{participateNum,mode=IN,jdbcType=NUMERIC},
@@ -182,5 +237,31 @@
                                            #{msg,mode=OUT,jdbcType=VARCHAR})
             }
     </insert>
+
+    <!-- 调用数据库存储过程 organization_remove_participate 移除活动报名 -->
+    <insert id="organization_remove_participate" statementType="CALLABLE">
+        {call organization_remove_participate(#{loginId,mode=IN,jdbcType=VARCHAR},
+                                              #{participateNum,mode=IN,jdbcType=INTEGER},
+                                              #{msg,mode=OUT,jdbcType=VARCHAR},
+                                              #{ok,mode=OUT,jdbcType=INTEGER})
+        }
+    </insert>
+
+    <!-- 调用数据库存储过程 participate_confirm_expire 释放未确认参加的报名 -->
+    <insert id="participate_confirm_expire" statementType="CALLABLE">
+        {call participate_confirm_expire(#{releasedCount,mode=OUT,jdbcType=INTEGER})
+        }
+    </insert>
+
+    <!-- 统计志愿者已核定服务时长所覆盖的志愿活动数量，用于生成志愿服务证明 -->
+    <select id="countApprovedActivities" resultType="int">
+        select count(distinct p.activity_num)
+        from checkin c
+        join participate p on p.participate_num = c.participate_num
+        where p.volunteer_num = #{volunteerNum,jdbcType=INTEGER}
+        and p.participate_applystate = '1'
+        and c.checkin_timecheck = '1'
+        and p.participate_isdeleted = 0
+    </select>
 
 </mapper>

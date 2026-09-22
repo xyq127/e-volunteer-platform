@@ -7,7 +7,6 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
     <link rel="stylesheet" type="text/css"
-          href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Roboto:wght@300;400;700&display=swap">
     <link rel="stylesheet" href="/portal/css/bootstrap.css">
     <link rel="stylesheet" href="/portal/css/fonts.css">
     <link rel="stylesheet" href="/portal/css/style.css">
@@ -58,6 +57,8 @@
                                     </li>
                                     <li class="rd-nav-item"><a class="rd-nav-link" href="#activities">志愿风采</a>
                                     </li>
+                                    <li class="rd-nav-item"><a class="rd-nav-link" href="/portal/shows.html">志愿秀</a>
+                                    </li>
                                     <li class="rd-nav-item"><a class="rd-nav-link" href="/admin/login.html">志愿者登录</a>
                                     </li>
                                     <li class="rd-nav-item"><a class="rd-nav-link" href="/portal/verify.html">服务证明校验</a>
@@ -97,22 +98,23 @@
             </div>
         </div>
     </section>
+
+    <!-- 通知公告 -->
+    <section class="section section-lg bg-secondary-lightest" id="announcements">
+        <div class="container">
+            <div class="text-block text-block-2 text-center">
+                <h2>通知公告</h2>
+            </div>
+            <div class="row row-30" id="announcementList"></div>
+        </div>
+    </section>
     <!-- 志愿者组织 -->
     <section class="section section-lg bg-default" id="organizations">
         <div class="container">
-            <h2>志愿者组织</h2>
-            <div class="owl-carousel owl-carousel-center owl-carousel-1" data-items="1" data-sm-items="2"
-                 data-md-items="3" data-lg-items="4" data-xl-items="5" data-autoplay="true"
-                 data-owl="{&quot;dots&quot;:true,&quot;slideTransition&quot;:&quot;linear&quot;,&quot;autoplayTimeout&quot;:4000,&quot;autoplaySpeed&quot;:4000,&quot;autoplayHoverPause&quot;:true}">
-                <a class="image-link" href="#"><img src="/portal/images/org1.png" alt="" width="164"
-                                                    height="37" loading="lazy"/></a><a class="image-link" href="#"><img
-                    src="/portal/images/org2.png" alt="" width="164" height="41" loading="lazy"/></a><a
-                    class="image-link mt-sm-2" href="#"><img src="/portal/images/org3.png" alt="" width="195"
-                                                             height="30" loading="lazy"/></a><a class="image-link"
-                                                                                                href="#"><img
-                    src="/portal/images/org4.png" alt="" width="164" height="25" loading="lazy"/></a><a
-                    class="image-link" href="#"><img src="/portal/images/org5.png" alt="" width="164"
-                                                     height="29" loading="lazy"/></a></div>
+            <div class="text-block text-block-2 text-center">
+                <h2>志愿者组织</h2>
+            </div>
+            <div class="row row-30" id="organizationList"></div>
         </div>
     </section>
     <!--    <section class="section section-lg bg-default">-->
@@ -146,55 +148,13 @@
     <!--            </div>-->
     <!--        </div>-->
     <!--    </section>-->
-    <!-- About us-->
-    <br>
+    <!-- 近期志愿活动 -->
     <section class="section section-lg bg-default text-center" id="activities">
         <div class="container">
             <div class="text-block text-block-2">
-                <h2>志愿风采</h2>
-                <!--                <div class="big">We regularly organize charitable campaigns aimed at changing the lives of people around-->
-                <!--                    the world.-->
-                <!--                </div>-->
+                <h2>近期志愿活动</h2>
             </div>
-            <div class="owl-carousel owl-carousel-2" data-items="1" data-sm-items="2" data-lg-items="3"
-                 data-xxl-margin="50" data-loop="false" data-autoplay="false" data-owl="{&quot;dots&quot;:true}">
-                <div class="post-classic wow fadeInUp"><a class="post-classic-media" href="../admin/login.html"><img
-                        class="post-classic-img" src="/portal/images/events-01-390x300.jpg" alt="" width="390"
-                        height="300" loading="lazy"/></a>
-                    <h3 class="post-classic-title"><a href="../admin/login.html">爱心便当志愿活动</a></h3>
-                    <div class="post-classic-meta post-meta">
-                        <div class="post-meta-item"><span class="post-date">2023-01-02</span></div>
-                    </div>
-                    <button class="post-classic-btn btn btn-secondary">
-                        查看活动详情
-                    </button>
-                </div>
-                <div class="post-classic wow fadeInUp" data-wow-delay=".15s"><a class="post-classic-media"
-                                                                                href="../admin/login.html"><img
-                        class="post-classic-img" src="/portal/images/events-02-390x300.jpg" alt="" width="390"
-                        height="300" loading="lazy"/></a>
-                    <h3 class="post-classic-title"><a href="../admin/login.html">助学志愿活动</a></h3>
-                    <div class="post-classic-meta post-meta">
-                        <div class="post-meta-item"><span class="post-date">2023-05-11</span></div>
-                    </div>
-                    <button class="post-classic-btn btn btn-secondary">
-                        查看活动详情
-                    </button>
-                </div>
-                <div class="post-classic wow fadeInUp" data-wow-delay=".3s"><a class="post-classic-media"
-                                                                               href="../admin/login.html"><img
-                        class="post-classic-img" src="/portal/images/events-03-390x300.jpg" alt="" width="390"
-                        height="300" loading="lazy"/></a>
-                    <h3 class="post-classic-title"><a href="../admin/login.html">公益捐书志愿活动</a>
-                    </h3>
-                    <div class="post-classic-meta post-meta">
-                        <div class="post-meta-item"><span class="post-date">2023-08-28</span></div>
-                    </div>
-                    <button class="post-classic-btn btn btn-secondary">
-                        查看活动详情
-                    </button>
-                </div>
-            </div>
+            <div class="row row-30" id="activityList"></div>
         </div>
     </section>
 
@@ -250,6 +210,7 @@
                         <li><a class="link-secondary" href="../admin/sign-up.html">志愿者注册</a></li>
                         <li><a class="link-secondary" href="/admin/login.html">志愿者登录</a></li>
                         <li><a class="link-secondary" href="/portal/verify.html">服务证明校验</a></li>
+                        <li><a class="link-secondary" href="/portal/shows.html">志愿秀</a></li>
                     </ul>
                 </div>
             </div>
@@ -258,12 +219,211 @@
     </footer>
 </div>
 
+<!-- 公告详情弹窗，内容由门户首页脚本填充 -->
+<div id="portalModal"
+     style="display:none;position:fixed;left:0;top:0;right:0;bottom:0;z-index:1200;overflow-y:auto;padding:40px 15px;background:rgba(34,34,34,.6);">
+    <div style="max-width:760px;margin:0 auto;background:#fff;border-radius:8px;padding:24px;">
+        <div style="text-align:right;">
+            <button class="btn btn-sm btn-secondary" type="button" id="portalModalClose">关闭</button>
+        </div>
+        <h3 id="portalModalTitle" style="margin-top:0;"></h3>
+        <div id="portalModalBody"></div>
+    </div>
+</div>
+
 <div class="snackbars" id="form-output-global"></div>
 <script src="/portal/js/core.min.js"></script>
 <script src="/portal/js/script.js"></script>
 
 <script type="text/javascript">
+    /**
+     * 门户首页脚本：通知公告、近期志愿活动、志愿者组织三个区块全部取自 /portal/site/** 公开接口，
+     * 接口不可用或没有数据时统一降级为“暂无数据”提示，页面不保留任何写死的业务数据。
+     */
+    // HTML 转义，避免公告标题、活动名称中的特殊字符破坏页面结构
+    function portalEscapeHtml(value) {
+        if (value === null || value === undefined) {
+            return "";
+        }
+        return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
 
+    // 文本摘要：超过指定长度时截断并追加省略号
+    function portalSummary(value, length) {
+        var text = value === null || value === undefined ? "" : String(value);
+        return text.length > length ? text.substring(0, length) + "…" : text;
+    }
+
+    // 统一时间显示格式 yyyy-MM-dd HH:mm
+    function portalFormatTime(value) {
+        if (!value) {
+            return "—";
+        }
+        return String(value).replace("T", " ").substring(0, 16);
+    }
+
+    // 从统一响应体中取出当前页列表，缺字段时按空列表处理
+    function portalListOf(result) {
+        return result && result.extend && result.extend.list ? result.extend.list : [];
+    }
+
+    // 区块无数据时渲染“暂无数据”
+    function portalEmptyTip(container, message) {
+        container.innerHTML = '<div class="col-12"><p class="text-muted">'
+            + portalEscapeHtml(message) + '</p></div>';
+    }
+
+    // 活动状态文案，与后端 activity_state 取值保持一致
+    var PORTAL_ACTIVITY_STATE = {"1": "未开始", "2": "进行中"};
+
+    // 通知公告区块：展示最近 5 条公告，点击标题查看详情
+    function portalLoadAnnouncements() {
+        var container = document.getElementById("announcementList");
+        fetch("/portal/site/announcements?page=1&size=5").then(function (response) {
+            return response.json();
+        }).then(function (result) {
+            var list = portalListOf(result);
+            if (!list.length) {
+                portalEmptyTip(container, "暂无数据");
+                return;
+            }
+            var html = "";
+            for (var i = 0; i < list.length; i++) {
+                var announcement = list[i];
+                html += '<div class="col-12"><div class="card"><div class="card-body">'
+                    + '<h4 class="card-title"><a href="javascript:void(0)" class="portal-announcement-link" data-num="'
+                    + portalEscapeHtml(announcement.policyannouncementNum) + '">'
+                    + portalEscapeHtml(announcement.policyannouncementName) + '</a></h4>'
+                    + '<p>' + portalEscapeHtml(portalSummary(announcement.policyannouncementDetail, 80)) + '</p>'
+                    + '<p class="text-muted">附件 ' + Number(announcement.fileCount || 0) + ' 个</p>'
+                    + '</div></div></div>';
+            }
+            container.innerHTML = html;
+            var links = container.querySelectorAll(".portal-announcement-link");
+            for (var j = 0; j < links.length; j++) {
+                links[j].addEventListener("click", function () {
+                    portalShowAnnouncement(this.getAttribute("data-num"));
+                });
+            }
+        }).catch(function () {
+            portalEmptyTip(container, "暂无数据");
+        });
+    }
+
+    // 公告详情：展示公告内容与附件下载链接
+    function portalShowAnnouncement(policyannouncementNum) {
+        fetch("/portal/site/announcement?policyannouncementNum=" + encodeURIComponent(policyannouncementNum))
+            .then(function (response) {
+                return response.json();
+            }).then(function (result) {
+                var announcement = result.extend ? result.extend.announcement : null;
+                if (result.code !== 100 || !announcement) {
+                    alert(result.msg || "该通知公告不存在或已被删除");
+                    return;
+                }
+                var files = announcement.files ? announcement.files : [];
+                var fileHtml = "";
+                if (files.length) {
+                    fileHtml = '<ul class="list">';
+                    for (var i = 0; i < files.length; i++) {
+                        fileHtml += '<li><a href="' + portalEscapeHtml(files[i].policyfileRoute) + '">'
+                            + portalEscapeHtml(files[i].policyfileName) + '</a></li>';
+                    }
+                    fileHtml += '</ul>';
+                } else {
+                    fileHtml = '<p class="text-muted">该公告没有附件</p>';
+                }
+                portalOpenModal(announcement.policyannouncementName,
+                    '<p>' + portalEscapeHtml(announcement.policyannouncementDetail).replace(/\n/g, "<br>") + '</p>'
+                    + '<h4>附件下载</h4>' + fileHtml);
+            }).catch(function () {
+                alert("通知公告详情加载失败，请稍后重试");
+            });
+    }
+
+    // 近期志愿活动区块：展示活动名称、时间、地点、招募人数与状态
+    function portalLoadActivities() {
+        var container = document.getElementById("activityList");
+        fetch("/portal/site/activities?page=1&size=6").then(function (response) {
+            return response.json();
+        }).then(function (result) {
+            var list = portalListOf(result);
+            if (!list.length) {
+                portalEmptyTip(container, "暂无数据");
+                return;
+            }
+            var html = "";
+            for (var i = 0; i < list.length; i++) {
+                var activity = list[i];
+                html += '<div class="col-md-6 col-lg-4"><div class="card"><div class="card-body">'
+                    + '<h4 class="card-title">' + portalEscapeHtml(activity.activityName) + '</h4>'
+                    + '<ul class="list">'
+                    + '<li>活动时间：' + portalEscapeHtml(portalFormatTime(activity.activityBegintime))
+                    + ' 至 ' + portalEscapeHtml(portalFormatTime(activity.activityEndtime)) + '</li>'
+                    + '<li>活动地点：' + portalEscapeHtml(activity.activityLocation || "—") + '</li>'
+                    + '<li>招募人数：' + Number(activity.activityNeedpeople || 0) + ' 人</li>'
+                    + '<li>报名截止：' + portalEscapeHtml(portalFormatTime(activity.activitySignddl)) + '</li>'
+                    + '<li>活动状态：'
+                    + portalEscapeHtml(PORTAL_ACTIVITY_STATE[activity.activityState] || "—") + '</li>'
+                    + '</ul>'
+                    + '<p>' + portalEscapeHtml(portalSummary(activity.activityDetail, 60)) + '</p>'
+                    + '</div></div></div>';
+            }
+            container.innerHTML = html;
+        }).catch(function () {
+            portalEmptyTip(container, "暂无数据");
+        });
+    }
+
+    // 志愿者组织区块：展示组织名称、成立日期与组织简介
+    function portalLoadOrganizations() {
+        var container = document.getElementById("organizationList");
+        fetch("/portal/site/organizations?page=1&size=6").then(function (response) {
+            return response.json();
+        }).then(function (result) {
+            var list = portalListOf(result);
+            if (!list.length) {
+                portalEmptyTip(container, "暂无数据");
+                return;
+            }
+            var html = "";
+            for (var i = 0; i < list.length; i++) {
+                var organization = list[i];
+                html += '<div class="col-md-6 col-lg-4"><div class="card"><div class="card-body">'
+                    + '<h4 class="card-title">' + portalEscapeHtml(organization.organizationName) + '</h4>'
+                    + '<p class="text-muted">成立日期：'
+                    + portalEscapeHtml(portalFormatTime(organization.organizationEstablishdate)) + '</p>'
+                    + '<p>' + portalEscapeHtml(portalSummary(organization.organizationIntroduction, 60)) + '</p>'
+                    + '</div></div></div>';
+            }
+            container.innerHTML = html;
+        }).catch(function () {
+            portalEmptyTip(container, "暂无数据");
+        });
+    }
+
+    // 弹窗打开与关闭
+    function portalOpenModal(title, bodyHtml) {
+        document.getElementById("portalModalTitle").textContent = title || "";
+        document.getElementById("portalModalBody").innerHTML = bodyHtml;
+        document.getElementById("portalModal").style.display = "block";
+    }
+
+    function portalCloseModal() {
+        document.getElementById("portalModal").style.display = "none";
+    }
+
+    document.getElementById("portalModalClose").addEventListener("click", portalCloseModal);
+    document.getElementById("portalModal").addEventListener("click", function (event) {
+        if (event.target === this) {
+            portalCloseModal();
+        }
+    });
+
+    portalLoadAnnouncements();
+    portalLoadActivities();
+    portalLoadOrganizations();
 </script>
 
 </body>

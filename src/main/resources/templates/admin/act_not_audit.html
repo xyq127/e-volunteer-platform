@@ -7,14 +7,6 @@
     <link rel="icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <link rel="shortcut icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <title>志愿活动审核 - E志愿志愿者服务平台 V1.0</title>
-    <!-- Google font-->
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap"
-          rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&amp;display=swap"
-          rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap"
-          rel="stylesheet">
     <!-- Font Awesome-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/fontawesome.css">
     <!-- ico-font-->
@@ -107,7 +99,31 @@
                                 <div><h6>志愿活动管理</h6></div>
                             </li>
                             <li class="dropdown"><a class="nav-link menu-title active" href="act_not_audit.html"><i
-                                    data-feather="box"></i><span>志愿活动审核</span></a>
+                                    data-feather="check-square"></i><span>志愿活动审核</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="manual_hours.html"><i
+                                    data-feather="clock"></i><span>补录时长复核</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="shows.html"><i
+                                    data-feather="image"></i><span>志愿秀管理</span></a>
+                            </li>
+                            <li class="sidebar-main-title">
+                                <div><h6>账号管理</h6></div>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="organizations.html"><i
+                                    data-feather="briefcase"></i><span>组织账号</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="volunteers.html"><i
+                                    data-feather="users"></i><span>志愿者名单</span></a>
+                            </li>
+                            <li class="sidebar-main-title">
+                                <div><h6>平台管理</h6></div>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="announcements.html"><i
+                                    data-feather="volume-2"></i><span>通知公告</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="audit_log.html"><i
+                                    data-feather="shield"></i><span>审计日志</span></a>
                             </li>
                         </ul>
 
@@ -126,13 +142,49 @@
                                 <h5>志愿活动--待审核</h5>
                             </div>
                             <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" id="activity_keyword"
+                                                   placeholder="活动名称或活动编号">
+                                            <button class="btn btn-primary" type="button" id="btn_search_activity">
+                                                查询
+                                            </button>
+                                            <button class="btn btn-light" type="button" id="btn_reset_activity">重置
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div id="basicScenario">
-                                    <table class="table table-hover table-bordered " id="auditActivity_table">
+                                    <table class="table table-hover table-bordered" id="auditActivity_table">
                                         <thead>
+                                        <tr>
+                                            <th class="text-center">活动名称</th>
+                                            <th class="text-center">活动开始时间</th>
+                                            <th class="text-center">活动结束时间</th>
+                                            <th class="text-center">活动地点</th>
+                                            <th class="text-center">需求人数</th>
+                                            <th class="text-center">操作</th>
+                                        </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody id="auditActivity_tbody">
+                                        <tr>
+                                            <td class="text-center text-muted" colspan="6">数据加载中……</td>
+                                        </tr>
                                         </tbody>
                                     </table>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <div class="text-muted" id="pager_info">共 0 条</div>
+                                    <div>
+                                        <button class="btn btn-outline-primary btn-sm" type="button" id="btn_prev_page">
+                                            上一页
+                                        </button>
+                                        <span class="mx-2" id="pager_page">第 1 / 1 页</span>
+                                        <button class="btn btn-outline-primary btn-sm" type="button" id="btn_next_page">
+                                            下一页
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -225,46 +277,91 @@
 </script>
 
 <script type="text/javascript">
-    function build_activity_table(result) {
-        //清空table表格
-        $("#auditActivity_table thead").empty();
-        $("#auditActivity_table tbody").empty();
+    /**
+     * 当前页码、每页条数与检索关键字
+     */
+    var page = 1;
+    var size = 10;
+    var keyword = "";
 
-        var auditActivity = result.extend.auditActivity;
+    /**
+     * 渲染分页控件：共 N 条、第 X / Y 页，首页禁用上一页、末页禁用下一页
+     */
+    function renderPager(totalCount, currentPage, pageSize) {
+        var total = totalCount || 0;
+        page = currentPage || 1;
+        size = pageSize || size;
+        var pages = total === 0 ? 1 : Math.ceil(total / size);
+        $("#pager_info").text("共 " + total + " 条");
+        $("#pager_page").text("第 " + page + " / " + pages + " 页");
+        $("#btn_prev_page").prop("disabled", page <= 1);
+        $("#btn_next_page").prop("disabled", page >= pages);
+    }
 
-        var activityNameTd = $("<td></td>").addClass("text-center").append("活动名称");
-        var activityBegintimeTd = $("<td></td>").addClass("text-center").append("活动开始时间");
-        var activityEndtimeTd = $("<td></td>").addClass("text-center").append("活动结束时间");
-        var activityLocationTd = $("<td></td>").addClass("text-center").append("活动地点");
-        var activityNeedpeopleTd = $("<td></td>").addClass("text-center").append("需求人数");
-        var controlTd = $("<td></td>").addClass("text-center").append("操作");
-        $("<tr></tr>").append(activityNameTd)
-            .append(activityBegintimeTd)
-            .append(activityEndtimeTd)
-            .append(activityLocationTd)
-            .append(activityNeedpeopleTd)
-            .append(controlTd)
-            .addClass("active")
-            .appendTo("#auditActivity_table thead");
-        var tabValue = ``;
-        $.each(auditActivity, function (index, item) {
-            tabValue += `<tr>
-                            <td class="text-center">${item.activityName}</td>
-                            <td class="text-center">${formatTime(item.activityBegintime)}</td>
-                            <td class="text-center">${formatTime(item.activityEndtime)}</td>
-                            <td class="text-center">${item.activityLocation}</td>
-                            <td class="text-center">${item.activityNeedpeople}</td>
-                            <td class="text-center">
-                            <button class="btn btn-pill btn-outline-primary btn-sm" type="button" onclick="activityInfo(${item.activityNum})" data-bs-toggle="modal" data-bs-target="#myModal" data-bs-original-title title>查看详情</button>
-                            </td>
-                          </tr>
-                `;
-        });
-        //列表为空时展示“暂无数据”；.html() 必须写在 $.each 之外，否则只会渲染最后一行
-        if (!auditActivity || auditActivity.length === 0) {
-            tabValue = `<tr><td class="text-center" colspan="6">暂无数据</td></tr>`;
+    /**
+     * 渲染待审核活动列表
+     */
+    function renderActivityTable(activities) {
+        var $body = $("#auditActivity_tbody").empty();
+        if (!activities || activities.length === 0) {
+            $body.append('<tr><td class="text-center text-muted" colspan="6">暂无数据</td></tr>');
+            return;
         }
-        $("#auditActivity_table tbody").html(tabValue);
+        var html = "";
+        $.each(activities, function (index, item) {
+            html += `<tr>
+                        <td class="text-center">${item.activityName || "—"}</td>
+                        <td class="text-center">${formatTime(item.activityBegintime)}</td>
+                        <td class="text-center">${formatTime(item.activityEndtime)}</td>
+                        <td class="text-center">${item.activityLocation || "—"}</td>
+                        <td class="text-center">${item.activityNeedpeople || 0}</td>
+                        <td class="text-center">
+                            <button class="btn btn-pill btn-outline-primary btn-sm" type="button"
+                                    onclick="activityInfo(${item.activityNum})" data-bs-toggle="modal"
+                                    data-bs-target="#myModal">查看详情</button>
+                        </td>
+                     </tr>`;
+        });
+        $body.html(html);
+    }
+
+    /**
+     * 按当前分页与关键字查询待审核活动
+     */
+    function loadActivities() {
+        $.ajax({
+            url: "/admin/findAuditActivityByState",
+            type: "GET",
+            data: {
+                "page": page,
+                "size": size,
+                "keyword": keyword
+            },
+            success: function (result) {
+                if (!result || result.code !== 100 || !result.extend) {
+                    alert((result && result.msg) ? result.msg : "待审核活动加载失败");
+                    return;
+                }
+                renderActivityTable(result.extend.list);
+                renderPager(result.extend.total, result.extend.page, result.extend.size);
+            },
+            error: function () {
+                alert("待审核活动加载失败，请稍后重试");
+            }
+        });
+    }
+
+    /**
+     * 关闭审核详情弹窗
+     */
+    function closeAuditModal() {
+        var modalElement = document.getElementById("myModal");
+        if (window.bootstrap && bootstrap.Modal && modalElement) {
+            var modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+        }
     }
 
     //查看活动详情
@@ -386,12 +483,9 @@
                 "activityNum": activityNum,
             },
             success: function (result) {
-                if (result) {
-                    console.log(result);
-                    alert("修改成功");
-                    build_activity_table(result);
-                } else {
-                    alert("修改失败");
+                alert((result && result.msg) ? result.msg : "操作已完成");
+                if (result && result.code === 100) {
+                    loadActivities();
                 }
             },
             error: function (result) {
@@ -414,8 +508,11 @@
             },
             success: function (result) {
                 alert(result);
-                window.location.href = "act_not_audit.html";
-                console.log(result);
+                closeAuditModal();
+                loadActivities();
+            },
+            error: function () {
+                alert("审核提交失败，请稍后重试");
             }
         });
 
@@ -440,27 +537,62 @@
             },
             success: function (result) {
                 alert(result);
-                window.location.href = "act_not_audit.html";
-                console.log(result);
+                closeAuditModal();
+                loadActivities();
+            },
+            error: function () {
+                alert("审核提交失败，请稍后重试");
             }
         });
 
     });
 
-    //一进网页就加载freshPage()
+    //一进网页就加载待审核活动列表
     $(document).ready(function () {
-        $.ajax({
-            url: "/admin/findAuditActivityByState",
-            type: "GET",
-            data: {},
-            success: function (result) {
-                console.log(result);
-                build_activity_table(result);
-            },
-            error: function (result) {
-                console.log(result);
-            }
-        });
+        loadActivities();
+    });
+
+    /**
+     * 点击查询：关键字检索从第一页开始
+     */
+    $("#btn_search_activity").click(function () {
+        keyword = $.trim($("#activity_keyword").val());
+        page = 1;
+        loadActivities();
+    });
+
+    /**
+     * 点击重置：清空关键字并回到第一页
+     */
+    $("#btn_reset_activity").click(function () {
+        $("#activity_keyword").val("");
+        keyword = "";
+        page = 1;
+        loadActivities();
+    });
+
+    /**
+     * 回车即查询
+     */
+    $("#activity_keyword").keydown(function (event) {
+        if (event.keyCode === 13) {
+            $("#btn_search_activity").click();
+        }
+    });
+
+    /**
+     * 分页按钮
+     */
+    $("#btn_prev_page").click(function () {
+        if (page > 1) {
+            page = page - 1;
+            loadActivities();
+        }
+    });
+
+    $("#btn_next_page").click(function () {
+        page = page + 1;
+        loadActivities();
     });
 
 </script>

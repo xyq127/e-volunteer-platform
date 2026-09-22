@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- E志愿志愿者服务平台 V1.0 操作审计表 audit_log 的映射文件 -->
+<mapper namespace="com.evolunteer.mapper.AuditLogMapper">
+
+    <resultMap id="BaseResultMap" type="com.evolunteer.entity.AuditLog">
+        <id property="auditNum" column="audit_num" jdbcType="INTEGER"/>
+        <result property="auditOperator" column="audit_operator" jdbcType="VARCHAR"/>
+        <result property="auditRole" column="audit_role" jdbcType="VARCHAR"/>
+        <result property="auditAction" column="audit_action" jdbcType="VARCHAR"/>
+        <result property="auditTarget" column="audit_target" jdbcType="VARCHAR"/>
+        <result property="auditDetail" column="audit_detail" jdbcType="VARCHAR"/>
+        <result property="auditIp" column="audit_ip" jdbcType="VARCHAR"/>
+        <result property="auditTime" column="audit_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        audit_num,audit_operator,audit_role,
+        audit_action,audit_target,audit_detail,
+        audit_ip,audit_time
+    </sql>
+
+    <!-- 按操作类型与操作账号分页查询审计日志，按时间倒序 -->
+    <select id="selectPageByCondition" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from audit_log
+        <where>
+            <if test="action != null and action != ''">
+                and audit_action = #{action,jdbcType=VARCHAR}
+            </if>
+            <if test="operator != null and operator != ''">
+                and audit_operator like concat('%', #{operator,jdbcType=VARCHAR}, '%')
+            </if>
+        </where>
+        order by audit_time desc, audit_num desc
+    </select>
+
+</mapper>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- E志愿志愿者服务平台 V1.0 站内通知表 notification 的映射文件 -->
+<mapper namespace="com.evolunteer.mapper.NotificationMapper">
+
+    <resultMap id="BaseResultMap" type="com.evolunteer.entity.Notification">
+        <id property="notificationNum" column="notification_num" jdbcType="INTEGER"/>
+        <result property="receiverId" column="receiver_id" jdbcType="VARCHAR"/>
+        <result property="receiverRole" column="receiver_role" jdbcType="VARCHAR"/>
+        <result property="notificationTitle" column="notification_title" jdbcType="VARCHAR"/>
+        <result property="notificationDetail" column="notification_detail" jdbcType="VARCHAR"/>
+        <result property="notificationRead" column="notification_read" jdbcType="INTEGER"/>
+        <result property="notificationTime" column="notification_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        notification_num,receiver_id,receiver_role,
+        notification_title,notification_detail,notification_read,
+        notification_time
+    </sql>
+
+    <!-- 按接收账号分页查询通知，未读优先、时间倒序 -->
+    <select id="selectPageByReceiverId" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from notification
+        where receiver_id = #{receiverId,jdbcType=VARCHAR}
+        order by notification_read asc, notification_time desc, notification_num desc
+    </select>
+
+    <!-- 统计接收账号的未读通知数量 -->
+    <select id="countUnreadByReceiverId" resultType="int">
+        select count(*)
+        from notification
+        where receiver_id = #{receiverId,jdbcType=VARCHAR}
+          and notification_read = 0
+    </select>
+
+    <!-- 将接收账号的全部未读通知标记为已读 -->
+    <update id="updateReadByReceiverId">
+        update notification
+        set notification_read = 1
+        where receiver_id = #{receiverId,jdbcType=VARCHAR}
+          and notification_read = 0
+    </update>
+
+</mapper>

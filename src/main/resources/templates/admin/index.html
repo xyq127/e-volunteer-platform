@@ -93,7 +93,31 @@
                                 <div><h6>志愿活动管理</h6></div>
                             </li>
                             <li class="dropdown"><a class="nav-link menu-title" href="act_not_audit.html"><i
-                                    data-feather="box"></i><span>志愿活动审核</span></a>
+                                    data-feather="check-square"></i><span>志愿活动审核</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="manual_hours.html"><i
+                                    data-feather="clock"></i><span>补录时长复核</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="shows.html"><i
+                                    data-feather="image"></i><span>志愿秀管理</span></a>
+                            </li>
+                            <li class="sidebar-main-title">
+                                <div><h6>账号管理</h6></div>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="organizations.html"><i
+                                    data-feather="briefcase"></i><span>组织账号</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="volunteers.html"><i
+                                    data-feather="users"></i><span>志愿者名单</span></a>
+                            </li>
+                            <li class="sidebar-main-title">
+                                <div><h6>平台管理</h6></div>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="announcements.html"><i
+                                    data-feather="volume-2"></i><span>通知公告</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="audit_log.html"><i
+                                    data-feather="shield"></i><span>审计日志</span></a>
                             </li>
                         </ul>
                     </div>
@@ -114,6 +138,7 @@
                                         <h6 class="mb-0">待审核志愿活动</h6>
                                         <h4 class="mb-0"><span id="count_audit">0</span> 个</h4>
                                         <p class="mb-0 text-muted small">志愿者组织已申报，等待平台审核</p>
+                                        <a class="btn btn-primary btn-sm mt-2" href="act_not_audit.html">进入审核</a>
                                     </div>
                                     <i class="fa fa-hourglass-half font-primary"></i>
                                 </div>
@@ -125,11 +150,12 @@
                             <div class="card-body">
                                 <div class="media static-top-widget">
                                     <div class="media-body">
-                                        <h6 class="mb-0">待审核活动数量</h6>
-                                        <h4 class="mb-0"><span id="count_total">0</span> 个</h4>
-                                        <p class="mb-0 text-muted small">工作台列表中展示的待审核活动数量</p>
+                                        <h6 class="mb-0">待复核补录时长</h6>
+                                        <h4 class="mb-0"><span id="count_manual">0</span> 条</h4>
+                                        <p class="mb-0 text-muted small">志愿者组织已补录，等待平台复核</p>
+                                        <a class="btn btn-primary btn-sm mt-2" href="manual_hours.html">进入复核</a>
                                     </div>
-                                    <i class="fa fa-list-ol font-secondary"></i>
+                                    <i class="fa fa-clock-o font-secondary"></i>
                                 </div>
                             </div>
                         </div>
@@ -139,11 +165,17 @@
                             <div class="card-body">
                                 <div class="media static-top-widget">
                                     <div class="media-body">
-                                        <h6 class="mb-0">志愿活动审核</h6>
-                                        <p class="mb-0 text-muted small">进入审核页面逐条审核志愿活动</p>
-                                        <a class="btn btn-primary btn-sm mt-2" href="act_not_audit.html">进入审核</a>
+                                        <h6 class="mb-0">平台管理入口</h6>
+                                        <p class="mb-0 text-muted small">账号、内容与操作审计</p>
+                                        <a class="btn btn-primary-light btn-sm mt-2"
+                                           href="organizations.html">组织账号</a>
+                                        <a class="btn btn-primary-light btn-sm mt-2"
+                                           href="volunteers.html">志愿者名单</a>
+                                        <a class="btn btn-primary-light btn-sm mt-2"
+                                           href="announcements.html">通知公告</a>
+                                        <a class="btn btn-primary-light btn-sm mt-2" href="audit_log.html">审计日志</a>
                                     </div>
-                                    <i class="fa fa-check-square-o font-success"></i>
+                                    <i class="fa fa-cog font-success"></i>
                                 </div>
                             </div>
                         </div>
@@ -152,10 +184,23 @@
                 <div class="row">
                     <div class="col-xl-12">
                         <div class="card">
-                            <div class="card-header">
+                            <div class="card-header pb-0">
                                 <h5>待审核的志愿活动</h5>
                             </div>
                             <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" id="activity_keyword"
+                                                   placeholder="活动名称或活动编号">
+                                            <button class="btn btn-primary" type="button" id="btn_search_activity">
+                                                查询
+                                            </button>
+                                            <button class="btn btn-light" type="button" id="btn_reset_activity">重置
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="table-responsive">
                                     <table class="table table-striped table-bordernone">
                                         <thead>
@@ -175,6 +220,18 @@
                                         </tr>
                                         </tbody>
                                     </table>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <div class="text-muted" id="pager_info">共 0 条</div>
+                                    <div>
+                                        <button class="btn btn-outline-primary btn-sm" type="button" id="btn_prev_page">
+                                            上一页
+                                        </button>
+                                        <span class="mx-2" id="pager_page">第 1 / 1 页</span>
+                                        <button class="btn btn-outline-primary btn-sm" type="button" id="btn_next_page">
+                                            下一页
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -201,6 +258,13 @@
 
 <script type="text/javascript">
     /**
+     * 当前页码、每页条数与检索关键字
+     */
+    var page = 1;
+    var size = 10;
+    var keyword = "";
+
+    /**
      * 将后端返回的时间格式化为 yyyy-MM-dd HH:mm
      */
     function formatTime(value) {
@@ -211,42 +275,157 @@
     }
 
     /**
+     * 渲染分页控件：共 N 条、第 X / Y 页，首页禁用上一页、末页禁用下一页
+     */
+    function renderPager(totalCount, currentPage, pageSize) {
+        var total = totalCount || 0;
+        page = currentPage || 1;
+        size = pageSize || size;
+        var pages = total === 0 ? 1 : Math.ceil(total / size);
+        $("#pager_info").text("共 " + total + " 条");
+        $("#pager_page").text("第 " + page + " / " + pages + " 页");
+        $("#btn_prev_page").prop("disabled", page <= 1);
+        $("#btn_next_page").prop("disabled", page >= pages);
+    }
+
+    /**
      * 渲染待审核活动列表
      */
     function renderActivityTable(activities) {
         var $body = $("#activity_table").empty();
-        if (activities.length === 0) {
-            $body.append('<tr><td colspan="7" class="text-center text-muted">暂无待审核的志愿活动</td></tr>');
+        if (!activities || activities.length === 0) {
+            $body.append('<tr><td colspan="7" class="text-center text-muted">暂无数据</td></tr>');
             return;
         }
+        var html = "";
         $.each(activities, function (index, activity) {
-            var row = "<tr>"
-                + "<td>" + activity.activityName + "</td>"
-                + "<td>" + (activity.activityLocation || "—") + "</td>"
-                + "<td>" + formatTime(activity.activityBegintime) + "</td>"
-                + "<td>" + formatTime(activity.activityEndtime) + "</td>"
-                + "<td>" + formatTime(activity.activitySignddl) + "</td>"
-                + "<td>" + (activity.activityNeedpeople || 0) + "</td>"
-                + '<td><a class="btn btn-primary btn-xs" href="act_not_audit.html">审核</a></td>'
-                + "</tr>";
-            $body.append(row);
+            html += `<tr>
+                        <td>${activity.activityName || "—"}</td>
+                        <td>${activity.activityLocation || "—"}</td>
+                        <td>${formatTime(activity.activityBegintime)}</td>
+                        <td>${formatTime(activity.activityEndtime)}</td>
+                        <td>${formatTime(activity.activitySignddl)}</td>
+                        <td>${activity.activityNeedpeople || 0}</td>
+                        <td><a class="btn btn-pill btn-outline-primary btn-sm" href="act_not_audit.html">审核</a></td>
+                     </tr>`;
         });
+        $body.html(html);
     }
 
-    $(document).ready(function () {
+    /**
+     * 按当前分页与关键字查询待审核的志愿活动
+     */
+    function loadActivities() {
         $.ajax({
             url: "/admin/findAuditActivityByState",
             type: "GET",
-            success: function (result) {
-                var activities = (result && result.extend) ? (result.extend.auditActivity || []) : [];
-                $("#count_audit").text(activities.length);
-                $("#count_total").text(activities.length);
-                renderActivityTable(activities);
+            data: {
+                "page": page,
+                "size": size,
+                "keyword": keyword
             },
-            error: function (result) {
-                console.log(result);
+            success: function (result) {
+                if (!result || result.code !== 100 || !result.extend) {
+                    alert((result && result.msg) ? result.msg : "待审核活动加载失败");
+                    return;
+                }
+                renderActivityTable(result.extend.list);
+                renderPager(result.extend.total, result.extend.page, result.extend.size);
+            },
+            error: function () {
+                alert("待审核活动加载失败，请稍后重试");
             }
         });
+    }
+
+    /**
+     * 加载工作台顶部统计：待审核活动数与待复核补录数
+     */
+    function loadCounters() {
+        $.ajax({
+            url: "/admin/findAuditActivityByState",
+            type: "GET",
+            data: {
+                "page": 1,
+                "size": 1
+            },
+            success: function (result) {
+                if (result && result.extend) {
+                    $("#count_audit").text(result.extend.total || 0);
+                }
+            },
+            error: function () {
+                $("#count_audit").text(0);
+            }
+        });
+        $.ajax({
+            url: "/admin/review/manualHours",
+            type: "GET",
+            data: {
+                "page": 1,
+                "size": 1,
+                "state": "0"
+            },
+            success: function (result) {
+                if (result && result.extend) {
+                    $("#count_manual").text(result.extend.total || 0);
+                }
+            },
+            error: function () {
+                $("#count_manual").text(0);
+            }
+        });
+    }
+
+    /**
+     * 点击查询：关键字检索从第一页开始
+     */
+    $("#btn_search_activity").click(function () {
+        keyword = $.trim($("#activity_keyword").val());
+        page = 1;
+        loadActivities();
+    });
+
+    /**
+     * 点击重置：清空关键字并回到第一页
+     */
+    $("#btn_reset_activity").click(function () {
+        $("#activity_keyword").val("");
+        keyword = "";
+        page = 1;
+        loadActivities();
+    });
+
+    /**
+     * 回车即查询
+     */
+    $("#activity_keyword").keydown(function (event) {
+        if (event.keyCode === 13) {
+            $("#btn_search_activity").click();
+        }
+    });
+
+    /**
+     * 分页按钮
+     */
+    $("#btn_prev_page").click(function () {
+        if (page > 1) {
+            page = page - 1;
+            loadActivities();
+        }
+    });
+
+    $("#btn_next_page").click(function () {
+        page = page + 1;
+        loadActivities();
+    });
+
+    /**
+     * 进入页面即加载工作台统计与待审核活动列表
+     */
+    $(document).ready(function () {
+        loadCounters();
+        loadActivities();
     });
 </script>
 </body>

@@ -2,8 +2,11 @@ package com.evolunteer.controller;
 
 import com.evolunteer.entity.ApiResponse;
 import com.evolunteer.entity.Volunteer;
+import com.evolunteer.enums.AuditActionEnum;
+import com.evolunteer.service.AuditLogService;
 import com.evolunteer.service.CheckInService;
 import com.evolunteer.service.VolunteerService;
+import com.evolunteer.utils.PageSupport;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -14,13 +17,14 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 /**
  * E志愿志愿者服务平台 V1.0
  * <p>
- * 可信签到控制器：志愿者使用现场签到码并携带定位完成签到签退，
- * 志愿者组织查询签到轨迹、复核服务时长并结算活动考勤。
+ * 可信服务记录控制器：志愿者使用现场签到码并携带定位完成签到签退；
+ * 志愿者组织分页查询签到轨迹、复核平台签到记录的服务时长，并为线下服务补录时长（补录由平台管理员复核）。
  */
 @Slf4j
 @Controller
@@ -32,6 +36,9 @@ public class CheckInController {
 
     @Autowired
     VolunteerService volunteerService;
+
+    @Autowired
+    AuditLogService auditLogService;
 
     /**
      * 志愿者签到：校验现场签到码、签到时间窗口与地理围栏
@@ -101,30 +108,41 @@ public class CheckInController {
     }
 
     /**
-     * 查询活动的签到与时长记录，供志愿者组织复核
+     * 分页查询活动的服务记录，供志愿者组织复核
      *
      * @param activityNum 活动编号
-     * @return 签到记录列表
+     * @param page        页码
+     * @param size        每页条数
+     * @param state       复核状态，0 待复核、1 已确认、2 已驳回
+     * @param source      记录来源，1 平台签到、2 组织补录
+     * @return 服务记录分页结果
      */
     @RequestMapping(value = "/reviewList", method = RequestMethod.GET)
     @ResponseBody
-    public ApiResponse reviewList(@RequestParam(value = "activityNum") Integer activityNum) {
-        return ApiResponse.success().add("checkins", checkInService.listCheckinRecords(activityNum));
+    public ApiResponse reviewList(@RequestParam(value = "activityNum") Integer activityNum,
+                                  @RequestParam(value = "page", required = false) Integer page,
+                                  @RequestParam(value = "size", required = false) Integer size,
+                                  @RequestParam(value = "state", required = false) String state,
+                                  @RequestParam(value = "source", required = false) String source) {
+        return PageSupport.toResponse(checkInService.pageCheckinRecords(activityNum, state, source, page, size));
     }
 
     /**
-     * 志愿者组织复核服务时长，确认后时长计入志愿者累计服务时长
+     * 志愿者组织复核平台签到记录的服务时长，确认后时长计入志愿者累计服务时长
      *
-     * @param checkinNum 签到编号
-     * @param isPass     复核结果（1 确认时长、2 驳回）
-     * @param remark     复核意见
+     * @param checkinNum  签到编号
+     * @param isPass      复核结果（1 确认时长、2 驳回）
+     * @param remark      复核意见
+     * @param request     请求对象
+     * @param auth        当前登录用户信息
      * @return 处理结果
      */
     @RequestMapping(value = "/review", method = RequestMethod.POST)
     @ResponseBody
     public ApiResponse review(@RequestParam(value = "checkinNum") Integer checkinNum,
                               @RequestParam(value = "isPass") Integer isPass,
-                              @RequestParam(value = "remark", required = false) String remark) {
+                              @RequestParam(value = "remark", required = false) String remark,
+                              HttpServletRequest request, Authentication auth) {
 
         Map<Object, Object> result = checkInService.reviewCheckin(checkinNum, isPass, remark);
         String msg = (String) result.get("msg");
@@ -132,7 +150,41 @@ public class CheckInController {
             log.warn("服务时长复核未完成，签到编号：{}，原因：{}", checkinNum, msg);
             return ApiResponse.fail(msg);
         }
+        auditLogService.record(operator(auth), "ROLE_ORGANIZATION", AuditActionEnum.CHECKIN_REVIEW,
+                "签到编号 " + checkinNum, msg, request.getRemoteAddr());
         log.info("志愿者组织完成服务时长复核，签到编号：{}，结果：{}", checkinNum, msg);
+        return ApiResponse.success(msg);
+    }
+
+    /**
+     * 志愿者组织为线下服务补录服务时长，补录记录提交平台管理员复核
+     *
+     * @param participateNum 报名编号
+     * @param beginTime      服务开始时间
+     * @param endTime        服务结束时间
+     * @param remark         补录说明
+     * @param request        请求对象
+     * @param auth           当前登录用户信息
+     * @return 处理结果
+     */
+    @RequestMapping(value = "/manual", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResponse manual(@RequestParam(value = "participateNum") Integer participateNum,
+                              @RequestParam(value = "beginTime") String beginTime,
+                              @RequestParam(value = "endTime") String endTime,
+                              @RequestParam(value = "remark", required = false) String remark,
+                              HttpServletRequest request, Authentication auth) {
+
+        String loginId = operator(auth);
+        Map<Object, Object> result = checkInService.recordServiceHours(loginId, participateNum,
+                beginTime, endTime, remark);
+        String msg = (String) result.get("msg");
+        if (!isSuccess(result)) {
+            log.warn("服务时长补录未完成，报名编号：{}，原因：{}", participateNum, msg);
+            return ApiResponse.fail(msg);
+        }
+        auditLogService.record(loginId, "ROLE_ORGANIZATION", AuditActionEnum.CHECKIN_REVIEW,
+                "报名编号 " + participateNum, "补录服务时长：" + msg, request.getRemoteAddr());
         return ApiResponse.success(msg);
     }
 
@@ -174,6 +226,13 @@ public class CheckInController {
     private Volunteer currentVolunteer(Authentication authentication) {
         User user = (User) authentication.getPrincipal();
         return volunteerService.getByLoginId(user.getUsername());
+    }
+
+    /**
+     * 取当前登录账号
+     */
+    private String operator(Authentication authentication) {
+        return ((User) authentication.getPrincipal()).getUsername();
     }
 
     /**

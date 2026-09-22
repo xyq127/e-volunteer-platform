@@ -18,9 +18,97 @@
             <result property="showIsdeleted" column="show_isdeleted" jdbcType="INTEGER"/>
     </resultMap>
 
+    <!-- 志愿者本人志愿秀列表的查询结果，附加未删除图片数量 -->
+    <resultMap id="VolunteerShowViewResultMap" type="com.evolunteer.entity.PortalShowView">
+        <id property="showNum" column="show_num" jdbcType="INTEGER"/>
+        <result property="showId" column="show_id" jdbcType="VARCHAR"/>
+        <result property="showDetail" column="show_detail" jdbcType="VARCHAR"/>
+        <result property="showSharetime" column="show_sharetime" jdbcType="TIMESTAMP"/>
+        <result property="volunteerNum" column="volunteer_num" jdbcType="INTEGER"/>
+        <result property="activityNum" column="activity_num" jdbcType="INTEGER"/>
+        <result property="showBrowse" column="show_browse" jdbcType="INTEGER"/>
+        <result property="showLike" column="show_like" jdbcType="INTEGER"/>
+        <result property="pictureCount" column="picture_count" jdbcType="INTEGER"/>
+    </resultMap>
+
     <sql id="Base_Column_List">
         show_num,show_id,show_detail,
         show_sharetime,volunteer_num,activity_num,
         show_browse,show_like,show_isdeleted
     </sql>
+
+    <!-- 按志愿者分页查询本人发布的志愿秀，并统计未删除图片数量 -->
+    <select id="selectPageByVolunteer" resultMap="VolunteerShowViewResultMap">
+        select
+        <include refid="Base_Column_List"/>,
+        (select count(*) from show_picture picture
+        where picture.show_num = `show`.show_num
+        and picture.picture_isdeleted = 0) as picture_count
+        from `show`
+        where volunteer_num = #{volunteerNum,jdbcType=INTEGER}
+        and show_isdeleted = 0
+        order by show_sharetime desc, show_num desc
+    </select>
+
+    <!-- 按志愿秀编号查询未删除的志愿秀 -->
+    <select id="selectShowByNum" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from `show`
+        where show_num = #{showNum,jdbcType=INTEGER}
+        and show_isdeleted = 0
+    </select>
+
+    <!-- 逻辑删除志愿秀 -->
+    <update id="logicDeleteByShowNum">
+        update `show`
+        set show_isdeleted = 1
+        where show_num = #{showNum,jdbcType=INTEGER}
+        and show_isdeleted = 0
+    </update>
+
+    <!-- 调用数据库存储过程 volunteer_publish_show 发布志愿秀 -->
+    <insert id="volunteer_publish_show" statementType="CALLABLE">
+        {call volunteer_publish_show(#{volunteerNum,mode=IN,jdbcType=INTEGER},
+                                     #{activityNum,mode=IN,jdbcType=INTEGER},
+                                     #{detail,mode=IN,jdbcType=VARCHAR},
+                                     #{showNum,mode=OUT,jdbcType=INTEGER},
+                                     #{msg,mode=OUT,jdbcType=VARCHAR},
+                                     #{ok,mode=OUT,jdbcType=INTEGER})
+        }
+    </insert>
+
+    <!-- 志愿秀被查看时累加浏览次数 -->
+    <update id="increaseBrowse">
+        update `show`
+        set show_browse = ifnull(show_browse, 0) + 1
+        where show_num = #{showNum,jdbcType=INTEGER}
+        and show_isdeleted = 0
+    </update>
+
+    <!-- 志愿者点赞时累加点赞次数 -->
+    <update id="increaseLike">
+        update `show`
+        set show_like = ifnull(show_like, 0) + 1
+        where show_num = #{showNum,jdbcType=INTEGER}
+        and show_isdeleted = 0
+    </update>
+
+    <!-- 志愿者取消点赞时递减点赞次数，点赞次数已为 0 时不再递减，避免出现负数 -->
+    <update id="decreaseLike">
+        update `show`
+        set show_like = show_like - 1
+        where show_num = #{showNum,jdbcType=INTEGER}
+        and show_isdeleted = 0
+        and show_like > 0
+    </update>
+
+    <!-- 按点赞记录重新核算点赞次数，使点赞次数始终等于点赞记录行数且不小于 0 -->
+    <update id="refreshLikeCount">
+        update `show`
+        set show_like = (select count(*) from show_like_record
+        where show_like_record.show_num = #{showNum,jdbcType=INTEGER})
+        where show_num = #{showNum,jdbcType=INTEGER}
+        and show_isdeleted = 0
+    </update>
 </mapper>

@@ -55,6 +55,10 @@
                     <li><a class="text-dark" href="#!" onclick="javascript:toggleFullScreen()"><i
                             data-feather="maximize"></i></a></li>
                     <li class="p-0">
+                        <button class="btn btn-primary-light" type="button"><a href="notifications.html"><i
+                                data-feather="bell"></i>未读消息 <span id="unread_count">0</span></a></button>
+                    </li>
+                    <li class="p-0">
                         <button class="btn btn-primary-light" type="button"><a href="/logout"><i
                                 data-feather="power"></i>退出登录</a></button>
                     </li>
@@ -113,6 +117,15 @@
                             <li class="dropdown"><a class="nav-link menu-title active" href="checkin_review.html"><i
                                     data-feather="check-square"></i><span>签到与时长复核</span></a>
                             </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="training.html"><i
+                                    data-feather="book-open"></i><span>培训管理</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="announcements.html"><i
+                                    data-feather="volume-2"></i><span>活动公告</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="notifications.html"><i
+                                    data-feather="bell"></i><span>消息通知</span></a>
+                            </li>
                             <li class="sidebar-main-title">
                                 <div><h6>组织中心</h6></div>
                             </li>
@@ -127,7 +140,6 @@
         </header>
         <!-- Page Sidebar Ends-->
         <div class="page-body">
-            <!-- Container-fluid starts-->
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-xl-4">
@@ -155,6 +167,7 @@
                                         </tbody>
                                     </table>
                                 </div>
+                                <div id="notStart_pager" class="mt-3"></div>
                             </div>
                         </div>
                     </div>
@@ -183,6 +196,7 @@
                                         </tbody>
                                     </table>
                                 </div>
+                                <div id="carry_pager" class="mt-3"></div>
                             </div>
                         </div>
                     </div>
@@ -211,6 +225,7 @@
                                         </tbody>
                                     </table>
                                 </div>
+                                <div id="end_pager" class="mt-3"></div>
                             </div>
                         </div>
                     </div>
@@ -221,7 +236,7 @@
                     <div class="col-xl-12">
                         <div class="card">
                             <div class="card-header pb-0">
-                                <h5>现场签到码<span class="text-muted" id="manage_activity_name"></span></h5>
+                                <h5>现场签到码</h5>
                             </div>
                             <div class="card-body">
                                 <div class="row align-items-center">
@@ -247,12 +262,38 @@
                     <div class="col-xl-12">
                         <div class="card">
                             <div class="card-header pb-0 d-flex justify-content-between align-items-center">
-                                <h5>签到与时长记录</h5>
-                                <button class="btn btn-outline-danger d-none" type="button" id="settle_activity">
-                                    活动结算
-                                </button>
+                                <h5>签到与时长记录<span class="text-muted" id="manage_activity_name"></span></h5>
+                                <div class="btn-group btn-group-pill" role="group" aria-label="记录操作">
+                                    <button class="btn btn-outline-primary btn-sm" type="button" id="manual_hours_button">
+                                        补录服务时长
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm d-none" type="button"
+                                            id="settle_activity">活动结算
+                                    </button>
+                                </div>
                             </div>
                             <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <select class="form-control" id="review_state" aria-label="复核状态">
+                                            <option value="">全部复核状态</option>
+                                            <option value="0">待复核</option>
+                                            <option value="1">已确认</option>
+                                            <option value="2">已驳回</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-control" id="review_source" aria-label="记录来源">
+                                            <option value="">全部来源</option>
+                                            <option value="1">平台签到</option>
+                                            <option value="2">组织补录</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button class="btn btn-primary" type="button" id="review_search_button">查询
+                                        </button>
+                                    </div>
+                                </div>
                                 <div class="table-responsive">
                                     <table class="table table-hover table-bordered" id="checkinReview_table">
                                         <thead>
@@ -260,31 +301,32 @@
                                             <th scope="col">志愿者编号</th>
                                             <th scope="col">姓名</th>
                                             <th scope="col">联系电话</th>
+                                            <th scope="col">记录来源</th>
                                             <th scope="col">签到时间</th>
                                             <th scope="col">签退时间</th>
                                             <th scope="col">服务时长</th>
                                             <th scope="col">签到距离（米）</th>
                                             <th scope="col">轨迹标记</th>
                                             <th scope="col">复核状态</th>
+                                            <th scope="col">复核意见</th>
                                             <th scope="col">操作</th>
                                         </tr>
                                         </thead>
                                         <tbody>
                                         <tr>
-                                            <td colspan="10" class="text-center text-muted">数据加载中……</td>
+                                            <td colspan="12" class="text-center text-muted">数据加载中……</td>
                                         </tr>
                                         </tbody>
                                     </table>
                                 </div>
+                                <div id="review_pager" class="mt-3"></div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <!-- 选中活动后的签到与时长管理区 end-->
             </div>
-            <!-- Container-fluid Ends-->
         </div>
-
         <!-- 复核模态框（Modal） start-->
         <div class="modal fade" id="reviewModal" tabindex="-1" role="dialog" aria-labelledby="reviewModalLabel"
              aria-hidden="true">
@@ -308,6 +350,56 @@
             </div>
         </div>
         <!-- 复核模态框（Modal） end-->
+
+        <!-- 补录服务时长模态框（Modal） start-->
+        <div class="modal fade" id="manualModal" tabindex="-1" role="dialog" aria-labelledby="manualModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="manualModalLabel">补录服务时长</h5>
+                        <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted">补录用于线下服务的服务时长，提交后由平台管理员复核，复核通过后计入志愿者累计服务时长。</p>
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label text-end">志愿者</label>
+                            <div class="col-sm-9">
+                                <select class="form-control" id="manual_participate">
+                                    <option value="">请选择已通过报名的志愿者</option>
+                                </select>
+                                <p class="text-muted mb-0 d-none" id="manual_hint"></p>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label text-end">服务开始时间</label>
+                            <div class="col-sm-9">
+                                <input class="form-control" type="datetime-local" id="manual_begin">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label text-end">服务结束时间</label>
+                            <div class="col-sm-9">
+                                <input class="form-control" type="datetime-local" id="manual_end">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label text-end">补录说明</label>
+                            <div class="col-sm-9">
+                                <textarea class="form-control" id="manual_remark" rows="3"
+                                          placeholder="请说明补录原因与服务内容"></textarea>
+                            </div>
+                        </div>
+                        <p class="text-muted mb-0">时间格式：年-月-日 时:分，结束时间需晚于开始时间。</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" type="button" id="manual_submit">提交补录</button>
+                        <button class="btn btn-light" type="button" data-bs-dismiss="modal">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 补录服务时长模态框（Modal） end-->
     </div>
 </div>
 <!-- latest jquery-->
@@ -335,31 +427,156 @@
         return String(value).replace("T", " ").substring(0, 16);
     }
 
+    /**
+     * 将时间转换为 datetime-local 输入框需要的 yyyy-MM-ddTHH:mm
+     */
+    function toDateTimeInput(value) {
+        if (!value) {
+            return "";
+        }
+        return String(value).replace(" ", "T").substring(0, 16);
+    }
+
+    /**
+     * 将 datetime-local 输入框的值转换为接口需要的 yyyy-MM-dd HH:mm
+     */
+    function toApiTime(value) {
+        if (!value) {
+            return "";
+        }
+        return String(value).replace("T", " ");
+    }
+
+    /**
+     * 通用分页控件渲染：holderId 为分页容器编号，onChange 接收目标页码
+     */
+    function renderPager(holderId, total, page, size, onChange) {
+        total = Number(total) || 0;
+        page = Number(page) || 1;
+        size = Number(size) || 10;
+        var totalPage = Math.ceil(total / size);
+        var currentPage = totalPage === 0 ? 0 : page;
+        var html = '<div class="d-flex justify-content-between align-items-center flex-wrap">'
+            + '<span class="text-muted">共 ' + total + ' 条，第 ' + currentPage + ' / ' + totalPage + ' 页</span>'
+            + '<div class="btn-group btn-group-pill" role="group" aria-label="分页">'
+            + '<button class="btn btn-outline-primary btn-sm pager-prev" type="button"'
+            + (page <= 1 ? ' disabled' : '') + '>上一页</button>'
+            + '<button class="btn btn-outline-primary btn-sm pager-next" type="button"'
+            + (page >= totalPage ? ' disabled' : '') + '>下一页</button>'
+            + '</div></div>';
+        var $holder = $("#" + holderId);
+        $holder.html(html);
+        $holder.find(".pager-prev").on("click", function () {
+            if (page > 1) {
+                onChange(page - 1);
+            }
+        });
+        $holder.find(".pager-next").on("click", function () {
+            if (page < totalPage) {
+                onChange(page + 1);
+            }
+        });
+    }
+
+    /**
+     * 分页响应统一取值：list 当前页数据、total 总条数、page 当前页、size 每页条数
+     */
+    function pageData(result, fallbackPage, fallbackSize) {
+        var extend = (result && result.extend) ? result.extend : {};
+        var total = Number(extend.total);
+        var currentPage = Number(extend.page);
+        var pageSize = Number(extend.size);
+        return {
+            list: extend.list || [],
+            total: (isNaN(total) || total < 0) ? 0 : total,
+            page: (isNaN(currentPage) || currentPage < 1) ? fallbackPage : currentPage,
+            size: (isNaN(pageSize) || pageSize < 1) ? fallbackSize : pageSize
+        };
+    }
+
+    /**
+     * 统一提示文案：优先使用接口返回的 msg，纯文本响应直接展示
+     */
+    function tip(result, fallback) {
+        if (result && result.msg) {
+            return result.msg;
+        }
+        if (typeof result === "string" && result) {
+            return result;
+        }
+        return fallback;
+    }
+
+    /**
+     * 查询顶部未读消息数量
+     */
+    function loadUnreadCount() {
+        $.ajax({
+            url: "/org/notifications/unreadCount",
+            type: "GET",
+            success: function (result) {
+                var count = (result && result.extend) ? result.extend.count : 0;
+                $("#unread_count").text((count === null || count === undefined) ? 0 : count);
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
     /** 当前正在管理的活动编号，未选中时为 null */
     var currentActivityNum = null;
-    /** 活动编号与活动名称、是否可结算的对应关系 */
-    var activityMeta = {};
-    /** 复核模态框实例 */
+    /** 活动列表分页状态：key 为列表标识 */
+    var activityLists = {
+        notStart: {
+            url: "/activity/findNotStartActivityByNumAndState",
+            tableId: "notStartActivity_table",
+            pagerId: "notStart_pager",
+            page: 1,
+            size: 5,
+            endActivity: false
+        },
+        carry: {
+            url: "/activity/findCarryActivityByNumAndState",
+            tableId: "carryActivity_table",
+            pagerId: "carry_pager",
+            page: 1,
+            size: 5,
+            endActivity: false
+        },
+        end: {
+            url: "/activity/findEndActivityByNumAndState",
+            tableId: "endActivity_table",
+            pagerId: "end_pager",
+            page: 1,
+            size: 5,
+            endActivity: true
+        }
+    };
+    /** 服务记录分页与筛选条件 */
+    var reviewPage = 1;
+    var reviewSize = 10;
+    var reviewState = "";
+    var reviewSource = "";
+    /** 复核模态框实例与当前待复核记录 */
     var reviewModal = null;
-    /** 当前待复核的签到记录 */
     var reviewTarget = {checkinNum: null, isPass: null};
+    /** 补录模态框实例 */
+    var manualModal = null;
 
     /**
      * 渲染活动列表（未开始 / 进行中 / 已结束）
      */
-    function loadActivityList(url, holderName, tableId, endActivity) {
+    function loadActivityList(key) {
+        var config = activityLists[key];
         $.ajax({
-            url: url,
+            url: config.url,
             type: "GET",
-            data: {},
+            data: {"page": config.page, "size": config.size},
             success: function (result) {
-                var activities = (result && result.extend) ? (result.extend[holderName] || []) : [];
-                var tabValue = ``;
-                $.each(activities, function (index, activity) {
-                    activityMeta[activity.activityNum] = {
-                        name: activity.activityName,
-                        endActivity: endActivity
-                    };
+                var data = pageData(result, config.page, config.size);
+                var tabValue = "";
+                $.each(data.list, function (index, activity) {
                     tabValue += `<tr>
                                     <td>${activity.activityName}</td>
                                     <td>${formatTime(activity.activityBegintime)} ~ ${formatTime(activity.activityEndtime)}</td>
@@ -367,14 +584,21 @@
                                     <td>${activity.activityNeedpeople || 0}</td>
                                     <td>${activity.activitySettleTime ? "已结算" : "未结算"}</td>
                                     <td>
-                                        <button class="btn btn-outline-primary activity_manage_button" type="button" data-activity-num="${activity.activityNum}">签到与时长管理</button>
+                                        <button class="btn btn-outline-primary btn-sm activity_manage_button" type="button"
+                                                data-activity-num="${activity.activityNum}"
+                                                data-activity-name="${activity.activityName}"
+                                                data-activity-ended="${config.endActivity}">签到与时长管理</button>
                                     </td>
                                  </tr>`;
                 });
-                if (activities.length === 0) {
+                if (data.list.length === 0) {
                     tabValue = `<tr><td colspan="6" class="text-center text-muted">暂无数据</td></tr>`;
                 }
-                $("#" + tableId + " tbody").html(tabValue);
+                $("#" + config.tableId + " tbody").html(tabValue);
+                renderPager(config.pagerId, data.total, data.page, data.size, function (target) {
+                    config.page = target;
+                    loadActivityList(key);
+                });
             },
             error: function (result) {
                 console.log(result);
@@ -383,20 +607,29 @@
     }
 
     /**
+     * 重新加载三个活动列表
+     */
+    function reloadActivityLists() {
+        $.each(activityLists, function (key) {
+            loadActivityList(key);
+        });
+    }
+
+    /**
      * 选中活动，展示签到码与签到记录管理区
      */
-    function selectActivity(activityNum) {
+    function selectActivity(activityNum, activityName, ended) {
         currentActivityNum = activityNum;
-        var meta = activityMeta[activityNum] || {};
-        $("#manage_activity_name").text(meta.name ? "：" + meta.name : "");
-        if (meta.endActivity) {
+        $("#manage_activity_name").text(activityName ? "：" + activityName : "");
+        if (ended) {
             $("#settle_activity").removeClass("d-none");
         } else {
             $("#settle_activity").addClass("d-none");
         }
+        reviewPage = 1;
         $("#manageArea").removeClass("d-none");
         loadCheckinCode();
-        loadCheckinReviewList();
+        loadReviewList();
         document.getElementById("manageArea").scrollIntoView();
     }
 
@@ -410,9 +643,7 @@
         $.ajax({
             url: "/checkin/code",
             type: "GET",
-            data: {
-                "activityNum": currentActivityNum
-            },
+            data: {"activityNum": currentActivityNum},
             success: function (result) {
                 var checkinCode = (result && result.extend) ? result.extend.checkinCode : null;
                 $("#checkin_code").text(checkinCode ? checkinCode : "尚未生成");
@@ -430,19 +661,19 @@
         if (currentActivityNum === null) {
             return;
         }
+        if (refresh && !confirm("重新生成后原签到码立即失效，确定重新生成吗？")) {
+            return;
+        }
         $.ajax({
             url: "/checkin/code",
             type: "POST",
-            data: {
-                "activityNum": currentActivityNum,
-                "refresh": refresh
-            },
+            data: {"activityNum": currentActivityNum},
             success: function (result) {
                 if (result && result.extend && result.extend.checkinCode) {
                     $("#checkin_code").text(result.extend.checkinCode);
                     alert("签到码已生成，请在活动现场向志愿者公布");
                 } else {
-                    alert((result && result.msg) ? result.msg : "签到码生成失败");
+                    alert(tip(result, "签到码生成失败"));
                 }
             },
             error: function (result) {
@@ -452,9 +683,25 @@
     }
 
     /**
-     * 复核状态文案：null 待复核、"1" 已确认、"2" 已驳回
+     * 记录来源文案
      */
-    function checkinStateText(checkinTimecheck) {
+    function sourceText(item) {
+        if (item.checkinSourceText) {
+            return item.checkinSourceText;
+        }
+        if (item.checkinSource === "1") {
+            return "平台签到";
+        }
+        if (item.checkinSource === "2") {
+            return "组织补录";
+        }
+        return "—";
+    }
+
+    /**
+     * 平台复核状态文案：null 待复核、"1" 已确认、"2" 已驳回
+     */
+    function stateText(checkinTimecheck) {
         if (checkinTimecheck === "1") {
             return "已确认";
         }
@@ -462,6 +709,27 @@
             return "已驳回";
         }
         return "待复核";
+    }
+
+    /**
+     * 复核状态列：组织补录记录标注由平台管理员复核
+     */
+    function reviewStateHtml(item) {
+        if (item.checkinSource === "2") {
+            return '组织补录（待平台管理员复核）'
+                + '<div class="text-muted small">平台管理员复核结果：' + stateText(item.checkinTimecheck) + '</div>';
+        }
+        return stateText(item.checkinTimecheck);
+    }
+
+    /**
+     * 复核意见列：组织补录展示平台管理员复核意见
+     */
+    function reviewRemarkText(item) {
+        if (item.checkinSource === "2") {
+            return item.checkinAdminremark || item.checkinRemark || "—";
+        }
+        return item.checkinRemark || "—";
     }
 
     /**
@@ -478,24 +746,27 @@
     }
 
     /**
-     * 复核操作列：待复核显示确认 / 驳回按钮，已复核显示复核备注
+     * 复核操作列：仅平台签到记录可由志愿者组织复核，组织补录由平台管理员复核
      */
-    function reviewControlTd(item) {
-        if (!item.checkinTimecheck) {
-            return `<td class="text-center">
-                        <div class="btn-group btn-group-pill" role="group" aria-label="时长复核">
-                            <button class="btn btn-outline-primary" type="button" onclick="openReviewModal(${item.checkinNum},1)">确认时长</button>
-                            <button class="btn btn-outline-danger" type="button" onclick="openReviewModal(${item.checkinNum},2)">驳回</button>
-                        </div>
-                    </td>`;
+    function reviewControlHtml(item) {
+        if (item.checkinSource === "2") {
+            return '<span class="text-muted">由平台管理员复核</span>';
         }
-        return `<td class="text-center">${item.checkinRemark || "—"}</td>`;
+        if (!item.checkinTimecheck) {
+            return '<div class="btn-group btn-group-pill" role="group" aria-label="时长复核">'
+                + '<button class="btn btn-outline-primary btn-sm" type="button" onclick="openReviewModal('
+                + item.checkinNum + ',1)">确认时长</button>'
+                + '<button class="btn btn-outline-danger btn-sm" type="button" onclick="openReviewModal('
+                + item.checkinNum + ',2)">驳回</button>'
+                + '</div>';
+        }
+        return "—";
     }
 
     /**
-     * 查询当前活动的签到与时长记录
+     * 查询当前活动的服务记录
      */
-    function loadCheckinReviewList() {
+    function loadReviewList() {
         if (currentActivityNum === null) {
             return;
         }
@@ -503,29 +774,43 @@
             url: "/checkin/reviewList",
             type: "GET",
             data: {
-                "activityNum": currentActivityNum
+                "activityNum": currentActivityNum,
+                "page": reviewPage,
+                "size": reviewSize,
+                "state": reviewState,
+                "source": reviewSource
             },
             success: function (result) {
-                var checkins = (result && result.extend) ? (result.extend.checkins || []) : [];
-                var tabValue = ``;
-                $.each(checkins, function (index, item) {
+                var data = pageData(result, reviewPage, reviewSize);
+                var tabValue = "";
+                $.each(data.list, function (index, item) {
+                    var duration = (item.checkinDuration === null || item.checkinDuration === undefined)
+                        ? "—" : item.checkinDuration + " 小时";
+                    var distance = (item.checkinDistance === null || item.checkinDistance === undefined)
+                        ? "—" : item.checkinDistance;
                     tabValue += `<tr>
-                                    <td>${item.volunteerId}</td>
-                                    <td>${item.volunteerName}</td>
+                                    <td>${item.volunteerId || "—"}</td>
+                                    <td>${item.volunteerName || "—"}</td>
                                     <td>${item.volunteerTel || "—"}</td>
+                                    <td>${sourceText(item)}</td>
                                     <td>${formatTime(item.checkinBegintime)}</td>
                                     <td>${formatTime(item.checkinEndtime)}</td>
-                                    <td>${(item.checkinDuration === null || item.checkinDuration === undefined) ? "—" : item.checkinDuration + " 小时"}</td>
-                                    <td>${(item.checkinDistance === null || item.checkinDistance === undefined) ? "—" : item.checkinDistance}</td>
+                                    <td>${duration}</td>
+                                    <td>${distance}</td>
                                     <td>${checkinFlagText(item.checkinFlag)}</td>
-                                    <td>${checkinStateText(item.checkinTimecheck)}</td>
-                                    ${reviewControlTd(item)}
+                                    <td>${reviewStateHtml(item)}</td>
+                                    <td>${reviewRemarkText(item)}</td>
+                                    <td class="text-center">${reviewControlHtml(item)}</td>
                                  </tr>`;
                 });
-                if (checkins.length === 0) {
-                    tabValue = `<tr><td colspan="10" class="text-center text-muted">暂无数据</td></tr>`;
+                if (data.list.length === 0) {
+                    tabValue = `<tr><td colspan="12" class="text-center text-muted">暂无数据</td></tr>`;
                 }
                 $("#checkinReview_table tbody").html(tabValue);
+                renderPager("review_pager", data.total, data.page, data.size, function (target) {
+                    reviewPage = target;
+                    loadReviewList();
+                });
             },
             error: function (result) {
                 console.log(result);
@@ -560,14 +845,13 @@
                 "remark": $("#review_remark").val()
             },
             success: function (result) {
-                if (result && result.code === 100) {
+                var success = result && result.code === 100;
+                alert(tip(result, success ? "复核完成" : "复核失败"));
+                if (success) {
                     if (reviewModal) {
                         reviewModal.hide();
                     }
-                    alert(result.msg || "复核完成");
-                    loadCheckinReviewList();
-                } else {
-                    alert((result && result.msg) ? result.msg : "复核失败");
+                    loadReviewList();
                 }
             },
             error: function (result) {
@@ -589,15 +873,14 @@
         $.ajax({
             url: "/org/settle",
             type: "POST",
-            data: {
-                "activityNum": currentActivityNum
-            },
+            data: {"activityNum": currentActivityNum},
             success: function (result) {
-                alert((result && result.msg) ? result.msg : "活动结算完成");
-                loadCheckinReviewList();
-                loadActivityList("/activity/findNotStartActivityByNumAndState", "auditActivity", "notStartActivity_table", false);
-                loadActivityList("/activity/findCarryActivityByNumAndState", "carryActivity", "carryActivity_table", false);
-                loadActivityList("/activity/findEndActivityByNumAndState", "endActivity", "endActivity_table", true);
+                var success = result && result.code === 100;
+                alert(tip(result, success ? "活动结算完成" : "活动结算失败"));
+                if (success) {
+                    loadReviewList();
+                    reloadActivityLists();
+                }
             },
             error: function (result) {
                 console.log(result);
@@ -605,14 +888,109 @@
         });
     }
 
-    //一进网页就加载三个活动列表
+    /**
+     * 加载当前活动已通过报名的志愿者，供补录服务时长选择
+     */
+    function loadManualVolunteers() {
+        $.ajax({
+            url: "/activity/volRecruit",
+            type: "GET",
+            data: {"activityNum": currentActivityNum, "page": 1, "size": 100},
+            success: function (result) {
+                var data = pageData(result, 1, 100);
+                var $select = $("#manual_participate");
+                $select.empty().append('<option value="">请选择已通过报名的志愿者</option>');
+                var added = 0;
+                $.each(data.list, function (index, item) {
+                    if (item.participateApplystate !== "1") {
+                        return true;
+                    }
+                    var volunteer = item.volunteer || {};
+                    var label = (volunteer.volunteerName || "志愿者")
+                        + "（" + (volunteer.volunteerId || item.volunteerNum) + "）";
+                    $select.append($("<option></option>").val(item.participateNum).text(label));
+                    added += 1;
+                });
+                if (added === 0) {
+                    $("#manual_hint").text("该活动暂无已通过报名的志愿者，无法补录服务时长").removeClass("d-none");
+                } else {
+                    $("#manual_hint").text("").addClass("d-none");
+                }
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
+    /**
+     * 打开补录服务时长弹窗
+     */
+    function openManualModal() {
+        if (currentActivityNum === null) {
+            alert("请先在活动列表中选择要补录的活动");
+            return;
+        }
+        $("#manual_participate").empty().append('<option value="">请选择已通过报名的志愿者</option>');
+        $("#manual_begin").val("");
+        $("#manual_end").val("");
+        $("#manual_remark").val("");
+        $("#manual_hint").text("").addClass("d-none");
+        loadManualVolunteers();
+        if (!manualModal) {
+            manualModal = new bootstrap.Modal(document.getElementById("manualModal"));
+        }
+        manualModal.show();
+    }
+
+    /**
+     * 提交服务时长补录，提交后由平台管理员复核
+     */
+    function submitManual() {
+        var participateNum = $("#manual_participate").val();
+        var beginTime = toApiTime($("#manual_begin").val());
+        var endTime = toApiTime($("#manual_end").val());
+        if (!participateNum) {
+            alert("请选择需要补录服务时长的志愿者");
+            return;
+        }
+        if (!beginTime || !endTime) {
+            alert("请填写服务开始时间与结束时间");
+            return;
+        }
+        $.ajax({
+            url: "/checkin/manual",
+            type: "POST",
+            data: {
+                "participateNum": participateNum,
+                "beginTime": beginTime,
+                "endTime": endTime,
+                "remark": $("#manual_remark").val()
+            },
+            success: function (result) {
+                var success = result && result.code === 100;
+                alert(tip(result, success ? "服务时长补录成功，等待平台管理员复核" : "服务时长补录失败"));
+                if (success) {
+                    if (manualModal) {
+                        manualModal.hide();
+                    }
+                    reviewPage = 1;
+                    loadReviewList();
+                }
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
     $(document).ready(function () {
-        loadActivityList("/activity/findNotStartActivityByNumAndState", "auditActivity", "notStartActivity_table", false);
-        loadActivityList("/activity/findCarryActivityByNumAndState", "carryActivity", "carryActivity_table", false);
-        loadActivityList("/activity/findEndActivityByNumAndState", "endActivity", "endActivity_table", true);
+        loadUnreadCount();
+        reloadActivityLists();
 
         $(document).on("click", ".activity_manage_button", function () {
-            selectActivity($(this).attr("data-activity-num"));
+            selectActivity($(this).attr("data-activity-num"), $(this).attr("data-activity-name"),
+                $(this).attr("data-activity-ended") === "true");
         });
         $("#generate_checkin_code").click(function () {
             generateCheckinCode(false);
@@ -626,7 +1004,20 @@
         $("#review_submit").click(function () {
             submitReview();
         });
+        $("#review_search_button").click(function () {
+            reviewPage = 1;
+            reviewState = $("#review_state").val();
+            reviewSource = $("#review_source").val();
+            loadReviewList();
+        });
+        $("#manual_hours_button").click(function () {
+            openManualModal();
+        });
+        $("#manual_submit").click(function () {
+            submitManual();
+        });
     });
+
 </script>
 </body>
 </html>

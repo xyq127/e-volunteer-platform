@@ -88,7 +88,7 @@ public class CertificateServiceImpl implements CertificateService {
     private ServiceCertificate buildCertificate(Volunteer volunteer, List<ServiceRecord> records) {
 
         double totalDuration = volunteer.getVolunteerTotalduration() == null ? 0 : volunteer.getVolunteerTotalduration();
-        int activityCount = records.size();
+        int activityCount = participationMapper.countApprovedActivities(volunteer.getVolunteerNum());
         VolunteerStarEnum star = VolunteerStarEnum.of(totalDuration);
 
         ServiceCertificate certificate = new ServiceCertificate();

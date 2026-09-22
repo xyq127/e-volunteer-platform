@@ -19,10 +19,82 @@
             <result property="trainingIsdeleted" column="training_isdeleted" jdbcType="INTEGER"/>
     </resultMap>
 
+    <!-- 培训安排关联活动名称与已登记培训情况人数的查询结果 -->
+    <resultMap id="TrainingViewResultMap" type="com.evolunteer.entity.TrainingView">
+        <id property="trainingNum" column="training_num" jdbcType="INTEGER"/>
+        <result property="trainingId" column="training_id" jdbcType="VARCHAR"/>
+        <result property="activityNum" column="activity_num" jdbcType="INTEGER"/>
+        <result property="trainingName" column="training_name" jdbcType="VARCHAR"/>
+        <result property="trainingDetail" column="training_detail" jdbcType="VARCHAR"/>
+        <result property="trainingBegintime" column="training_begintime" jdbcType="TIMESTAMP"/>
+        <result property="trainingEndtime" column="training_endtime" jdbcType="TIMESTAMP"/>
+        <result property="trainingLocation" column="training_location" jdbcType="VARCHAR"/>
+        <result property="trainingCheckin" column="training_checkin" jdbcType="VARCHAR"/>
+        <result property="activityName" column="activity_name" jdbcType="VARCHAR"/>
+        <result property="situationCount" column="situation_count" jdbcType="INTEGER"/>
+    </resultMap>
+
     <sql id="Base_Column_List">
         training_num,training_id,activity_num,
         training_name,training_detail,training_begintime,
         training_endtime,training_location,training_checkin,
         training_isdeleted
     </sql>
+
+    <sql id="TrainingView_Column_List">
+        training.training_num,
+        training.training_id,
+        training.activity_num,
+        training.training_name,
+        training.training_detail,
+        training.training_begintime,
+        training.training_endtime,
+        training.training_location,
+        training.training_checkin,
+        activity.activity_name,
+        (select count(*)
+        from volunteer_training_situation
+        where volunteer_training_situation.training_num = training.training_num
+        and volunteer_training_situation.vtsituation_isdeleted = 0) as situation_count
+    </sql>
+
+    <!-- 志愿者组织分页查询本组织申报活动的培训安排，关联活动名称与已登记培训情况人数 -->
+    <select id="selectPageByOrganization" resultMap="TrainingViewResultMap">
+        select
+        <include refid="TrainingView_Column_List"/>
+        from training, activity
+        where training.activity_num = activity.activity_num
+        and training.training_isdeleted = 0
+        and activity.activity_isdeleted = 0
+        and activity.organization_num = #{organizationNum,jdbcType=INTEGER}
+        <if test="activityNum != null">
+            and training.activity_num = #{activityNum,jdbcType=INTEGER}
+        </if>
+        order by training.training_begintime desc, training.training_num desc
+    </select>
+
+    <!-- 志愿者分页查询本人已通过报名活动对应的培训安排 -->
+    <select id="selectPageForVolunteer" resultMap="TrainingViewResultMap">
+        select
+        <include refid="TrainingView_Column_List"/>
+        from training, activity
+        where training.activity_num = activity.activity_num
+        and training.training_isdeleted = 0
+        and activity.activity_isdeleted = 0
+        and exists (select 1
+        from participate
+        where participate.activity_num = training.activity_num
+        and participate.volunteer_num = #{volunteerNum,jdbcType=INTEGER}
+        and participate.participate_applystate = '1'
+        and participate.participate_isdeleted = 0)
+        order by training.training_begintime desc, training.training_num desc
+    </select>
+
+    <!-- 生成下一个培训业务编号的自增序号，业务编号格式为 tra_ + 5 位数字 -->
+    <select id="selectNextTrainingSeq" resultType="int">
+        select coalesce(max(cast(substring(training_id, 5) as unsigned)), 0) + 1
+        from training
+        where training_id like 'tra%'
+        and char_length(training_id) = 9
+    </select>
 </mapper>

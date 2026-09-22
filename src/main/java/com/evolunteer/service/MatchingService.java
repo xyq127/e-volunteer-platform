@@ -1,9 +1,8 @@
 package com.evolunteer.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.evolunteer.entity.ActivityMatch;
 import com.evolunteer.utils.MatchCalculator;
-
-import java.util.List;
 
 /**
  * E志愿志愿者服务平台 V1.0
@@ -14,12 +13,16 @@ import java.util.List;
 public interface MatchingService {
 
     /**
-     * 查询志愿者可报名的志愿活动，并附加匹配度与匹配理由，按匹配度降序排列
+     * 分页查询志愿者可报名的志愿活动，并附加匹配度与匹配理由，按匹配度降序排列
      *
      * @param volunteerNum 志愿者编号
-     * @return 匹配活动列表
+     * @param keyword      活动名称或活动地点关键字，可为空
+     * @param pageNum      页码
+     * @param pageSize     每页条数
+     * @return 匹配活动分页结果
      */
-    List<ActivityMatch> recommendActivities(Integer volunteerNum);
+    IPage<ActivityMatch> pageRecommendActivities(Integer volunteerNum, String keyword,
+                                                 Integer pageNum, Integer pageSize);
 
     /**
      * 计算指定活动对指定志愿者的匹配度

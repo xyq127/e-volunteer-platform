@@ -101,6 +101,15 @@
                             <li class="dropdown"><a class="nav-link menu-title active" href="profile.html"><i
                                     data-feather="user"></i><span>我的档案</span></a>
                             </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="notifications.html"><i
+                                    data-feather="bell"></i><span>消息通知</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="training.html"><i
+                                    data-feather="book-open"></i><span>培训与公告</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="show.html"><i
+                                    data-feather="image"></i><span>志愿秀</span></a>
+                            </li>
                             <li class="dropdown"><a class="nav-link menu-title" href="certificate.html"><i
                                     data-feather="award"></i><span>志愿服务证明</span></a>
                             </li>
@@ -290,6 +299,39 @@
                                 </button>
                             </div>
                         </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>修改登录密码</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small mb-2">新密码长度需为 8~20 位，修改成功后需要使用新密码重新登录。</p>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="col-form-label" for="old_password">原密码</label>
+                                            <input class="form-control" type="password" id="old_password"
+                                                   placeholder="请输入当前登录密码">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="col-form-label" for="new_password">新密码</label>
+                                            <input class="form-control" type="password" id="new_password"
+                                                   placeholder="请输入 8~20 位新密码">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="col-form-label" for="confirm_password">确认新密码</label>
+                                            <input class="form-control" type="password" id="confirm_password"
+                                                   placeholder="请再次输入新密码">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary" type="button" onclick="changePassword()">修改密码
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -435,6 +477,47 @@
                 if (result && result.code === 100) {
                     loadProfile();
                 }
+            },
+            error: function (result) {
+                console.log(result);
+                alert("网络异常，请稍后重试");
+            }
+        });
+    }
+
+    /**
+     * 修改登录密码：校验原密码已填写、新密码长度 8~20 位且两次输入一致
+     */
+    function changePassword() {
+        var oldPassword = $("#old_password").val();
+        var newPassword = $("#new_password").val();
+        var confirmPassword = $("#confirm_password").val();
+        if (!oldPassword) {
+            alert("请输入原密码");
+            return;
+        }
+        if (!newPassword || newPassword.length < 8 || newPassword.length > 20) {
+            alert("新密码长度需为 8~20 位");
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            alert("两次输入的新密码不一致");
+            return;
+        }
+        $.ajax({
+            url: "/volunteer/password/change",
+            type: "POST",
+            data: {oldPassword: oldPassword, newPassword: newPassword},
+            success: function (result) {
+                if (!result || result.code !== 100) {
+                    alert((result && result.msg) ? result.msg : "密码修改失败，请稍后重试");
+                    return;
+                }
+                $("#old_password").val("");
+                $("#new_password").val("");
+                $("#confirm_password").val("");
+                alert("密码已修改，请重新登录");
+                window.location.href = "/logout";
             },
             error: function (result) {
                 console.log(result);

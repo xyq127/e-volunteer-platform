@@ -2,17 +2,18 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<!-- E志愿志愿者服务平台 V1.0 统一用户表 e_user 的映射文件 -->
+<!-- E志愿志愿者服务平台 V1.0 统一用户表 e_user 的映射文件：账号名单查询、密码更新与组织账号开通、账号启停存储过程调用 -->
 <mapper namespace="com.evolunteer.mapper.UserAccountMapper">
 
     <resultMap id="BaseResultMap" type="com.evolunteer.entity.UserAccount">
         <result property="id" column="id" jdbcType="VARCHAR"/>
         <result property="password" column="password" jdbcType="VARCHAR"/>
         <result property="role" column="role" jdbcType="VARCHAR"/>
+        <result property="enabled" column="enabled" jdbcType="INTEGER"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,password,role
+        id,password,role,enabled
     </sql>
 
     <!-- 按登录账号查询用户认证信息 -->
@@ -30,4 +31,86 @@
         set password = #{password,jdbcType=VARCHAR}
         where id = #{id,jdbcType=VARCHAR}
     </update>
+
+    <!-- 志愿者账号名单查询结果：志愿者信息 + 登录账号状态 -->
+    <resultMap id="VolunteerAccountResultMap" type="com.evolunteer.entity.Volunteer">
+        <id property="volunteerNum" column="volunteer_num" jdbcType="INTEGER"/>
+        <result property="volunteerId" column="volunteer_id" jdbcType="VARCHAR"/>
+        <result property="volunteerName" column="volunteer_name" jdbcType="VARCHAR"/>
+        <result property="volunteerRegisterdate" column="volunteer_registerdate" jdbcType="DATE"/>
+        <result property="volunteerGender" column="volunteer_gender" jdbcType="VARCHAR"/>
+        <result property="volunteerBirth" column="volunteer_birth" jdbcType="DATE"/>
+        <result property="volunteerTel" column="volunteer_tel" jdbcType="VARCHAR"/>
+        <result property="volunteerLatitude" column="volunteer_latitude" jdbcType="DECIMAL"/>
+        <result property="volunteerLongitude" column="volunteer_longitude" jdbcType="DECIMAL"/>
+        <result property="volunteerCredit" column="volunteer_credit" jdbcType="INTEGER"/>
+        <result property="volunteerNoshow" column="volunteer_noshow" jdbcType="INTEGER"/>
+        <result property="volunteerTotalduration" column="volunteer_totalduration" jdbcType="FLOAT"/>
+        <result property="volunteerIsdeleted" column="volunteer_isdeleted" jdbcType="INTEGER"/>
+        <result property="accountEnabled" column="account_enabled" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="VolunteerAccount_Column_List">
+        v.volunteer_num,v.volunteer_id,
+        v.volunteer_name,v.volunteer_registerdate,v.volunteer_gender,
+        v.volunteer_birth,v.volunteer_tel,
+        v.volunteer_latitude,v.volunteer_longitude,
+        v.volunteer_credit,v.volunteer_noshow,v.volunteer_totalduration,
+        v.volunteer_isdeleted,u.enabled as account_enabled
+    </sql>
+
+    <sql id="VolunteerAccount_Keyword_Condition">
+        <if test="keyword != null and keyword != ''">
+            and (v.volunteer_id like concat('%', #{keyword,jdbcType=VARCHAR}, '%')
+            or v.volunteer_name like concat('%', #{keyword,jdbcType=VARCHAR}, '%')
+            or v.volunteer_tel like concat('%', #{keyword,jdbcType=VARCHAR}, '%'))
+        </if>
+    </sql>
+
+    <!-- 平台管理员分页查询志愿者名单，含已被停用的志愿者，并关联登录账号状态 -->
+    <select id="selectVolunteerAccountPage" resultMap="VolunteerAccountResultMap">
+        select
+        <include refid="VolunteerAccount_Column_List"/>
+        from volunteer v
+        left join e_user u on u.id = v.volunteer_id
+        <where>
+            <include refid="VolunteerAccount_Keyword_Condition"/>
+        </where>
+        order by v.volunteer_num asc
+    </select>
+
+    <!-- 查询志愿者名单，含已被停用的志愿者，供平台管理员导出志愿者名册 -->
+    <select id="selectVolunteerAccountList" resultMap="VolunteerAccountResultMap">
+        select
+        <include refid="VolunteerAccount_Column_List"/>
+        from volunteer v
+        left join e_user u on u.id = v.volunteer_id
+        <where>
+            <include refid="VolunteerAccount_Keyword_Condition"/>
+        </where>
+        order by v.volunteer_num asc
+    </select>
+
+    <!-- 调用数据库存储过程 admin_create_organization 开通志愿者组织账号，初始密码以密文写入 -->
+    <insert id="admin_create_organization" statementType="CALLABLE">
+        {call admin_create_organization(#{loginId,mode=IN,jdbcType=VARCHAR},
+                                        #{organizationId,mode=IN,jdbcType=VARCHAR},
+                                        #{organizationName,mode=IN,jdbcType=VARCHAR},
+                                        #{password,mode=IN,jdbcType=VARCHAR},
+                                        #{establishDate,mode=IN,jdbcType=DATE},
+                                        #{introduction,mode=IN,jdbcType=VARCHAR},
+                                        #{msg,mode=OUT,jdbcType=VARCHAR},
+                                        #{ok,mode=OUT,jdbcType=INTEGER})
+        }
+    </insert>
+
+    <!-- 调用数据库存储过程 admin_set_account_enabled 启用或停用组织账号与志愿者账号 -->
+    <insert id="admin_set_account_enabled" statementType="CALLABLE">
+        {call admin_set_account_enabled(#{loginId,mode=IN,jdbcType=VARCHAR},
+                                       #{accountId,mode=IN,jdbcType=VARCHAR},
+                                       #{enabled,mode=IN,jdbcType=INTEGER},
+                                       #{msg,mode=OUT,jdbcType=VARCHAR},
+                                       #{ok,mode=OUT,jdbcType=INTEGER})
+        }
+    </insert>
 </mapper>

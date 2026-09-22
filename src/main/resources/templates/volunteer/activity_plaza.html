@@ -101,6 +101,15 @@
                             <li class="dropdown"><a class="nav-link menu-title" href="profile.html"><i
                                     data-feather="user"></i><span>我的档案</span></a>
                             </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="notifications.html"><i
+                                    data-feather="bell"></i><span>消息通知</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="training.html"><i
+                                    data-feather="book-open"></i><span>培训与公告</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="show.html"><i
+                                    data-feather="image"></i><span>志愿秀</span></a>
+                            </li>
                             <li class="dropdown"><a class="nav-link menu-title" href="certificate.html"><i
                                     data-feather="award"></i><span>志愿服务证明</span></a>
                             </li>
@@ -122,6 +131,17 @@
                             </div>
                             <div class="card-body">
                                 <p class="text-muted small mb-2">活动已按匹配度从高到低排序，匹配度由技能标签、常住定位距离与历史参与情况综合计算。</p>
+                                <div class="row mb-2">
+                                    <div class="col-md-6">
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" id="plaza_keyword"
+                                                   placeholder="输入活动名称或活动地点关键字">
+                                            <button class="btn btn-primary" type="button" onclick="searchPlaza()">
+                                                查询
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="table-responsive">
                                     <table class="table table-striped table-bordernone">
                                         <thead>
@@ -143,6 +163,23 @@
                                         </tr>
                                         </tbody>
                                     </table>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <span class="text-muted small" id="plaza_total">共 0 条</span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <nav class="float-end">
+                                            <ul class="pagination pagination-primary mb-0">
+                                                <li class="page-item" id="plaza_prev"><a class="page-link" href="#!"
+                                                        onclick="changePlazaPage(-1);return false;">上一页</a></li>
+                                                <li class="page-item disabled"><a class="page-link" href="#!"
+                                                        id="plaza_page_info">第 1 / 1 页</a></li>
+                                                <li class="page-item" id="plaza_next"><a class="page-link" href="#!"
+                                                        onclick="changePlazaPage(1);return false;">下一页</a></li>
+                                            </ul>
+                                        </nav>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -326,12 +363,45 @@
     }
 
     /**
+     * 活动广场分页与检索条件
+     */
+    var plazaPage = 1;
+    var plazaSize = 10;
+    var plazaKeyword = "";
+    var plazaTotal = 0;
+
+    /**
+     * 渲染分页控件：条数、页码信息与上一页/下一页可用状态
+     */
+    function renderPager(total, current, pageSize) {
+        plazaTotal = Number(total);
+        if (isNaN(plazaTotal) || plazaTotal < 0) {
+            plazaTotal = 0;
+        }
+        var currentPage = Number(current);
+        if (isNaN(currentPage) || currentPage < 1) {
+            currentPage = 1;
+        }
+        var currentSize = Number(pageSize);
+        if (isNaN(currentSize) || currentSize < 1) {
+            currentSize = plazaSize;
+        }
+        var totalPages = plazaTotal > 0 ? Math.ceil(plazaTotal / currentSize) : 1;
+        $("#plaza_total").text("共 " + plazaTotal + " 条");
+        $("#plaza_page_info").text("第 " + currentPage + " / " + totalPages + " 页");
+        $("#plaza_prev").toggleClass("disabled", currentPage <= 1);
+        $("#plaza_next").toggleClass("disabled",
+            plazaTotal === 0 || currentPage >= totalPages);
+    }
+
+    /**
      * 加载智能匹配活动广场数据
      */
     function loadPlaza() {
         $.ajax({
             url: "/volunteer/plaza",
             type: "GET",
+            data: {page: plazaPage, size: plazaSize, keyword: plazaKeyword},
             success: function (result) {
                 if (!result || result.code !== 100 || !result.extend) {
                     if (result && result.msg) {
@@ -339,12 +409,35 @@
                     }
                     return;
                 }
-                renderPlaza(result.extend.activities);
+                renderPlaza(result.extend.list);
+                renderPager(result.extend.total, result.extend.page, result.extend.size);
             },
             error: function (result) {
                 console.log(result);
             }
         });
+    }
+
+    /**
+     * 按关键字检索活动广场，重新从第一页开始
+     */
+    function searchPlaza() {
+        plazaKeyword = $.trim($("#plaza_keyword").val());
+        plazaPage = 1;
+        loadPlaza();
+    }
+
+    /**
+     * 翻页：step 为 1 下一页、-1 上一页
+     */
+    function changePlazaPage(step) {
+        var nextPage = plazaPage + step;
+        var totalPages = plazaTotal > 0 ? Math.ceil(plazaTotal / plazaSize) : 1;
+        if (nextPage < 1 || nextPage > totalPages) {
+            return;
+        }
+        plazaPage = nextPage;
+        loadPlaza();
     }
 
     /**
@@ -380,6 +473,12 @@
     }
 
     $(document).ready(function () {
+        $("#plaza_keyword").on("keydown", function (event) {
+            if (event.keyCode === 13) {
+                searchPlaza();
+                return false;
+            }
+        });
         loadProfile();
         loadPlaza();
     });

@@ -75,6 +75,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/loginRegisterController/**").permitAll()
                 // 志愿服务证明校验接口，供第三方核验证明真伪
                 .antMatchers("/certificate/**").permitAll()
+                // 通知公告附件与志愿秀图片下载
+                .antMatchers("/file/download/**").permitAll()
+                // 门户公开数据接口：通知公告、活动风采、志愿者组织与志愿秀
+                .antMatchers("/portal/site/**").permitAll()
                 // 志愿者页面与志愿者本人的签到签退接口
                 .antMatchers("/volunteer/**").hasRole("VOLUNTEER")
                 .antMatchers("/checkin/in", "/checkin/out").hasRole("VOLUNTEER")

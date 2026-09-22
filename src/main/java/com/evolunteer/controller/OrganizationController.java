@@ -3,10 +3,15 @@ package com.evolunteer.controller;
 import com.evolunteer.entity.Activity;
 import com.evolunteer.entity.ApiResponse;
 import com.evolunteer.entity.Organization;
+import com.evolunteer.enums.AuditActionEnum;
 import com.evolunteer.service.ActivityService;
+import com.evolunteer.service.AuditLogService;
 import com.evolunteer.service.CheckInService;
+import com.evolunteer.service.NotificationService;
+import com.evolunteer.service.OrgExportService;
 import com.evolunteer.service.OrganizationService;
 import com.evolunteer.utils.DateTimeParser;
+import com.evolunteer.utils.PageSupport;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -17,7 +22,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,8 +34,8 @@ import java.util.Map;
 /**
  * E志愿志愿者服务平台 V1.0
  * <p>
- * 志愿者组织控制器：提供志愿活动申报、活动重名校验、审核未通过活动的修改后重新申报、活动结算，
- * 以及志愿者组织资料查询与修改能力。
+ * 志愿者组织控制器：提供志愿活动申报、活动重名校验、审核未通过活动的修改后重新申报、活动结算、
+ * 报名考勤与服务时长导出、站内通知查询，以及志愿者组织资料查询与修改能力。
  */
 @Slf4j
 @Controller
@@ -41,6 +50,15 @@ public class OrganizationController {
 
     @Autowired
     CheckInService checkInService;
+
+    @Autowired
+    NotificationService notificationService;
+
+    @Autowired
+    OrgExportService orgExportService;
+
+    @Autowired
+    AuditLogService auditLogService;
 
     /**
      * 志愿者组织申报志愿活动
@@ -149,6 +167,7 @@ public class OrganizationController {
      * @param longitude      活动地点经度
      * @param radius         签到地理围栏半径（米）
      * @param authentication 当前登录用户信息
+     * @param request        请求对象
      * @return 重新申报的处理结果信息
      */
     @RequestMapping(value = "/reviseAct", method = RequestMethod.POST)
@@ -166,7 +185,7 @@ public class OrganizationController {
                             @RequestParam(value = "latitude", required = false) String latitude,
                             @RequestParam(value = "longitude", required = false) String longitude,
                             @RequestParam(value = "radius", required = false) String radius,
-                            Authentication authentication) {
+                            Authentication authentication, HttpServletRequest request) {
 
         Date start;
         Date end;
@@ -213,27 +232,121 @@ public class OrganizationController {
         map.put("activityRadius", activityRadius);
         activityService.reviseAct(map);
         log.info("志愿者组织修改后重新申报志愿活动，活动编号：{}", activityNum);
+        auditLogService.record(user.getUsername(), "ROLE_ORGANIZATION", AuditActionEnum.ACTIVITY_REVISE,
+                "活动编号 " + activityNum, name, request.getRemoteAddr());
         return (String) map.get("msg");
     }
 
     /**
      * 活动结算：对已通过报名但未签退的志愿者记录爽约并扣减信用分
      *
-     * @param activityNum 活动编号
+     * @param activityNum    活动编号
+     * @param authentication 当前登录用户信息
+     * @param request        请求对象
      * @return 处理结果
      */
     @RequestMapping(value = "/settle", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResponse settle(@RequestParam(value = "activityNum") Integer activityNum) {
+    public ApiResponse settle(@RequestParam(value = "activityNum") Integer activityNum,
+                              Authentication authentication, HttpServletRequest request) {
 
         Map<Object, Object> result = checkInService.settleActivity(activityNum);
         String msg = (String) result.get("msg");
-        if (!isSuccess(result)) {
+        Object ok = result.get("ok");
+        if (ok == null || ((Number) ok).intValue() != 1) {
             log.warn("活动结算未完成，活动编号：{}，原因：{}", activityNum, msg);
             return ApiResponse.fail(msg);
         }
+        String loginId = ((User) authentication.getPrincipal()).getUsername();
+        auditLogService.record(loginId, "ROLE_ORGANIZATION", AuditActionEnum.ACTIVITY_SETTLE,
+                "活动编号 " + activityNum, msg, request.getRemoteAddr());
         log.info("志愿者组织完成活动结算，活动编号：{}，结果：{}", activityNum, msg);
         return ApiResponse.success(msg);
+    }
+
+    /**
+     * 导出活动报名考勤名单
+     *
+     * @param activityNum 活动编号
+     * @param response    响应对象
+     */
+    @RequestMapping(value = "/export/participants", method = RequestMethod.GET)
+    public void exportParticipants(@RequestParam(value = "activityNum") Integer activityNum,
+                                   HttpServletResponse response) throws IOException {
+        writeCsv(response, "activity-participants-" + activityNum + ".csv",
+                orgExportService.exportParticipants(activityNum));
+    }
+
+    /**
+     * 导出活动服务时长明细
+     *
+     * @param activityNum 活动编号
+     * @param response    响应对象
+     */
+    @RequestMapping(value = "/export/hours", method = RequestMethod.GET)
+    public void exportServiceHours(@RequestParam(value = "activityNum") Integer activityNum,
+                                   HttpServletResponse response) throws IOException {
+        writeCsv(response, "activity-hours-" + activityNum + ".csv",
+                orgExportService.exportServiceHours(activityNum));
+    }
+
+    /**
+     * 分页查询当前登录志愿者组织的站内通知
+     *
+     * @param page           页码
+     * @param size           每页条数
+     * @param authentication 当前登录用户信息
+     * @return 通知分页结果
+     */
+    @RequestMapping(value = "/notifications", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiResponse notifications(@RequestParam(value = "page", required = false) Integer page,
+                                     @RequestParam(value = "size", required = false) Integer size,
+                                     Authentication authentication) {
+        return PageSupport.toResponse(notificationService.page(operator(authentication), page, size));
+    }
+
+    /**
+     * 查询当前登录志愿者组织的未读通知数量
+     *
+     * @param authentication 当前登录用户信息
+     * @return 未读通知数量
+     */
+    @RequestMapping(value = "/notifications/unreadCount", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiResponse unreadCount(Authentication authentication) {
+        return ApiResponse.success().add("count", notificationService.unreadCount(operator(authentication)));
+    }
+
+    /**
+     * 将指定通知标记为已读
+     *
+     * @param notificationNum 通知编号
+     * @param authentication  当前登录用户信息
+     * @return 处理结果
+     */
+    @RequestMapping(value = "/notifications/read", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResponse readNotification(@RequestParam(value = "notificationNum") Integer notificationNum,
+                                        Authentication authentication) {
+        boolean marked = notificationService.markRead(operator(authentication), notificationNum);
+        if (!marked) {
+            return ApiResponse.fail("未找到对应的通知");
+        }
+        return ApiResponse.success("通知已标记为已读");
+    }
+
+    /**
+     * 将当前登录志愿者组织的全部通知标记为已读
+     *
+     * @param authentication 当前登录用户信息
+     * @return 处理结果
+     */
+    @RequestMapping(value = "/notifications/readAll", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResponse readAllNotifications(Authentication authentication) {
+        int updated = notificationService.markAllRead(operator(authentication));
+        return ApiResponse.success("已标记 " + updated + " 条通知为已读");
     }
 
     /**
@@ -289,6 +402,24 @@ public class OrganizationController {
     }
 
     /**
+     * 以 CSV 形式输出导出内容
+     */
+    private void writeCsv(HttpServletResponse response, String fileName, String csv) throws IOException {
+        response.setContentType("text/csv;charset=UTF-8");
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+        response.getWriter().write(csv);
+        response.getWriter().flush();
+    }
+
+    /**
+     * 取当前登录账号
+     */
+    private String operator(Authentication authentication) {
+        return ((User) authentication.getPrincipal()).getUsername();
+    }
+
+    /**
      * 解析页面提交的经纬度并校验取值范围
      */
     private BigDecimal parseDecimal(String value, int maxAbsolute, String fieldName) {
@@ -323,13 +454,5 @@ public class OrganizationController {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("签到围栏半径必须为大于 0 的数字");
         }
-    }
-
-    /**
-     * 判断存储过程返回的处理结果是否成功
-     */
-    private boolean isSuccess(Map<Object, Object> result) {
-        Object ok = result.get("ok");
-        return ok != null && ((Number) ok).intValue() == 1;
     }
 }

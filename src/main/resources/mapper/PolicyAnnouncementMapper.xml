@@ -16,9 +16,49 @@
             <result property="policyannouncementIsdeleted" column="policyannouncement_isdeleted" jdbcType="INTEGER"/>
     </resultMap>
 
+    <!-- 通知公告管理列表的查询结果，附加附件数量 -->
+    <resultMap id="AnnouncementViewResultMap" type="com.evolunteer.entity.PortalAnnouncementView">
+            <id property="policyannouncementNum" column="policyannouncement_num" jdbcType="INTEGER"/>
+            <result property="policyannouncementId" column="policyannouncement_id" jdbcType="VARCHAR"/>
+            <result property="policyannouncementName" column="policyannouncement_name" jdbcType="VARCHAR"/>
+            <result property="policyannouncementDetail" column="policyannouncement_detail" jdbcType="VARCHAR"/>
+            <result property="policyannouncementFile" column="policyannouncement_file" jdbcType="VARCHAR"/>
+            <result property="adminNum" column="admin_num" jdbcType="INTEGER"/>
+            <result property="fileCount" column="file_count" jdbcType="INTEGER"/>
+    </resultMap>
+
     <sql id="Base_Column_List">
         policyannouncement_num,policyannouncement_id,policyannouncement_name,
         policyannouncement_detail,policyannouncement_file,admin_num,
         policyannouncement_isdeleted
     </sql>
+
+    <!-- 按关键字分页查询通知公告并统计附件数量，公告标题倒序展示最新发布的公告 -->
+    <select id="selectPageWithFileCount" resultMap="AnnouncementViewResultMap">
+        select
+        announcement.policyannouncement_num,
+        announcement.policyannouncement_id,
+        announcement.policyannouncement_name,
+        announcement.policyannouncement_detail,
+        announcement.policyannouncement_file,
+        announcement.admin_num,
+        (select count(*) from policy_file
+        where policy_file.policyannouncement_num = announcement.policyannouncement_num
+        and policy_file.policyfile_isdeleted = '0') as file_count
+        from policy_announcement announcement
+        where announcement.policyannouncement_isdeleted = 0
+        <if test="keyword != null and keyword != ''">
+            and (announcement.policyannouncement_name like concat('%', #{keyword,jdbcType=VARCHAR}, '%')
+            or announcement.policyannouncement_detail like concat('%', #{keyword,jdbcType=VARCHAR}, '%'))
+        </if>
+        order by announcement.policyannouncement_num desc
+    </select>
+
+    <!-- 按管理员登录账号查询管理员编号，用于记录公告发布人 -->
+    <select id="selectAdminNumByAdminId" resultType="java.lang.Integer">
+        select admin_num
+        from admin
+        where admin_id = #{adminId,jdbcType=VARCHAR}
+        limit 1
+    </select>
 </mapper>

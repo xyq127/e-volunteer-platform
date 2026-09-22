@@ -18,6 +18,7 @@
         <result property="volunteerCredit" column="volunteer_credit" jdbcType="INTEGER"/>
         <result property="volunteerNoshow" column="volunteer_noshow" jdbcType="INTEGER"/>
         <result property="volunteerTotalduration" column="volunteer_totalduration" jdbcType="FLOAT"/>
+        <result property="volunteerIsdeleted" column="volunteer_isdeleted" jdbcType="INTEGER"/>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -25,7 +26,8 @@
         volunteer_name,volunteer_registerdate,volunteer_gender,
         volunteer_birth,volunteer_tel,
         volunteer_latitude,volunteer_longitude,
-        volunteer_credit,volunteer_noshow,volunteer_totalduration
+        volunteer_credit,volunteer_noshow,volunteer_totalduration,
+        volunteer_isdeleted
     </sql>
 
     <!-- 按志愿者姓名查询志愿者 -->

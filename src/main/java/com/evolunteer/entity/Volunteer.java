@@ -3,6 +3,7 @@ package com.evolunteer.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -12,7 +13,8 @@ import lombok.Data;
 /**
  * E志愿志愿者服务平台 V1.0
  * <p>
- * 志愿者表 volunteer，保存志愿者的编号、姓名、联系方式、常住地点，以及志愿服务信用分与已核定累计服务时长。
+ * 志愿者表 volunteer，保存志愿者的编号、姓名、联系方式、常住地点，
+ * 以及志愿服务信用分、已核定累计服务时长与账号删除标记。
  */
 @TableName(value ="volunteer")
 @Data
@@ -53,6 +55,14 @@ public class Volunteer implements Serializable {
 
     /** 已核定累计服务时长（小时） */
     private Double volunteerTotalduration;
+
+    /** 删除标记，账号被平台管理员停用时置 1 */
+    @TableLogic
+    private Integer volunteerIsdeleted;
+
+    /** 登录账号状态，1 启用、0 停用，平台管理员查询志愿者名单时关联展示 */
+    @TableField(exist = false)
+    private Integer accountEnabled;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

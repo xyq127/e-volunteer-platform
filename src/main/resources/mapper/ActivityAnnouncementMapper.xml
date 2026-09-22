@@ -16,9 +16,70 @@
             <result property="actannouncementIsdeleted" column="actannouncement_isdeleted" jdbcType="INTEGER"/>
     </resultMap>
 
+    <!-- 活动公告关联活动名称的查询结果 -->
+    <resultMap id="ActivityAnnouncementViewResultMap" type="com.evolunteer.entity.ActivityAnnouncementView">
+        <id property="actannouncementNum" column="actannouncement_num" jdbcType="INTEGER"/>
+        <result property="activityNum" column="activity_num" jdbcType="INTEGER"/>
+        <result property="actannouncementId" column="actannouncement_id" jdbcType="VARCHAR"/>
+        <result property="actannouncementName" column="actannouncement_name" jdbcType="VARCHAR"/>
+        <result property="actannouncementDetail" column="actannouncement_detail" jdbcType="VARCHAR"/>
+        <result property="organizationNum" column="organization_num" jdbcType="INTEGER"/>
+        <result property="activityName" column="activity_name" jdbcType="VARCHAR"/>
+    </resultMap>
+
     <sql id="Base_Column_List">
         actannouncement_num,activity_num,actannouncement_id,
         actannouncement_name,actannouncement_detail,organization_num,
         actannouncement_isdeleted
     </sql>
+
+    <sql id="ActivityAnnouncementView_Column_List">
+        act_announcement.actannouncement_num,
+        act_announcement.activity_num,
+        act_announcement.actannouncement_id,
+        act_announcement.actannouncement_name,
+        act_announcement.actannouncement_detail,
+        act_announcement.organization_num,
+        activity.activity_name
+    </sql>
+
+    <!-- 志愿者组织分页查询本组织发布的活动公告，关联活动名称 -->
+    <select id="selectPageByOrganization" resultMap="ActivityAnnouncementViewResultMap">
+        select
+        <include refid="ActivityAnnouncementView_Column_List"/>
+        from act_announcement, activity
+        where act_announcement.activity_num = activity.activity_num
+        and act_announcement.actannouncement_isdeleted = 0
+        and activity.activity_isdeleted = 0
+        and act_announcement.organization_num = #{organizationNum,jdbcType=INTEGER}
+        <if test="activityNum != null">
+            and act_announcement.activity_num = #{activityNum,jdbcType=INTEGER}
+        </if>
+        order by act_announcement.actannouncement_num desc
+    </select>
+
+    <!-- 志愿者分页查询本人已报名（待审核、已通过、候补）活动的公告 -->
+    <select id="selectPageForVolunteer" resultMap="ActivityAnnouncementViewResultMap">
+        select
+        <include refid="ActivityAnnouncementView_Column_List"/>
+        from act_announcement, activity
+        where act_announcement.activity_num = activity.activity_num
+        and act_announcement.actannouncement_isdeleted = 0
+        and activity.activity_isdeleted = 0
+        and exists (select 1
+        from participate
+        where participate.activity_num = act_announcement.activity_num
+        and participate.volunteer_num = #{volunteerNum,jdbcType=INTEGER}
+        and participate.participate_applystate in ('0', '1', '3')
+        and participate.participate_isdeleted = 0)
+        order by act_announcement.actannouncement_num desc
+    </select>
+
+    <!-- 生成下一个公告业务编号的自增序号，业务编号格式为 ann_ + 5 位数字 -->
+    <select id="selectNextAnnouncementSeq" resultType="int">
+        select coalesce(max(cast(substring(actannouncement_id, 5) as unsigned)), 0) + 1
+        from act_announcement
+        where actannouncement_id like 'ann%'
+        and char_length(actannouncement_id) = 9
+    </select>
 </mapper>

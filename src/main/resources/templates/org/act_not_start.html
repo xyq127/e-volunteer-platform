@@ -7,14 +7,6 @@
     <link rel="icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <link rel="shortcut icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <title>未开始的活动 - E志愿志愿者服务平台 V1.0</title>
-    <!-- Google font-->
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap"
-          rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&amp;display=swap"
-          rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap"
-          rel="stylesheet">
     <!-- Font Awesome-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/fontawesome.css">
     <!-- ico-font-->
@@ -25,10 +17,6 @@
     <link rel="stylesheet" type="text/css" href="/console/assets/css/flag-icon.css">
     <!-- Feather icon-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/feather-icon.css">
-    <!-- Plugins css start-->
-    <link rel="stylesheet" type="text/css" href="/console/assets/css/animate.css">
-    <link rel="stylesheet" type="text/css" href="/console/assets/css/date-picker.css">
-    <!-- Plugins css Ends-->
     <!-- Bootstrap css-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/bootstrap.css">
     <!-- App css-->
@@ -44,14 +32,14 @@
     </div>
 </div>
 <!-- Loader ends-->
-<!-- page-wrapper Start       -->
+<!-- page-wrapper Start-->
 <div class="page-wrapper compact-wrapper" id="pageWrapper">
     <!-- Page Header Start-->
     <div class="page-main-header">
         <div class="main-header-right row m-0">
             <div class="main-header-left">
                 <div class="logo-wrapper"><a href="index.html"><img class="img-fluid"
-                                                                    src="/console/assets/images/logo/app-logo.svg" alt=""></a>
+                                                                   src="/console/assets/images/logo/app-logo.svg" alt=""></a>
                 </div>
                 <div class="dark-logo-wrapper"><a href="index.html"><img class="img-fluid"
                                                                          src="/console/assets/images/logo/app-logo-dark.svg"
@@ -59,17 +47,18 @@
                 <div class="toggle-sidebar"><i class="status_toggle middle" data-feather="sidebar"
                                                id="sidebar-toggle"></i></div>
             </div>
-
+            <div class="left-menu-header col">
+                <h6 class="f-w-600 mb-0">志愿者组织工作台</h6>
+            </div>
             <div class="nav-right col pull-right right-menu p-0">
                 <ul class="nav-menus">
                     <li><a class="text-dark" href="#!" onclick="javascript:toggleFullScreen()"><i
                             data-feather="maximize"></i></a></li>
-
-                    <li>
-                        <div class="mode"><i class="fa fa-moon-o"></i></div>
+                    <li class="p-0">
+                        <button class="btn btn-primary-light" type="button"><a href="notifications.html"><i
+                                data-feather="bell"></i>未读消息 <span id="unread_count">0</span></a></button>
                     </li>
-
-                                        <li class="p-0">
+                    <li class="p-0">
                         <button class="btn btn-primary-light" type="button"><a href="/logout"><i
                                 data-feather="power"></i>退出登录</a></button>
                     </li>
@@ -78,23 +67,22 @@
             <div class="d-lg-none mobile-toggle pull-right w-auto"><i data-feather="menu"></i></div>
         </div>
     </div>
-    <!-- Page Header Ends                              -->
+    <!-- Page Header Ends-->
     <!-- Page Body Start-->
     <div class="page-body-wrapper sidebar-icon">
         <!-- Page Sidebar Start-->
         <header class="main-nav">
-
-                        <div class="sidebar-user text-center">
+            <div class="sidebar-user text-center">
                 <a class="setting-primary" href="org_info.html"><i data-feather="settings"></i></a>
                 <img class="img-90 rounded-circle" src="/console/assets/images/dashboard/1.png" alt="">
-                <a href="org_info.html"><h6 class="mt-3 f-14 f-w-600">志愿者组织</h6></a>
+                <a href="org_info.html"><h6 class="mt-3 f-14 f-w-600" id="organization_name">志愿者组织</h6></a>
                 <p class="mb-0 font-roboto">志愿活动申报与报名管理</p>
             </div>
             <nav>
                 <div class="main-navbar">
                     <div class="left-arrow" id="left-arrow"><i data-feather="rewind"></i></div>
                     <div id="mainnav">
-                                                <ul class="nav-menu custom-scrollbar">
+                        <ul class="nav-menu custom-scrollbar">
                             <li class="back-btn">
                                 <div class="mobile-back text-end"><span>返回</span><i class="fa fa-angle-right ps-2"
                                                                                    aria-hidden="true"></i></div>
@@ -129,6 +117,15 @@
                             <li class="dropdown"><a class="nav-link menu-title" href="checkin_review.html"><i
                                     data-feather="check-square"></i><span>签到与时长复核</span></a>
                             </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="training.html"><i
+                                    data-feather="book-open"></i><span>培训管理</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="announcements.html"><i
+                                    data-feather="volume-2"></i><span>活动公告</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="notifications.html"><i
+                                    data-feather="bell"></i><span>消息通知</span></a>
+                            </li>
                             <li class="sidebar-main-title">
                                 <div><h6>组织中心</h6></div>
                             </li>
@@ -136,7 +133,6 @@
                                     data-feather="sliders"></i><span>组织资料</span></a>
                             </li>
                         </ul>
-
                     </div>
                     <div class="right-arrow" id="right-arrow"><i data-feather="play"></i></div>
                 </div>
@@ -152,45 +148,93 @@
                                 <h5>志愿活动--未开始</h5>
                             </div>
                             <div class="card-body">
-                                <div id="basicScenario">
-                                    <table class="table table-hover table-bordered " id="notStartActivity_table">
+                                <div class="row mb-3">
+                                    <div class="col-md-5">
+                                        <div class="input-group">
+                                            <input class="form-control" id="keyword" type="text"
+                                                   placeholder="活动名称或活动编号">
+                                            <button class="btn btn-primary" type="button" id="search_button">查询</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-bordered" id="activity_table">
                                         <thead>
+                                        <tr class="active">
+                                            <th scope="col">活动名称</th>
+                                            <th scope="col">活动开始时间</th>
+                                            <th scope="col">活动结束时间</th>
+                                            <th scope="col">活动地点</th>
+                                            <th scope="col">需求人数</th>
+                                            <th scope="col">操作</th>
+                                        </tr>
                                         </thead>
                                         <tbody>
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">数据加载中……</td>
+                                        </tr>
                                         </tbody>
                                     </table>
                                 </div>
+                                <div id="activity_pager" class="mt-3"></div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- 模态框（Modal） start-->
-        <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
+        <!-- 志愿者招募模态框 start-->
+        <div class="modal fade" id="volRecruitModal" tabindex="-1" role="dialog"
+             aria-labelledby="volRecruitModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">志愿者招募</h5>
+                        <h5 class="modal-title" id="volRecruitModalLabel">志愿者招募<span
+                                id="recruit_activity_name"></span></h5>
                         <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <table class="table table-hover table-bordered" id="volRecruitList_table">
-                            <thead>
-                            </thead>
-                            <tbody>
-                            </tbody>
-                        </table>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <input class="form-control" id="recruit_keyword" type="text"
+                                           placeholder="姓名、志愿者编号或手机号">
+                                    <button class="btn btn-primary" type="button" id="recruit_search_button">查询</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered" id="volRecruitList_table">
+                                <thead>
+                                <tr class="active">
+                                    <th scope="col">编号</th>
+                                    <th scope="col">姓名</th>
+                                    <th scope="col">报名时间</th>
+                                    <th scope="col">性别</th>
+                                    <th scope="col">联系电话</th>
+                                    <th scope="col">匹配度</th>
+                                    <th scope="col">参加确认</th>
+                                    <th scope="col">爽约</th>
+                                    <th scope="col">审核状态</th>
+                                    <th scope="col">操作</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td colspan="10" class="text-center text-muted">数据加载中……</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="recruit_pager" class="mt-3"></div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-primary" type="button" data-bs-dismiss="modal">Close</button>
+                        <button class="btn btn-light" type="button" data-bs-dismiss="modal">关闭</button>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- 模态框（Modal） end-->
-
+        <!-- 志愿者招募模态框 end-->
     </div>
 </div>
 <!-- latest jquery-->
@@ -206,8 +250,6 @@
 <script src="/console/assets/js/bootstrap/bootstrap.min.js"></script>
 <!-- Theme js-->
 <script src="/console/assets/js/script.js"></script>
-<!-- login js-->
-<!-- Plugin used-->
 
 <script type="text/javascript">
     /**
@@ -219,125 +261,301 @@
         }
         return String(value).replace("T", " ").substring(0, 16);
     }
-</script>
 
-<script type="text/javascript">
-
-    function parseDate(str) {
-        if (str.match(/^\d{4}[\-\/\s+]\d{1,2}[\-\/\s+]\d{1,2}$/)) {
-            return new Date(str.replace(/[\-\/\s+]/i, '/'));
-        } else if (str.match(/^\d{8}$/)) {
-            return new Date(str.substring(0, 4) + '/' + str.substring(4, 6) + '/' + str.substring(6));
-        } else {
-            return ('转换发生错误')
+    /**
+     * 将时间转换为 datetime-local 输入框需要的 yyyy-MM-ddTHH:mm
+     */
+    function toDateTimeInput(value) {
+        if (!value) {
+            return "";
         }
+        return String(value).replace(" ", "T").substring(0, 16);
     }
 
-    function build_activity_table(result) {
-        //清空table表格
-        $("#notStartActivity_table thead").empty();
-        $("#notStartActivity_table tbody").empty();
+    /**
+     * 将 datetime-local 输入框的值转换为接口需要的 yyyy-MM-dd HH:mm
+     */
+    function toApiTime(value) {
+        if (!value) {
+            return "";
+        }
+        return String(value).replace("T", " ");
+    }
 
-        var notStartActivity = result.extend.auditActivity;
+    /**
+     * 通用分页控件渲染：holderId 为分页容器编号，onChange 接收目标页码
+     */
+    function renderPager(holderId, total, page, size, onChange) {
+        total = Number(total) || 0;
+        page = Number(page) || 1;
+        size = Number(size) || 10;
+        var totalPage = Math.ceil(total / size);
+        var currentPage = totalPage === 0 ? 0 : page;
+        var html = '<div class="d-flex justify-content-between align-items-center flex-wrap">'
+            + '<span class="text-muted">共 ' + total + ' 条，第 ' + currentPage + ' / ' + totalPage + ' 页</span>'
+            + '<div class="btn-group btn-group-pill" role="group" aria-label="分页">'
+            + '<button class="btn btn-outline-primary btn-sm pager-prev" type="button"'
+            + (page <= 1 ? ' disabled' : '') + '>上一页</button>'
+            + '<button class="btn btn-outline-primary btn-sm pager-next" type="button"'
+            + (page >= totalPage ? ' disabled' : '') + '>下一页</button>'
+            + '</div></div>';
+        var $holder = $("#" + holderId);
+        $holder.html(html);
+        $holder.find(".pager-prev").on("click", function () {
+            if (page > 1) {
+                onChange(page - 1);
+            }
+        });
+        $holder.find(".pager-next").on("click", function () {
+            if (page < totalPage) {
+                onChange(page + 1);
+            }
+        });
+    }
 
-        var activityNameTd = $("<td></td>").addClass("text-center").append("活动名称");
-        var activityBegintimeTd = $("<td></td>").addClass("text-center").append("活动开始时间");
-        var activityEndtimeTd = $("<td></td>").addClass("text-center").append("活动结束时间");
-        var activityLocationTd = $("<td></td>").addClass("text-center").append("活动地点");
-        var activityNeedpeopleTd = $("<td></td>").addClass("text-center").append("需求人数");
-        var controlTd = $("<td></td>").addClass("text-center").append("操作");
-        $("<tr></tr>").append(activityNameTd)
-            .append(activityBegintimeTd)
-            .append(activityEndtimeTd)
-            .append(activityLocationTd)
-            .append(activityNeedpeopleTd)
-            .append(controlTd)
-            .addClass("active")
-            .appendTo("#notStartActivity_table thead");
-        var tabValue = ``;
-        $.each(notStartActivity, function (index, item) {
+    /**
+     * 分页响应统一取值：list 当前页数据、total 总条数、page 当前页、size 每页条数
+     */
+    function pageData(result, fallbackPage, fallbackSize) {
+        var extend = (result && result.extend) ? result.extend : {};
+        var total = Number(extend.total);
+        var currentPage = Number(extend.page);
+        var pageSize = Number(extend.size);
+        return {
+            list: extend.list || [],
+            total: (isNaN(total) || total < 0) ? 0 : total,
+            page: (isNaN(currentPage) || currentPage < 1) ? fallbackPage : currentPage,
+            size: (isNaN(pageSize) || pageSize < 1) ? fallbackSize : pageSize
+        };
+    }
+
+    /**
+     * 统一提示文案：优先使用接口返回的 msg，纯文本响应直接展示
+     */
+    function tip(result, fallback) {
+        if (result && result.msg) {
+            return result.msg;
+        }
+        if (typeof result === "string" && result) {
+            return result;
+        }
+        return fallback;
+    }
+
+    /**
+     * 查询顶部未读消息数量
+     */
+    function loadUnreadCount() {
+        $.ajax({
+            url: "/org/notifications/unreadCount",
+            type: "GET",
+            success: function (result) {
+                var count = (result && result.extend) ? result.extend.count : 0;
+                $("#unread_count").text((count === null || count === undefined) ? 0 : count);
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
+    /** 活动列表当前页码、每页条数与检索关键字 */
+    var page = 1, size = 10, keyword = "";
+    /** 志愿者招募弹窗的当前活动编号、页码、每页条数与关键字 */
+    var recruitActivityNum = null;
+    var recruitPage = 1;
+    var recruitSize = 10;
+    var recruitKeyword = "";
+    /** 志愿者招募弹窗实例 */
+    var recruitModal = null;
+    /** 活动编号与活动名称的对应关系，报名弹窗标题使用 */
+    var activityNames = {};
+
+    /**
+     * 渲染未开始的活动列表
+     */
+    function renderActivityTable(list) {
+        var tabValue = "";
+        $.each(list, function (index, item) {
+            activityNames[item.activityNum] = item.activityName;
             tabValue += `<tr>
                             <td class="text-center">${item.activityName}</td>
                             <td class="text-center">${formatTime(item.activityBegintime)}</td>
                             <td class="text-center">${formatTime(item.activityEndtime)}</td>
-                            <td class="text-center">${item.activityLocation}</td>
-                            <td class="text-center">${item.activityNeedpeople}</td>
+                            <td class="text-center">${item.activityLocation || "—"}</td>
+                            <td class="text-center">${item.activityNeedpeople || 0}</td>
                             <td class="text-center">
-                                <div class="btn-group btn-group-pill" role="group" aria-label="Basic example">
-                                    <button class="btn btn-outline-secondary" type="button" onclick="volRecruit(${item.activityNum})" data-bs-toggle="modal" data-bs-target=".bd-example-modal-lg">志愿者招募</button>
-                            </div>
+                                <div class="btn-group btn-group-pill" role="group" aria-label="活动操作">
+                                    <button class="btn btn-outline-secondary btn-sm" type="button"
+                                            onclick="openVolRecruit(${item.activityNum})">志愿者招募</button>
+                                    <button class="btn btn-outline-primary btn-sm" type="button"
+                                            onclick="startActivity(${item.activityNum})">开始活动</button>
+                                    <a class="btn btn-outline-success btn-sm"
+                                       href="/org/export/participants?activityNum=${item.activityNum}">导出报名名单</a>
+                                    <a class="btn btn-outline-info btn-sm"
+                                       href="/org/export/hours?activityNum=${item.activityNum}">导出服务时长</a>
+                                </div>
                             </td>
-                          </tr>
-                `;
+                         </tr>`;
         });
-        if (notStartActivity.length === 0) {
+        if (list.length === 0) {
             tabValue = `<tr><td colspan="6" class="text-center text-muted">暂无数据</td></tr>`;
         }
-        $("#notStartActivity_table tbody").html(tabValue);
+        $("#activity_table tbody").html(tabValue);
     }
 
-    function volRecruit(activityNum) {
-        console.log("志愿者招募/报名人列表");
+    /**
+     * 加载当前组织未开始的活动
+     */
+    function load() {
+        $.ajax({
+            url: "/activity/findNotStartActivityByNumAndState",
+            type: "GET",
+            data: {page: page, size: size, keyword: keyword},
+            success: function (result) {
+                var data = pageData(result, page, size);
+                renderActivityTable(data.list);
+                renderPager("activity_pager", data.total, data.page, data.size, function (target) {
+                    page = target;
+                    load();
+                });
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
+    /**
+     * 开始活动：活动进入进行中状态
+     */
+    function startActivity(activityNum) {
+        if (!confirm("确定开始该活动吗？开始后志愿者可凭签到码现场签到。")) {
+            return;
+        }
+        $.ajax({
+            url: "/activity/startActivity",
+            type: "POST",
+            data: {"activityNum": activityNum},
+            success: function (result) {
+                var success = result && result.code === 100;
+                alert(tip(result, success ? "活动已开始" : "活动开始失败"));
+                if (success) {
+                    load();
+                }
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
+    /**
+     * 打开志愿者招募弹窗，展示报名名单第一页
+     */
+    function openVolRecruit(activityNum) {
+        recruitActivityNum = activityNum;
+        recruitPage = 1;
+        recruitKeyword = "";
+        $("#recruit_activity_name").text("：" + (activityNames[activityNum] || ""));
+        loadRecruitList();
+        if (!recruitModal) {
+            recruitModal = new bootstrap.Modal(document.getElementById("volRecruitModal"));
+        }
+        recruitModal.show();
+    }
+
+    /**
+     * 审核状态文案
+     */
+    function applyStateText(state) {
+        if (state === "0") {
+            return "待审核";
+        }
+        if (state === "1") {
+            return '<span style="color: #009900">已通过</span>';
+        }
+        if (state === "2") {
+            return '<span style="color: red">未通过</span>';
+        }
+        if (state === "3") {
+            return "候补";
+        }
+        return "—";
+    }
+
+    /**
+     * 报名操作列：待审核可审核，已通过可移除报名，其余仅展示状态
+     */
+    function recruitControlHtml(item) {
+        var buttons = "";
+        if (item.participateApplystate === "0" || item.participateApplystate === "3") {
+            buttons += `<button class="btn btn-outline-primary btn-sm" type="button"
+                                onclick="volPassRecruit(${item.participateNum})">通过</button>
+                        <button class="btn btn-outline-danger btn-sm" type="button"
+                                onclick="volUnPassRecruit(${item.participateNum})">驳回</button>`;
+        }
+        if (item.participateApplystate === "0" || item.participateApplystate === "1"
+            || item.participateApplystate === "3") {
+            buttons += `<button class="btn btn-outline-warning btn-sm" type="button"
+                                onclick="removeParticipate(${item.participateNum})">移除报名</button>`;
+        }
+        if (!buttons) {
+            return "—";
+        }
+        return `<div class="btn-group btn-group-pill" role="group" aria-label="报名操作">${buttons}</div>`;
+    }
+
+    /**
+     * 加载报名志愿者列表，含匹配度、参加确认与爽约情况
+     */
+    function loadRecruitList() {
+        if (recruitActivityNum === null) {
+            return;
+        }
         $.ajax({
             url: "/activity/volRecruit",
             type: "GET",
             data: {
-                "activityNum": activityNum,
+                "activityNum": recruitActivityNum,
+                "page": recruitPage,
+                "size": recruitSize,
+                "keyword": recruitKeyword
             },
             success: function (result) {
-                console.log(result);
-                $("#volRecruitList_table thead").empty();
-                $("#volRecruitList_table tbody").empty();
-                var modalValueThead = ``;
-                modalValueThead = `<tr>
-                                <td class="text-center">编号</td>
-                                <td class="text-center">姓名</td>
-                                <td class="text-center">报名时间</td>
-                                <td class="text-center">性别</td>
-                                <td class="text-center">联系电话</td>
-                                <td class="text-center">匹配度</td>
-                                <td class="text-center">操作</td>
-                              </tr>
-                `;
-                $("#volRecruitList_table thead").html(modalValueThead);
-
-                var recruitVolList = (result && result.extend) ? (result.extend.volunteerList || []) : [];
-                var modalValueTbody = ``;
-                $.each(recruitVolList, function (index, item) {
-                    // 志愿者表中的性别直接保存中文，无值时以占位符展示
-                    var gender = item.volunteer.volunteerGender || '—';
-                    modalValueTbody += `<tr>
-                                            <td class="text-center">${item.volunteer.volunteerId}</td>
-                                            <td class="text-center">${item.volunteer.volunteerName}</td>
-                                            <td class="text-center">${formatTime(item.participateApplytime)}</td>
-                                            <td class="text-center">${gender}</td>
-                                            <td class="text-center">${item.volunteer.volunteerTel}</td>
-                                            <td class="text-center">${(item.matchScore === null || item.matchScore === undefined) ? "—" : item.matchScore + " 分"}
-                                                <div class="text-muted small">${item.matchReasons || "—"}</div>
-                                            </td>
-
-                    `;
-                    if (item.participateApplystate == '0') {
-                        modalValueTbody += `<td class="text-center" id='${item.participateNum}'>
-                                                <div class="btn-group btn-group-pill" role="group" aria-label="Basic example">
-                                                    <button class="btn btn-outline-primary" type="button" onclick="volPassRecruit(${item.activityNum},${item.participateNum})">√</button>
-                                                    <button class="btn btn-outline-danger" type="button" onclick="volUnPassRecruit(${item.activityNum},${item.participateNum})">×</button>
-                                                </div>
-                                            </td>
-                                          </tr>`;
-                    } else if (item.participateApplystate == '1') {
-                        modalValueTbody += `<td class="text-center" style="color: #009900">已通过</td>
-                                          </tr>`;
-                    } else if (item.participateApplystate == '2') {
-                        modalValueTbody += `<td class="text-center" style="color: red">未通过</td>
-                                          </tr>`;
-                    }
-
+                var data = pageData(result, recruitPage, recruitSize);
+                var tabValue = "";
+                $.each(data.list, function (index, item) {
+                    var volunteer = item.volunteer || {};
+                    var score = (item.matchScore === null || item.matchScore === undefined)
+                        ? "—" : item.matchScore + " 分";
+                    var reasons = item.matchReasons || "—";
+                    var confirmText = item.participateConfirmstateText || "待确认";
+                    var noshowText = (item.participateNoshow === 1)
+                        ? '<span style="color: red">爽约</span>' : "正常";
+                    tabValue += `<tr>
+                                    <td class="text-center">${volunteer.volunteerId || "—"}</td>
+                                    <td class="text-center">${volunteer.volunteerName || "—"}</td>
+                                    <td class="text-center">${formatTime(item.participateApplytime)}</td>
+                                    <td class="text-center">${volunteer.volunteerGender || "—"}</td>
+                                    <td class="text-center">${volunteer.volunteerTel || "—"}</td>
+                                    <td class="text-center">${score}
+                                        <div class="text-muted small">${reasons}</div>
+                                    </td>
+                                    <td class="text-center">${confirmText}</td>
+                                    <td class="text-center">${noshowText}</td>
+                                    <td class="text-center">${applyStateText(item.participateApplystate)}</td>
+                                    <td class="text-center">${recruitControlHtml(item)}</td>
+                                 </tr>`;
                 });
-                if (recruitVolList.length === 0) {
-                    modalValueTbody = `<tr><td colspan="7" class="text-center text-muted">暂无数据</td></tr>`;
+                if (data.list.length === 0) {
+                    tabValue = `<tr><td colspan="10" class="text-center text-muted">暂无数据</td></tr>`;
                 }
-                $("#volRecruitList_table tbody").html(modalValueTbody);
+                $("#volRecruitList_table tbody").html(tabValue);
+                renderPager("recruit_pager", data.total, data.page, data.size, function (target) {
+                    recruitPage = target;
+                    loadRecruitList();
+                });
             },
             error: function (result) {
                 console.log(result);
@@ -345,40 +563,63 @@
         });
     }
 
-    function volPassRecruit(activityNum, participateNum) {
+    /**
+     * 审核报名通过：无论返回文案如何均重新加载报名列表
+     */
+    function volPassRecruit(participateNum) {
         $.ajax({
             url: "/participate/volPassRecruit",
             type: "POST",
-            data: {
-                "participateNum": participateNum
-            },
+            data: {"participateNum": participateNum},
             success: function (result) {
-                console.log(result);
-                if (result && result.code === 100) {
-                    volRecruit(activityNum);//审核结果以接口返回为准，重新渲染招募列表
-                } else {
-                    alert((result && result.msg) ? result.msg : "审核操作失败");
-                }
+                alert(tip(result, "审核操作已完成"));
+                loadRecruitList();
+                load();
             },
             error: function (result) {
                 console.log(result);
+                loadRecruitList();
             }
         });
     }
 
-    function volUnPassRecruit(activityNum,participateNum){
+    /**
+     * 审核报名驳回：无论返回文案如何均重新加载报名列表
+     */
+    function volUnPassRecruit(participateNum) {
         $.ajax({
             url: "/participate/volUnPassRecruit",
             type: "POST",
-            data: {
-                "participateNum":participateNum
-            },
+            data: {"participateNum": participateNum},
             success: function (result) {
+                alert(tip(result, "审核操作已完成"));
+                loadRecruitList();
+                load();
+            },
+            error: function (result) {
                 console.log(result);
-                if (result && result.code === 100) {
-                    volRecruit(activityNum);//审核结果以接口返回为准，重新渲染招募列表
-                } else {
-                    alert((result && result.msg) ? result.msg : "审核操作失败");
+                loadRecruitList();
+            }
+        });
+    }
+
+    /**
+     * 移除报名，成功后重新加载报名列表
+     */
+    function removeParticipate(participateNum) {
+        if (!confirm("确定移除该志愿者的报名记录吗？")) {
+            return;
+        }
+        $.ajax({
+            url: "/participate/remove",
+            type: "POST",
+            data: {"participateNum": participateNum},
+            success: function (result) {
+                var success = result && result.code === 100;
+                alert(tip(result, success ? "报名已移除" : "移除报名失败"));
+                if (success) {
+                    loadRecruitList();
+                    load();
                 }
             },
             error: function (result) {
@@ -387,24 +628,21 @@
         });
     }
 
-    //一进网页就加载freshPage()
     $(document).ready(function () {
-        $.ajax({
-            url: "/activity/findNotStartActivityByNumAndState",
-            type: "GET",
-            data: {},
-            success: function (result) {
-                console.log(result);
-                build_activity_table(result);//画表格
-            },
-            error: function (result) {
-                console.log(result);
-            }
+        loadUnreadCount();
+        load();
+        $("#search_button").click(function () {
+            page = 1;
+            keyword = $.trim($("#keyword").val());
+            load();
         });
-
+        $("#recruit_search_button").click(function () {
+            recruitPage = 1;
+            recruitKeyword = $.trim($("#recruit_keyword").val());
+            loadRecruitList();
+        });
     });
 
 </script>
-
 </body>
 </html>

@@ -25,10 +25,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private UserAccountMapper userAccountMapper;
 
     /**
-     * 按登录账号加载用户认证信息
+     * 按登录账号加载用户认证信息，并校验账号是否已被平台管理员停用
      *
-     * @param input 登录账号（志愿者组织账号或平台管理员账号）
-     * @return Spring Security 用户信息，包含密码密文与角色权限
+     * @param input 登录账号（志愿者、志愿者组织或平台管理员账号）
+     * @return Spring Security 用户信息，包含密码密文、角色权限与启用状态
      * @throws UsernameNotFoundException 账号不存在时抛出
      */
     @Override
@@ -39,8 +39,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             throw new UsernameNotFoundException("账号不存在：" + input);
         }
         UserAccount userAccount = userAccounts.get(0);
+        // 账号被平台管理员停用后不允许登录，登录失败时由 Spring Security 统一跳回登录页
+        boolean disabled = userAccount.getEnabled() != null && userAccount.getEnabled() == 0;
 
-        return new User(userAccount.getId(), userAccount.getPassword(),
-                AuthorityUtils.commaSeparatedStringToAuthorityList(userAccount.getRole()));
+        return User.withUsername(userAccount.getId())
+                .password(userAccount.getPassword())
+                .disabled(disabled)
+                .authorities(AuthorityUtils.commaSeparatedStringToAuthorityList(userAccount.getRole()))
+                .build();
     }
 }

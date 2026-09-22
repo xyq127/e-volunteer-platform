@@ -21,4 +21,14 @@
         policyfile_name,policyfile_route,policyfile_uniquename,
         policyfile_isdeleted
     </sql>
+
+    <!-- 按公告查询附件列表，按附件编号升序排列 -->
+    <select id="selectByAnnouncementNum" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from policy_file
+        where policyannouncement_num = #{policyannouncementNum,jdbcType=INTEGER}
+        and policyfile_isdeleted = '0'
+        order by policyfile_num asc
+    </select>
 </mapper>

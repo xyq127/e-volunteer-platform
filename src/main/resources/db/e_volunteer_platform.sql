@@ -35,6 +35,7 @@ CREATE TABLE volunteer
     volunteer_credit       INT          DEFAULT 100 COMMENT '志愿服务信用分，初始 100',
     volunteer_noshow       INT          DEFAULT 0 COMMENT '活动爽约次数',
     volunteer_totalduration DECIMAL(10, 1) DEFAULT 0 COMMENT '已核定累计服务时长（小时）',
+    volunteer_isdeleted    INT          DEFAULT 0 COMMENT '删除标记，0 未删除、1 已删除（账号被停用时置 1）',
     PRIMARY KEY (volunteer_num),
     UNIQUE KEY uk_volunteer_tel (volunteer_tel),
     KEY idx_volunteer_id (volunteer_id),
@@ -96,6 +97,7 @@ CREATE TABLE e_user
     id       VARCHAR(32)  NOT NULL COMMENT '登录账号',
     password VARCHAR(200) DEFAULT NULL COMMENT '登录密码密文',
     role     VARCHAR(64)  DEFAULT NULL COMMENT '角色权限，如 ROLE_VOLUNTEER、ROLE_ADMIN、ROLE_ORGANIZATION',
+    enabled  INT          DEFAULT 1 COMMENT '账号状态，1 启用、0 停用，停用后无法登录',
     PRIMARY KEY (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='统一用户表';
@@ -178,6 +180,8 @@ CREATE TABLE participate
     participate_timecheck      VARCHAR(4)  DEFAULT NULL COMMENT '服务时长审核状态，空 待复核、1 已确认、2 已驳回',
     participate_noshow         INT         DEFAULT 0 COMMENT '爽约标记，0 正常、1 爽约',
     participate_cancel_time    DATETIME    DEFAULT NULL COMMENT '志愿者撤回报名时间',
+    participate_confirmstate   VARCHAR(4)  DEFAULT NULL COMMENT '参加确认状态，空 待确认、1 已确认、2 已放弃',
+    participate_confirmtime    DATETIME    DEFAULT NULL COMMENT '参加确认时间',
     participate_isdeleted      INT         DEFAULT 0 COMMENT '删除标记，0 未删除、1 已删除',
     PRIMARY KEY (participate_num),
     KEY idx_participate_activity (activity_num),
@@ -200,6 +204,7 @@ CREATE TABLE checkin
     checkin_endtime    DATETIME       DEFAULT NULL COMMENT '签退时间',
     checkin_duration   DOUBLE         DEFAULT NULL COMMENT '服务时长（小时）',
     checkin_timecheck  VARCHAR(4)     DEFAULT NULL COMMENT '服务时长复核状态，空 待复核、1 已确认、2 已驳回',
+    checkin_source     VARCHAR(4)     DEFAULT '1' COMMENT '记录来源，1 平台签到、2 志愿者组织补录（需平台管理员复核）',
     checkin_code       VARCHAR(16)    DEFAULT NULL COMMENT '签到使用的现场签到码',
     checkin_latitude   DECIMAL(10, 7) DEFAULT NULL COMMENT '签到地点纬度',
     checkin_longitude  DECIMAL(10, 7) DEFAULT NULL COMMENT '签到地点经度',
@@ -207,6 +212,7 @@ CREATE TABLE checkin
     checkin_outdistance INT           DEFAULT NULL COMMENT '签退地点与活动地点的距离（米）',
     checkin_flag       VARCHAR(4)     DEFAULT '1' COMMENT '轨迹标记，1 正常、2 异常',
     checkin_remark     VARCHAR(200)   DEFAULT NULL COMMENT '志愿者组织的复核意见',
+    checkin_adminremark VARCHAR(200)  DEFAULT NULL COMMENT '平台管理员对补录记录的复核意见',
     checkin_checktime  DATETIME       DEFAULT NULL COMMENT '复核时间',
     PRIMARY KEY (checkin_num),
     KEY idx_checkin_participate (participate_num)
@@ -343,6 +349,60 @@ CREATE TABLE show_picture
     KEY idx_picture_show (show_num)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='志愿秀图片表';
+
+-- -----------------------------------------------------------------------------
+-- 17. 志愿秀点赞记录表：记录志愿者对志愿秀的点赞，保证同一志愿者对同一志愿秀只计一次
+-- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS show_like_record;
+CREATE TABLE show_like_record
+(
+    like_num      INT AUTO_INCREMENT COMMENT '点赞编号，主键自增',
+    show_num      INT NOT NULL COMMENT '志愿秀编号',
+    volunteer_num INT NOT NULL COMMENT '点赞志愿者编号',
+    PRIMARY KEY (like_num),
+    UNIQUE KEY uk_show_like (show_num, volunteer_num)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='志愿秀点赞记录表';
+
+-- -----------------------------------------------------------------------------
+-- 18. 站内通知表：保存平台向志愿者、志愿者组织发送的站内通知，支撑报名、审核、复核、提醒等消息触达
+-- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS notification;
+CREATE TABLE notification
+(
+    notification_num    INT AUTO_INCREMENT COMMENT '通知编号，主键自增',
+    receiver_id         VARCHAR(32)  DEFAULT NULL COMMENT '接收账号',
+    receiver_role       VARCHAR(64)  DEFAULT NULL COMMENT '接收角色，如 ROLE_VOLUNTEER、ROLE_ORGANIZATION',
+    notification_title  VARCHAR(100) DEFAULT NULL COMMENT '通知标题',
+    notification_detail VARCHAR(500) DEFAULT NULL COMMENT '通知内容',
+    notification_read   INT          DEFAULT 0 COMMENT '是否已读，0 未读、1 已读',
+    notification_time   DATETIME     DEFAULT NULL COMMENT '通知时间',
+    PRIMARY KEY (notification_num),
+    KEY idx_notification_receiver (receiver_id, notification_read),
+    KEY idx_notification_time (notification_time)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='站内通知表';
+
+-- -----------------------------------------------------------------------------
+-- 19. 操作审计表：记录平台管理员与志愿者组织的关键操作，便于事后追溯与责任界定
+-- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS audit_log;
+CREATE TABLE audit_log
+(
+    audit_num      INT AUTO_INCREMENT COMMENT '审计编号，主键自增',
+    audit_operator VARCHAR(32)  DEFAULT NULL COMMENT '操作账号',
+    audit_role     VARCHAR(64)  DEFAULT NULL COMMENT '操作角色',
+    audit_action   VARCHAR(64)  DEFAULT NULL COMMENT '操作类型编码',
+    audit_target   VARCHAR(200) DEFAULT NULL COMMENT '操作对象',
+    audit_detail   VARCHAR(500) DEFAULT NULL COMMENT '操作详情',
+    audit_ip       VARCHAR(64)  DEFAULT NULL COMMENT '操作来源 IP',
+    audit_time     DATETIME     DEFAULT NULL COMMENT '操作时间',
+    PRIMARY KEY (audit_num),
+    KEY idx_audit_time (audit_time),
+    KEY idx_audit_action (audit_action),
+    KEY idx_audit_operator (audit_operator)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='操作审计表';
 
 -- =============================================================================
 -- 存储过程
@@ -981,15 +1041,19 @@ BEGIN
     DECLARE durationValue DOUBLE DEFAULT NULL;
     DECLARE participateNumValue INT DEFAULT NULL;
     DECLARE volunteerNumValue INT DEFAULT NULL;
+    DECLARE sourceValue VARCHAR(4) DEFAULT NULL;
 
     SET ok = 0;
 
-    SELECT checkin_timecheck, checkin_duration, participate_num
-    INTO timecheckValue, durationValue, participateNumValue
+    SELECT checkin_timecheck, checkin_duration, participate_num, checkin_source
+    INTO timecheckValue, durationValue, participateNumValue, sourceValue
     FROM checkin
     WHERE checkin_num = checkinNum;
 
-    IF participateNumValue IS NULL THEN
+    IF sourceValue = '2' THEN
+        -- 志愿者组织补录的记录由平台管理员复核，避免录入与复核由同一方完成
+        SET msg = '该记录为志愿者组织补录，需由平台管理员复核';
+    ELSEIF participateNumValue IS NULL THEN
         SET msg = '未找到对应的签到记录';
     ELSEIF timecheckValue IS NOT NULL THEN
         SET msg = '该服务时长已复核，无需重复处理';
@@ -1043,6 +1107,8 @@ CREATE PROCEDURE organization_settle_activity(IN activityNum INT,
                                               OUT ok INT)
 BEGIN
     DECLARE settleTime DATETIME DEFAULT NULL;
+    DECLARE activityEndtimeValue DATETIME DEFAULT NULL;
+    DECLARE activityStateValue VARCHAR(4) DEFAULT NULL;
     DECLARE noshowCount INT DEFAULT 0;
     DECLARE done INT DEFAULT 0;
     DECLARE curParticipateNum INT DEFAULT NULL;
@@ -1062,7 +1128,8 @@ BEGIN
 
     SET ok = 0;
 
-    SELECT activity_settle_time INTO settleTime
+    SELECT activity_settle_time, activity_endtime, activity_state
+    INTO settleTime, activityEndtimeValue, activityStateValue
     FROM activity
     WHERE activity_num = activityNum
       AND activity_isdeleted = 0;
@@ -1071,6 +1138,9 @@ BEGIN
         SET msg = '未找到对应的志愿活动';
     ELSEIF settleTime IS NOT NULL THEN
         SET msg = '该志愿活动已完成结算，无需重复结算';
+    -- 活动已由志愿者组织人工置为已结束时，允许在计划结束时间之前结算
+    ELSEIF activityStateValue <> '3' AND (activityEndtimeValue IS NULL OR NOW() < activityEndtimeValue) THEN
+        SET msg = '活动尚未结束，暂不能结算考勤';
     ELSE
         OPEN absentCursor;
         read_loop:
@@ -1091,6 +1161,562 @@ BEGIN
 
         UPDATE activity SET activity_settle_time = NOW() WHERE activity_num = activityNum;
         SET msg = CONCAT('活动结算完成，共记录 ', noshowCount, ' 名志愿者爽约并扣减信用分');
+        SET ok = 1;
+    END IF;
+END $$
+
+-- -----------------------------------------------------------------------------
+-- 活动状态流转：按活动时间自动把未开始的活动置为进行中、把到期的活动置为已结束
+-- -----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS activity_state_refresh $$
+CREATE PROCEDURE activity_state_refresh(OUT startedCount INT, OUT finishedCount INT)
+BEGIN
+    UPDATE activity
+    SET activity_state = '2'
+    WHERE activity_isdeleted = 0
+      AND activity_state = '1'
+      AND activity_begintime IS NOT NULL
+      AND NOW() >= activity_begintime
+      AND (activity_endtime IS NULL OR NOW() < activity_endtime);
+    SET startedCount = ROW_COUNT();
+
+    UPDATE activity
+    SET activity_state = '3'
+    WHERE activity_isdeleted = 0
+      AND activity_state IN ('1', '2')
+      AND activity_endtime IS NOT NULL
+      AND NOW() >= activity_endtime;
+    SET finishedCount = ROW_COUNT();
+END $$
+
+-- -----------------------------------------------------------------------------
+-- 活动状态人工流转：志愿者组织将本组织申报的活动置为进行中或已结束
+-- -----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS organization_change_activity_state $$
+CREATE PROCEDURE organization_change_activity_state(IN loginId VARCHAR(32),
+                                                    IN activityNum INT,
+                                                    IN targetState VARCHAR(4),
+                                                    OUT msg VARCHAR(200),
+                                                    OUT ok INT)
+BEGIN
+    DECLARE orgNum INT DEFAULT NULL;
+    DECLARE ownerOrgNum INT DEFAULT NULL;
+    DECLARE activityState VARCHAR(4) DEFAULT NULL;
+    DECLARE activityName VARCHAR(100) DEFAULT NULL;
+
+    SET ok = 0;
+
+    SELECT organization_num INTO orgNum FROM organization WHERE organization_id = loginId LIMIT 1;
+    SELECT organization_num, activity_state, activity_name
+    INTO ownerOrgNum, activityState, activityName
+    FROM activity
+    WHERE activity_num = activityNum
+      AND activity_isdeleted = 0;
+
+    IF activityState IS NULL THEN
+        SET msg = '未找到对应的志愿活动';
+    ELSEIF ownerOrgNum <> orgNum THEN
+        SET msg = '只能管理本组织申报的志愿活动';
+    ELSEIF targetState = '2' THEN
+        IF activityState <> '1' THEN
+            SET msg = '只有未开始的活动可以置为进行中';
+        ELSE
+            UPDATE activity SET activity_state = '2' WHERE activity_num = activityNum;
+            SET msg = CONCAT('活动「', activityName, '」已置为进行中');
+            SET ok = 1;
+        END IF;
+    ELSEIF targetState = '3' THEN
+        IF activityState NOT IN ('1', '2') THEN
+            SET msg = '只有未开始或进行中的活动可以置为已结束';
+        ELSE
+            UPDATE activity SET activity_state = '3' WHERE activity_num = activityNum;
+            SET msg = CONCAT('活动「', activityName, '」已置为已结束，可进行考勤结算');
+            SET ok = 1;
+        END IF;
+    ELSE
+        SET msg = '不支持变更到该活动状态';
+    END IF;
+END $$
+
+-- -----------------------------------------------------------------------------
+-- 服务时长补录：志愿者组织为未在平台签到的服务补录时长，提交平台管理员复核
+-- -----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS organization_record_service_hours $$
+CREATE PROCEDURE organization_record_service_hours(IN loginId VARCHAR(32),
+                                                   IN participateNum INT,
+                                                   IN beginTime DATETIME,
+                                                   IN endTime DATETIME,
+                                                   IN remark VARCHAR(200),
+                                                   OUT msg VARCHAR(200),
+                                                   OUT ok INT)
+BEGIN
+    DECLARE orgNum INT DEFAULT NULL;
+    DECLARE ownerOrgNum INT DEFAULT NULL;
+    DECLARE applyState VARCHAR(4) DEFAULT NULL;
+    DECLARE isDeletedValue INT DEFAULT 0;
+    DECLARE durationValue DOUBLE DEFAULT NULL;
+    DECLARE overlapCount INT DEFAULT 0;
+
+    SET ok = 0;
+
+    SELECT organization_num INTO orgNum FROM organization WHERE organization_id = loginId LIMIT 1;
+
+    SELECT p.participate_applystate, p.participate_isdeleted, a.organization_num
+    INTO applyState, isDeletedValue, ownerOrgNum
+    FROM participate p
+    JOIN activity a ON a.activity_num = p.activity_num
+    WHERE p.participate_num = participateNum;
+
+    IF ownerOrgNum IS NULL THEN
+        SET msg = '未找到对应的报名记录';
+    ELSEIF ownerOrgNum <> orgNum THEN
+        SET msg = '只能为本组织活动中的志愿者补录服务时长';
+    ELSEIF isDeletedValue <> 0 OR applyState <> '1' THEN
+        SET msg = '只有报名已通过的志愿者可以补录服务时长';
+    ELSEIF beginTime IS NULL OR endTime IS NULL OR endTime <= beginTime THEN
+        SET msg = '服务开始时间与结束时间不正确，请重新填写';
+    ELSEIF endTime > NOW() THEN
+        SET msg = '不能补录尚未结束的服务时长';
+    ELSE
+        SET durationValue = ROUND(TIMESTAMPDIFF(SECOND, beginTime, endTime) / 3600, 2);
+
+        IF durationValue <= 0 OR durationValue > 24 THEN
+            SET msg = '单条补录的服务时长需大于 0 且不超过 24 小时';
+        ELSE
+            SELECT COUNT(*) INTO overlapCount
+            FROM checkin
+            WHERE participate_num = participateNum
+              AND checkin_begintime < endTime
+              AND IFNULL(checkin_endtime, NOW()) > beginTime;
+
+            IF overlapCount > 0 THEN
+                SET msg = '该时间段与志愿者已有的服务记录重叠，请核对后重新录入';
+            ELSE
+                INSERT INTO checkin(participate_num, checkin_begintime, checkin_endtime, checkin_duration,
+                                    checkin_source, checkin_flag, checkin_remark)
+                VALUES (participateNum, beginTime, endTime, durationValue, '2', '1', remark);
+                SET msg = CONCAT('已补录服务时长 ', durationValue, ' 小时，待平台管理员复核后计入累计时长');
+                SET ok = 1;
+            END IF;
+        END IF;
+    END IF;
+END $$
+
+-- -----------------------------------------------------------------------------
+-- 补录复核：平台管理员复核志愿者组织补录的服务时长，确认后计入累计时长
+-- -----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS admin_check_manual_checkin $$
+CREATE PROCEDURE admin_check_manual_checkin(IN loginId VARCHAR(32),
+                                            IN checkinNum INT,
+                                            IN isPass INT,
+                                            IN remark VARCHAR(200),
+                                            OUT msg VARCHAR(200),
+                                            OUT ok INT)
+BEGIN
+    DECLARE adminCount INT DEFAULT 0;
+    DECLARE sourceValue VARCHAR(4) DEFAULT NULL;
+    DECLARE timecheckValue VARCHAR(4) DEFAULT NULL;
+    DECLARE durationValue DOUBLE DEFAULT NULL;
+    DECLARE participateNumValue INT DEFAULT NULL;
+    DECLARE volunteerNumValue INT DEFAULT NULL;
+    DECLARE confirmedCount INT DEFAULT 0;
+
+    SET ok = 0;
+
+    SELECT COUNT(*) INTO adminCount FROM admin WHERE admin_id = loginId;
+
+    SELECT checkin_source, checkin_timecheck, checkin_duration, participate_num
+    INTO sourceValue, timecheckValue, durationValue, participateNumValue
+    FROM checkin
+    WHERE checkin_num = checkinNum;
+
+    IF adminCount = 0 THEN
+        SET msg = '未找到平台管理员信息，请重新登录后再试';
+    ELSEIF participateNumValue IS NULL THEN
+        SET msg = '未找到对应的服务时长记录';
+    ELSEIF sourceValue <> '2' THEN
+        SET msg = '该记录为平台签到记录，请由志愿者组织复核';
+    ELSEIF timecheckValue IS NOT NULL THEN
+        SET msg = '该服务时长已复核，无需重复处理';
+    ELSE
+        SELECT volunteer_num INTO volunteerNumValue FROM participate WHERE participate_num = participateNumValue;
+
+        IF isPass = 1 THEN
+            UPDATE checkin
+            SET checkin_timecheck = '1',
+                checkin_checktime = NOW(),
+                checkin_adminremark = remark
+            WHERE checkin_num = checkinNum;
+
+            UPDATE participate
+            SET participate_timecheck = '1',
+                participate_duration  = IFNULL(participate_duration, 0) + IFNULL(durationValue, 0)
+            WHERE participate_num = participateNumValue;
+
+            UPDATE volunteer
+            SET volunteer_totalduration = volunteer_totalduration + IFNULL(durationValue, 0),
+                volunteer_credit        = LEAST(120, volunteer_credit + 2)
+            WHERE volunteer_num = volunteerNumValue;
+
+            SET msg = CONCAT('已确认补录服务时长 ', IFNULL(durationValue, 0), ' 小时，并计入志愿者累计服务时长');
+        ELSE
+            UPDATE checkin
+            SET checkin_timecheck = '2',
+                checkin_checktime = NOW(),
+                checkin_adminremark = remark
+            WHERE checkin_num = checkinNum;
+
+            SELECT COUNT(*) INTO confirmedCount
+            FROM checkin
+            WHERE participate_num = participateNumValue
+              AND checkin_timecheck = '1';
+
+            UPDATE participate
+            SET participate_timecheck = IF(confirmedCount > 0, '1', '2')
+            WHERE participate_num = participateNumValue;
+
+            SET msg = '已驳回该补录记录，本次时长不计入累计服务时长';
+        END IF;
+        SET ok = 1;
+    END IF;
+END $$
+
+-- -----------------------------------------------------------------------------
+-- 移除报名：志愿者组织移除本组织活动名单中的报名，已通过的报名释放名额并递补
+-- -----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS organization_remove_participate $$
+CREATE PROCEDURE organization_remove_participate(IN loginId VARCHAR(32),
+                                                 IN participateNum INT,
+                                                 OUT msg VARCHAR(200),
+                                                 OUT ok INT)
+BEGIN
+    DECLARE orgNum INT DEFAULT NULL;
+    DECLARE ownerOrgNum INT DEFAULT NULL;
+    DECLARE applyState VARCHAR(4) DEFAULT NULL;
+    DECLARE isDeletedValue INT DEFAULT 0;
+    DECLARE activityNumValue INT DEFAULT NULL;
+    DECLARE confirmedCount INT DEFAULT 0;
+    DECLARE nextParticipateNum INT DEFAULT NULL;
+
+    SET ok = 0;
+
+    SELECT organization_num INTO orgNum FROM organization WHERE organization_id = loginId LIMIT 1;
+
+    SELECT p.participate_applystate, p.activity_num, p.participate_isdeleted, a.organization_num
+    INTO applyState, activityNumValue, isDeletedValue, ownerOrgNum
+    FROM participate p
+    JOIN activity a ON a.activity_num = p.activity_num
+    WHERE p.participate_num = participateNum;
+
+    SELECT COUNT(*) INTO confirmedCount
+    FROM checkin
+    WHERE participate_num = participateNum
+      AND checkin_timecheck = '1';
+
+    IF ownerOrgNum IS NULL THEN
+        SET msg = '未找到对应的报名记录';
+    ELSEIF ownerOrgNum <> orgNum THEN
+        SET msg = '只能管理本组织活动中的报名记录';
+    ELSEIF isDeletedValue <> 0 THEN
+        SET msg = '该报名已不在活动名单中';
+    ELSEIF confirmedCount > 0 THEN
+        SET msg = '该志愿者已有核定服务时长，不能移除报名';
+    ELSE
+        UPDATE participate
+        SET participate_isdeleted = 1,
+            participate_cancel_time = NOW()
+        WHERE participate_num = participateNum;
+
+        IF applyState = '1' THEN
+            SELECT participate_num INTO nextParticipateNum
+            FROM participate
+            WHERE activity_num = activityNumValue
+              AND participate_applystate = '3'
+              AND participate_isdeleted = 0
+            ORDER BY participate_applytime ASC, participate_num ASC
+            LIMIT 1
+            FOR UPDATE;
+
+            IF nextParticipateNum IS NOT NULL THEN
+                UPDATE participate SET participate_applystate = '0' WHERE participate_num = nextParticipateNum;
+                SET msg = '已移除该报名并释放名额，候补志愿者已自动递补进入待审核';
+            ELSE
+                SET msg = '已移除该报名并释放名额';
+            END IF;
+        ELSE
+            SET msg = '已移除该报名';
+        END IF;
+        SET ok = 1;
+    END IF;
+END $$
+
+-- -----------------------------------------------------------------------------
+-- 参加确认：志愿者确认参加或放弃已通过的活动报名，放弃时释放名额并递补
+-- -----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS volunteer_confirm_participate $$
+CREATE PROCEDURE volunteer_confirm_participate(IN participateNum INT,
+                                               IN volunteerNum INT,
+                                               IN confirmState INT,
+                                               OUT msg VARCHAR(200),
+                                               OUT ok INT)
+BEGIN
+    DECLARE applyState VARCHAR(4) DEFAULT NULL;
+    DECLARE ownerVolunteerNum INT DEFAULT NULL;
+    DECLARE activityNumValue INT DEFAULT NULL;
+    DECLARE confirmStateValue VARCHAR(4) DEFAULT NULL;
+    DECLARE nextParticipateNum INT DEFAULT NULL;
+
+    SET ok = 0;
+
+    SELECT participate_applystate, volunteer_num, activity_num, participate_confirmstate
+    INTO applyState, ownerVolunteerNum, activityNumValue, confirmStateValue
+    FROM participate
+    WHERE participate_num = participateNum
+      AND participate_isdeleted = 0;
+
+    IF ownerVolunteerNum IS NULL THEN
+        SET msg = '未找到对应的报名记录';
+    ELSEIF ownerVolunteerNum <> volunteerNum THEN
+        SET msg = '只能确认本人的报名记录';
+    ELSEIF applyState <> '1' THEN
+        SET msg = '只有报名已通过的记录可以确认参加';
+    ELSEIF confirmState = 1 THEN
+        IF confirmStateValue = '1' THEN
+            SET msg = '您已确认参加，请按时到场';
+        ELSE
+            UPDATE participate
+            SET participate_confirmstate = '1',
+                participate_confirmtime  = NOW()
+            WHERE participate_num = participateNum;
+            SET msg = '已确认参加，请按活动时间到场并在现场完成签到';
+        END IF;
+        SET ok = 1;
+    ELSEIF confirmState = 2 THEN
+        UPDATE participate
+        SET participate_isdeleted    = 1,
+            participate_cancel_time  = NOW(),
+            participate_confirmstate = '2',
+            participate_confirmtime  = NOW()
+        WHERE participate_num = participateNum;
+
+        SELECT participate_num INTO nextParticipateNum
+        FROM participate
+        WHERE activity_num = activityNumValue
+          AND participate_applystate = '3'
+          AND participate_isdeleted = 0
+        ORDER BY participate_applytime ASC, participate_num ASC
+        LIMIT 1
+        FOR UPDATE;
+
+        IF nextParticipateNum IS NOT NULL THEN
+            UPDATE participate SET participate_applystate = '0' WHERE participate_num = nextParticipateNum;
+            SET msg = '已放弃参加并释放名额，候补志愿者已自动递补';
+        ELSE
+            SET msg = '已放弃参加并释放名额';
+        END IF;
+        SET ok = 1;
+    ELSE
+        SET msg = '参加确认状态不正确';
+    END IF;
+END $$
+
+-- -----------------------------------------------------------------------------
+-- 参加确认到期：活动开始前 24 小时仍未确认的报名自动释放名额并递补候补志愿者
+--   报名通过后至少保留 12 小时确认时间，避免临时发布的活动把已报名志愿者直接判定为放弃
+-- -----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS participate_confirm_expire $$
+CREATE PROCEDURE participate_confirm_expire(OUT releasedCount INT)
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE curParticipateNum INT DEFAULT NULL;
+    DECLARE curActivityNum INT DEFAULT NULL;
+    DECLARE nextParticipateNum INT DEFAULT NULL;
+    DECLARE expireCursor CURSOR FOR
+        SELECT p.participate_num, p.activity_num
+        FROM participate p
+        JOIN activity a ON a.activity_num = p.activity_num
+        WHERE p.participate_applystate = '1'
+          AND p.participate_confirmstate IS NULL
+          AND p.participate_isdeleted = 0
+          AND a.activity_isdeleted = 0
+          AND a.activity_state IN ('1', '2')
+          AND a.activity_begintime IS NOT NULL
+          AND NOW() < a.activity_begintime
+          AND NOW() >= DATE_SUB(a.activity_begintime, INTERVAL 24 HOUR)
+          AND NOW() >= DATE_ADD(IFNULL(p.participate_applychecktime, p.participate_applytime), INTERVAL 12 HOUR);
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    SET releasedCount = 0;
+
+    OPEN expireCursor;
+    expire_loop:
+    LOOP
+        FETCH expireCursor INTO curParticipateNum, curActivityNum;
+        IF done = 1 THEN
+            LEAVE expire_loop;
+        END IF;
+
+        IF EXISTS (SELECT 1
+                   FROM participate
+                   WHERE participate_num = curParticipateNum
+                     AND participate_isdeleted = 0
+                     AND participate_confirmstate IS NULL) THEN
+
+            UPDATE participate
+            SET participate_isdeleted   = 1,
+                participate_cancel_time = NOW()
+            WHERE participate_num = curParticipateNum;
+
+            SET nextParticipateNum = NULL;
+            SELECT participate_num INTO nextParticipateNum
+            FROM participate
+            WHERE activity_num = curActivityNum
+              AND participate_applystate = '3'
+              AND participate_isdeleted = 0
+            ORDER BY participate_applytime ASC, participate_num ASC
+            LIMIT 1
+            FOR UPDATE;
+
+            IF nextParticipateNum IS NOT NULL THEN
+                UPDATE participate SET participate_applystate = '0' WHERE participate_num = nextParticipateNum;
+            END IF;
+
+            SET releasedCount = releasedCount + 1;
+        END IF;
+    END LOOP;
+    CLOSE expireCursor;
+END $$
+
+-- -----------------------------------------------------------------------------
+-- 开通组织账号：平台管理员创建志愿者组织账号，同时写入组织信息与登录账号
+-- -----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS admin_create_organization $$
+CREATE PROCEDURE admin_create_organization(IN loginId VARCHAR(32),
+                                           IN organizationId VARCHAR(32),
+                                           IN organizationName VARCHAR(100),
+                                           IN organizationPassword VARCHAR(200),
+                                           IN organizationEstablishdate DATE,
+                                           IN organizationIntroduction TEXT,
+                                           OUT msg VARCHAR(200),
+                                           OUT ok INT)
+BEGIN
+    DECLARE adminCount INT DEFAULT 0;
+    DECLARE duplicateCount INT DEFAULT 0;
+
+    SET ok = 0;
+
+    SELECT COUNT(*) INTO adminCount FROM admin WHERE admin_id = loginId;
+    SELECT COUNT(*) INTO duplicateCount FROM e_user WHERE id = TRIM(organizationId);
+
+    IF duplicateCount = 0 THEN
+        SELECT COUNT(*) INTO duplicateCount FROM organization WHERE organization_id = TRIM(organizationId);
+    END IF;
+
+    IF adminCount = 0 THEN
+        SET msg = '未找到平台管理员信息，请重新登录后再试';
+    ELSEIF organizationId IS NULL OR TRIM(organizationId) = ''
+        OR organizationName IS NULL OR TRIM(organizationName) = '' THEN
+        SET msg = '组织登录账号与组织名称不能为空';
+    ELSEIF duplicateCount > 0 THEN
+        SET msg = '该组织登录账号已存在，请更换登录账号';
+    ELSE
+        INSERT INTO organization(organization_id, organization_name, organization_establishdate,
+                                 organization_introduction, organization_isdeleted)
+        VALUES (TRIM(organizationId), TRIM(organizationName), organizationEstablishdate,
+                organizationIntroduction, 0);
+        INSERT INTO e_user(id, password, role, enabled)
+        VALUES (TRIM(organizationId), organizationPassword, 'ROLE_ORGANIZATION', 1);
+        SET msg = CONCAT('志愿者组织「', TRIM(organizationName), '」账号已开通');
+        SET ok = 1;
+    END IF;
+END $$
+
+-- -----------------------------------------------------------------------------
+-- 账号启停：平台管理员停用或启用组织账号与志愿者账号
+-- -----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS admin_set_account_enabled $$
+CREATE PROCEDURE admin_set_account_enabled(IN loginId VARCHAR(32),
+                                           IN accountId VARCHAR(32),
+                                           IN enabledValue INT,
+                                           OUT msg VARCHAR(200),
+                                           OUT ok INT)
+BEGIN
+    DECLARE adminCount INT DEFAULT 0;
+    DECLARE accountRole VARCHAR(64) DEFAULT NULL;
+
+    SET ok = 0;
+
+    SELECT COUNT(*) INTO adminCount FROM admin WHERE admin_id = loginId;
+    SELECT role INTO accountRole FROM e_user WHERE id = accountId;
+
+    IF adminCount = 0 THEN
+        SET msg = '未找到平台管理员信息，请重新登录后再试';
+    ELSEIF accountRole IS NULL THEN
+        SET msg = '未找到对应的登录账号';
+    ELSEIF accountId = loginId THEN
+        SET msg = '不能停用当前登录的管理员账号';
+    ELSEIF accountRole = 'ROLE_ADMIN' THEN
+        SET msg = '平台管理员账号不支持在此停用';
+    ELSEIF enabledValue = 1 THEN
+        UPDATE e_user SET enabled = 1 WHERE id = accountId;
+        IF accountRole = 'ROLE_ORGANIZATION' THEN
+            UPDATE organization SET organization_isdeleted = 0 WHERE organization_id = accountId;
+        ELSEIF accountRole = 'ROLE_VOLUNTEER' THEN
+            UPDATE volunteer SET volunteer_isdeleted = 0 WHERE volunteer_id = accountId;
+        END IF;
+        SET msg = '账号已启用';
+        SET ok = 1;
+    ELSE
+        UPDATE e_user SET enabled = 0 WHERE id = accountId;
+        IF accountRole = 'ROLE_ORGANIZATION' THEN
+            UPDATE organization SET organization_isdeleted = 1 WHERE organization_id = accountId;
+        ELSEIF accountRole = 'ROLE_VOLUNTEER' THEN
+            UPDATE volunteer SET volunteer_isdeleted = 1 WHERE volunteer_id = accountId;
+        END IF;
+        SET msg = '账号已停用，停用后该账号无法登录平台';
+        SET ok = 1;
+    END IF;
+END $$
+
+-- -----------------------------------------------------------------------------
+-- 志愿秀发布：志愿者分享志愿服务经历，可关联本人已通过报名的活动
+-- -----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS volunteer_publish_show $$
+CREATE PROCEDURE volunteer_publish_show(IN volunteerNum INT,
+                                        IN activityNum INT,
+                                        IN showDetail TEXT,
+                                        OUT showNum INT,
+                                        OUT msg VARCHAR(200),
+                                        OUT ok INT)
+BEGIN
+    DECLARE newNum INT DEFAULT 0;
+    DECLARE joinedCount INT DEFAULT 0;
+
+    SET ok = 0;
+    SET showNum = NULL;
+
+    IF activityNum IS NOT NULL AND activityNum > 0 THEN
+        SELECT COUNT(*) INTO joinedCount
+        FROM participate
+        WHERE activity_num = activityNum
+          AND volunteer_num = volunteerNum
+          AND participate_applystate = '1'
+          AND participate_isdeleted = 0;
+    END IF;
+
+    IF showDetail IS NULL OR TRIM(showDetail) = '' THEN
+        SET msg = '请填写志愿服务分享内容';
+    ELSEIF activityNum IS NOT NULL AND activityNum > 0 AND joinedCount = 0 THEN
+        SET msg = '只能关联本人已通过报名的志愿活动';
+    ELSE
+        INSERT INTO `show`(show_id, show_detail, show_sharetime, volunteer_num, activity_num,
+                           show_browse, show_like, show_isdeleted)
+        VALUES ('', TRIM(showDetail), NOW(), volunteerNum,
+                IF(activityNum IS NULL OR activityNum = 0, NULL, activityNum), 0, 0, 0);
+        SET newNum = LAST_INSERT_ID();
+        UPDATE `show` SET show_id = CONCAT('sho_', LPAD(newNum, 5, '0')) WHERE show_num = newNum;
+        SET showNum = newNum;
+        SET msg = '志愿秀已发布，可在志愿秀广场查看';
         SET ok = 1;
     END IF;
 END $$
@@ -1208,28 +1834,32 @@ VALUES (1, '助学支教'),
 INSERT INTO participate(volunteer_num, activity_num, participate_applytime, participate_applystate,
                         participate_applychecktime, participate_training, participate_begintime,
                         participate_endtime, participate_duration, participate_timecheck,
-                        participate_noshow, participate_cancel_time, participate_isdeleted)
+                        participate_noshow, participate_cancel_time,
+                        participate_confirmstate, participate_confirmtime, participate_isdeleted)
 VALUES (1, 3, '2023-08-25 09:10:00', '1', '2023-08-26 10:00:00', '已完成岗前培训',
-        '2023-10-14 08:25:00', '2023-10-14 11:35:00', 3.0, '1', 0, NULL, 0),
+        '2023-10-14 08:25:00', '2023-10-14 11:35:00', 3.0, '1', 0, NULL, '1', '2023-08-26 10:30:00', 0),
        (2, 3, '2023-08-26 14:20:00', '1', '2023-08-27 09:30:00', '已完成岗前培训',
-        '2023-10-14 08:28:00', '2023-10-14 11:32:00', 3.0, NULL, 0, NULL, 0),
-       (3, 3, '2023-08-28 19:05:00', '0', NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, 0),
+        '2023-10-14 08:28:00', '2023-10-14 11:32:00', 3.0, NULL, 0, NULL, '1', '2023-08-27 10:00:00', 0),
+       (3, 3, '2023-08-28 19:05:00', '0', NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0),
        (4, 4, '2023-07-25 10:00:00', '1', '2023-07-26 11:00:00', '已完成岗前培训',
-        '2023-08-05 09:02:00', '2023-08-05 12:05:00', 3.0, '1', 0, NULL, 0),
-       (3, 7, '2026-09-20 10:00:00', '3', NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, 0),
-       (4, 7, '2026-09-19 09:00:00', '1', '2026-09-19 15:00:00', '已完成岗前培训', NULL, NULL, NULL, NULL, 0, NULL, 0),
+        '2023-08-05 09:02:00', '2023-08-05 12:05:00', 3.0, '1', 0, NULL, '1', '2023-07-26 11:30:00', 0),
+       (3, 7, '2026-09-20 10:00:00', '3', NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0),
+       (4, 7, '2026-09-19 09:00:00', '1', '2026-09-19 15:00:00', '已完成岗前培训',
+        NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 0),
        (2, 4, '2023-07-25 15:30:00', '1', '2023-07-26 11:00:00', '已完成岗前培训',
-        NULL, NULL, NULL, NULL, 1, NULL, 0);
+        NULL, NULL, NULL, NULL, 1, NULL, NULL, NULL, 0);
 
 INSERT INTO checkin(participate_num, checkin_begintime, checkin_endtime, checkin_duration, checkin_timecheck,
                     checkin_code, checkin_latitude, checkin_longitude, checkin_distance, checkin_outdistance,
-                    checkin_flag, checkin_remark, checkin_checktime)
+                    checkin_flag, checkin_remark, checkin_checktime, checkin_source, checkin_adminremark)
 VALUES (1, '2023-10-14 08:25:00', '2023-10-14 11:35:00', 3.0, '1', 'X3P8Q1',
-        31.2305000, 121.4738000, 120, 95, '1', '签到轨迹与活动地点一致，服务时长予以确认', '2023-10-15 09:00:00'),
+        31.2305000, 121.4738000, 120, 95, '1', '签到轨迹与活动地点一致，服务时长予以确认', '2023-10-15 09:00:00', '1', NULL),
        (2, '2023-10-14 08:28:00', '2023-10-14 11:32:00', 3.0, NULL, 'X3P8Q1',
-        31.2500000, 121.5000000, 1860, 60, '2', NULL, NULL),
+        31.2500000, 121.5000000, 1860, 60, '2', NULL, NULL, '1', NULL),
        (4, '2023-08-05 09:02:00', '2023-08-05 12:05:00', 3.0, '1', 'B5T1W7',
-        31.2401000, 121.4801000, 85, 70, '1', '服务时长与活动计划一致，予以确认', '2023-08-06 10:00:00');
+        31.2401000, 121.4801000, 85, 70, '1', '服务时长与活动计划一致，予以确认', '2023-08-06 10:00:00', '1', NULL),
+       (4, '2023-08-05 13:00:00', '2023-08-05 15:00:00', 2.0, NULL, NULL,
+        NULL, NULL, NULL, NULL, '1', '当日午后加做图书整理，由志愿者组织补录', NULL, '2', NULL);
 
 INSERT INTO training(training_id, activity_num, training_name, training_detail,
                      training_begintime, training_endtime, training_location, training_checkin, training_isdeleted)
@@ -1259,3 +1889,10 @@ VALUES ('sho_00001', '参加城市环保徒步宣传，向市民讲解垃圾分�
 
 INSERT INTO show_picture(show_num, picture_id, picture_name, picture_route, picture_uniquename, picture_isdeleted)
 VALUES (1, 'pic_00001', '环保徒步宣传现场', '/upload/show/2023/10/15/001.jpg', '20231015001.jpg', 0);
+
+INSERT INTO notification(receiver_id, receiver_role, notification_title, notification_detail,
+                         notification_read, notification_time)
+VALUES ('vol_00001', 'ROLE_VOLUNTEER', '报名申请已通过',
+        '您报名的「城市环保徒步宣传」已通过志愿者组织审核，请按时到场并在现场完成签到签退。', 0, '2023-08-26 10:00:00'),
+       ('vol_00001', 'ROLE_VOLUNTEER', '服务时长已确认',
+        '「城市环保徒步宣传」的服务时长 3.0 小时已由志愿者组织复核确认，并计入您的累计服务时长。', 1, '2023-10-15 09:00:00');

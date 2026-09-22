@@ -34,6 +34,14 @@ public class Organization implements Serializable {
     @TableLogic
     private Integer organizationIsdeleted;
 
+
+    /** 登录账号状态，1 启用、0 停用，平台管理员查询组织名单时关联展示 */
+    @TableField(exist = false)
+    private Integer accountEnabled;
+
+    /** 组织已申报的志愿活动数量，平台管理员查询组织名单时关联展示 */
+    @TableField(exist = false)
+    private Integer activityCount;
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

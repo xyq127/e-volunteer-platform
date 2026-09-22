@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.evolunteer.mapper.PortalMapper">
+    <!-- E志愿志愿者服务平台 V1.0 公众门户数据的映射文件，仅提供只读查询 -->
+
+    <!-- 门户通知公告的查询结果，附件列表由服务层按公告编号装配 -->
+    <resultMap id="PortalAnnouncementResultMap" type="com.evolunteer.entity.PortalAnnouncementView">
+        <id property="policyannouncementNum" column="policyannouncement_num" jdbcType="INTEGER"/>
+        <result property="policyannouncementId" column="policyannouncement_id" jdbcType="VARCHAR"/>
+        <result property="policyannouncementName" column="policyannouncement_name" jdbcType="VARCHAR"/>
+        <result property="policyannouncementDetail" column="policyannouncement_detail" jdbcType="VARCHAR"/>
+        <result property="policyannouncementFile" column="policyannouncement_file" jdbcType="VARCHAR"/>
+        <result property="adminNum" column="admin_num" jdbcType="INTEGER"/>
+        <result property="fileCount" column="file_count" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!-- 门户公开志愿活动的查询结果，不包含签到码、地理围栏与审核意见等内部数据 -->
+    <resultMap id="PortalActivityResultMap" type="com.evolunteer.entity.Activity">
+        <id property="activityNum" column="activity_num" jdbcType="INTEGER"/>
+        <result property="organizationNum" column="organization_num" jdbcType="INTEGER"/>
+        <result property="activityId" column="activity_id" jdbcType="VARCHAR"/>
+        <result property="activityName" column="activity_name" jdbcType="VARCHAR"/>
+        <result property="activityDetail" column="activity_detail" jdbcType="VARCHAR"/>
+        <result property="activityBegintime" column="activity_begintime" jdbcType="TIMESTAMP"/>
+        <result property="activityEndtime" column="activity_endtime" jdbcType="TIMESTAMP"/>
+        <result property="activityLocation" column="activity_location" jdbcType="VARCHAR"/>
+        <result property="activityNeedpeople" column="activity_needpeople" jdbcType="INTEGER"/>
+        <result property="activityNotice" column="activity_notice" jdbcType="VARCHAR"/>
+        <result property="activityPublishtime" column="activity_publishtime" jdbcType="TIMESTAMP"/>
+        <result property="activitySignddl" column="activity_signddl" jdbcType="TIMESTAMP"/>
+        <result property="activityState" column="activity_state" jdbcType="VARCHAR"/>
+        <result property="activityCheckin" column="activity_checkin" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 门户志愿者组织的查询结果 -->
+    <resultMap id="PortalOrganizationResultMap" type="com.evolunteer.entity.Organization">
+        <id property="organizationNum" column="organization_num" jdbcType="INTEGER"/>
+        <result property="organizationId" column="organization_id" jdbcType="VARCHAR"/>
+        <result property="organizationName" column="organization_name" jdbcType="VARCHAR"/>
+        <result property="organizationEstablishdate" column="organization_establishdate" jdbcType="TIMESTAMP"/>
+        <result property="organizationIntroduction" column="organization_introduction" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 门户志愿秀的查询结果：关联分享志愿者姓名、关联活动名称与首图访问路径 -->
+    <resultMap id="PortalShowResultMap" type="com.evolunteer.entity.PortalShowView">
+        <id property="showNum" column="show_num" jdbcType="INTEGER"/>
+        <result property="showId" column="show_id" jdbcType="VARCHAR"/>
+        <result property="showDetail" column="show_detail" jdbcType="VARCHAR"/>
+        <result property="showSharetime" column="show_sharetime" jdbcType="TIMESTAMP"/>
+        <result property="volunteerNum" column="volunteer_num" jdbcType="INTEGER"/>
+        <result property="volunteerName" column="volunteer_name" jdbcType="VARCHAR"/>
+        <result property="activityNum" column="activity_num" jdbcType="INTEGER"/>
+        <result property="activityName" column="activity_name" jdbcType="VARCHAR"/>
+        <result property="showBrowse" column="show_browse" jdbcType="INTEGER"/>
+        <result property="showLike" column="show_like" jdbcType="INTEGER"/>
+        <result property="pictureRoute" column="picture_route" jdbcType="VARCHAR"/>
+        <result property="pictureCount" column="picture_count" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="PortalAnnouncement_Column_List">
+        announcement.policyannouncement_num,
+        announcement.policyannouncement_id,
+        announcement.policyannouncement_name,
+        announcement.policyannouncement_detail,
+        announcement.policyannouncement_file,
+        announcement.admin_num
+    </sql>
+
+    <sql id="PortalActivity_Column_List">
+        activity.activity_num,
+        activity.organization_num,
+        activity.activity_id,
+        activity.activity_name,
+        activity.activity_detail,
+        activity.activity_begintime,
+        activity.activity_endtime,
+        activity.activity_location,
+        activity.activity_needpeople,
+        activity.activity_notice,
+        activity.activity_publishtime,
+        activity.activity_signddl,
+        activity.activity_state,
+        activity.activity_checkin
+    </sql>
+
+    <sql id="PortalShow_Column_List">
+        content.show_num,
+        content.show_id,
+        content.show_detail,
+        content.show_sharetime,
+        content.volunteer_num,
+        content.activity_num,
+        (select count(*) from show_picture picture_count_source
+        where picture_count_source.show_num = content.show_num
+        and picture_count_source.picture_isdeleted = 0) as picture_count,
+        content.show_browse,
+        content.show_like,
+        sharer.volunteer_name,
+        public_activity.activity_name,
+        (select picture.picture_route
+        from show_picture picture
+        where picture.show_num = content.show_num
+        and picture.picture_isdeleted = 0
+        order by picture.picture_num asc
+        limit 1) as picture_route
+    </sql>
+
+    <!-- 分页查询门户通知公告，并统计每条公告的附件数量 -->
+    <select id="selectAnnouncementPage" resultMap="PortalAnnouncementResultMap">
+        select
+        <include refid="PortalAnnouncement_Column_List"/>,
+        (select count(*) from policy_file
+        where policy_file.policyannouncement_num = announcement.policyannouncement_num
+        and policy_file.policyfile_isdeleted = '0') as file_count
+        from policy_announcement announcement
+        where announcement.policyannouncement_isdeleted = 0
+        <if test="keyword != null and keyword != ''">
+            and (announcement.policyannouncement_name like concat('%', #{keyword,jdbcType=VARCHAR}, '%')
+            or announcement.policyannouncement_detail like concat('%', #{keyword,jdbcType=VARCHAR}, '%'))
+        </if>
+        order by announcement.policyannouncement_num desc
+    </select>
+
+    <!-- 按公告编号查询门户公告详情 -->
+    <select id="selectAnnouncementByNum" resultMap="PortalAnnouncementResultMap">
+        select
+        <include refid="PortalAnnouncement_Column_List"/>,
+        (select count(*) from policy_file
+        where policy_file.policyannouncement_num = announcement.policyannouncement_num
+        and policy_file.policyfile_isdeleted = '0') as file_count
+        from policy_announcement announcement
+        where announcement.policyannouncement_isdeleted = 0
+        and announcement.policyannouncement_num = #{policyannouncementNum,jdbcType=INTEGER}
+    </select>
+
+    <!-- 按公告编号批量查询附件，供门户公告列表一次性装配附件 -->
+    <select id="selectFilesByAnnouncementNums" resultType="com.evolunteer.entity.PolicyFile">
+        select
+        policyfile_num as policyfileNum,
+        policyannouncement_num as policyannouncementNum,
+        policyfile_id as policyfileId,
+        policyfile_name as policyfileName,
+        policyfile_route as policyfileRoute,
+        policyfile_uniquename as policyfileUniquename,
+        policyfile_isdeleted as policyfileIsdeleted
+        from policy_file
+        where policyfile_isdeleted = '0'
+        and policyannouncement_num in
+        <foreach collection="policyannouncementNums" item="announcementNum" open="(" separator="," close=")">
+            #{announcementNum,jdbcType=INTEGER}
+        </foreach>
+        order by policyfile_num asc
+    </select>
+
+    <!-- 分页查询门户公开志愿活动，仅展示未开始与进行中且未删除的活动 -->
+    <select id="selectActivityPage" resultMap="PortalActivityResultMap">
+        select
+        <include refid="PortalActivity_Column_List"/>
+        from activity
+        where activity.activity_isdeleted = 0
+        and activity.activity_state in ('1', '2')
+        <if test="keyword != null and keyword != ''">
+            and (activity.activity_name like concat('%', #{keyword,jdbcType=VARCHAR}, '%')
+            or activity.activity_location like concat('%', #{keyword,jdbcType=VARCHAR}, '%'))
+        </if>
+        order by activity.activity_begintime asc, activity.activity_num desc
+    </select>
+
+    <!-- 分页查询门户志愿者组织 -->
+    <select id="selectOrganizationPage" resultMap="PortalOrganizationResultMap">
+        select
+        organization.organization_num,
+        organization.organization_id,
+        organization.organization_name,
+        organization.organization_establishdate,
+        organization.organization_introduction
+        from organization
+        where organization.organization_isdeleted = 0
+        <if test="keyword != null and keyword != ''">
+            and (organization.organization_name like concat('%', #{keyword,jdbcType=VARCHAR}, '%')
+            or organization.organization_introduction like concat('%', #{keyword,jdbcType=VARCHAR}, '%'))
+        </if>
+        order by organization.organization_num asc
+    </select>
+
+    <!-- 分页查询门户志愿秀，关联分享志愿者姓名、关联活动名称与首图访问路径 -->
+    <select id="selectShowPage" resultMap="PortalShowResultMap">
+        select
+        <include refid="PortalShow_Column_List"/>
+        from `show` content
+        left join volunteer sharer on sharer.volunteer_num = content.volunteer_num
+        left join activity public_activity on public_activity.activity_num = content.activity_num
+        where content.show_isdeleted = 0
+        <if test="keyword != null and keyword != ''">
+            and (content.show_detail like concat('%', #{keyword,jdbcType=VARCHAR}, '%')
+            or sharer.volunteer_name like concat('%', #{keyword,jdbcType=VARCHAR}, '%'))
+        </if>
+        order by content.show_sharetime desc, content.show_num desc
+    </select>
+
+    <!-- 按志愿秀编号查询门户志愿秀详情 -->
+    <select id="selectShowByNum" resultMap="PortalShowResultMap">
+        select
+        <include refid="PortalShow_Column_List"/>
+        from `show` content
+        left join volunteer sharer on sharer.volunteer_num = content.volunteer_num
+        left join activity public_activity on public_activity.activity_num = content.activity_num
+        where content.show_isdeleted = 0
+        and content.show_num = #{showNum,jdbcType=INTEGER}
+    </select>
+
+    <!-- 按志愿秀编号查询全部图片访问路径 -->
+    <select id="selectPictureRoutes" resultType="java.lang.String">
+        select picture.picture_route
+        from show_picture picture
+        where picture.show_num = #{showNum,jdbcType=INTEGER}
+        and picture.picture_isdeleted = 0
+        order by picture.picture_num asc
+    </select>
+
+    <!-- 查询志愿者在指定志愿秀范围内已点赞的志愿秀编号 -->
+    <select id="selectLikedShowNums" resultType="java.lang.Integer">
+        select record.show_num
+        from show_like_record record
+        where record.volunteer_num = #{volunteerNum,jdbcType=INTEGER}
+        and record.show_num in
+        <foreach collection="showNums" item="showNum" open="(" separator="," close=")">
+            #{showNum,jdbcType=INTEGER}
+        </foreach>
+    </select>
+</mapper>

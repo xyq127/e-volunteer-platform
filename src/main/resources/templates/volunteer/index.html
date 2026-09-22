@@ -54,6 +54,9 @@
                 <ul class="nav-menus">
                     <li><a class="text-dark" href="#!" onclick="javascript:toggleFullScreen()"><i
                             data-feather="maximize"></i></a></li>
+                    <li><a class="text-dark" href="notifications.html" title="消息通知"><i
+                            data-feather="bell"></i><span class="badge badge-primary ms-1"
+                                                      id="header_unread_count">0</span></a></li>
                     <li class="p-0">
                         <button class="btn btn-primary-light" type="button"><a href="/logout"><i
                                 data-feather="power"></i>退出登录</a></button>
@@ -100,6 +103,15 @@
                             </li>
                             <li class="dropdown"><a class="nav-link menu-title" href="profile.html"><i
                                     data-feather="user"></i><span>我的档案</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="notifications.html"><i
+                                    data-feather="bell"></i><span>消息通知</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="training.html"><i
+                                    data-feather="book-open"></i><span>培训与公告</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="show.html"><i
+                                    data-feather="image"></i><span>志愿秀</span></a>
                             </li>
                             <li class="dropdown"><a class="nav-link menu-title" href="certificate.html"><i
                                     data-feather="award"></i><span>志愿服务证明</span></a>
@@ -398,14 +410,14 @@
     }
 
     /**
-     * 渲染“我的报名”列表（仅展示前 5 条）
+     * 渲染工作台最近 5 条本人报名记录
      */
     function renderParticipations(participations) {
         var html = "";
         if (!participations || participations.length === 0) {
             html = '<tr><td colspan="4" class="text-center text-muted">暂无数据</td></tr>';
         } else {
-            $.each(participations.slice(0, 5), function (index, item) {
+            $.each(participations, function (index, item) {
                 html += "<tr>"
                     + "<td>" + item.activityName + "</td>"
                     + "<td>" + formatTime(item.participateApplytime) + "</td>"
@@ -442,6 +454,7 @@
         $.ajax({
             url: "/volunteer/plaza",
             type: "GET",
+            data: {page: 1, size: 3},
             success: function (result) {
                 if (!result || result.code !== 100 || !result.extend) {
                     if (result && result.msg) {
@@ -449,7 +462,7 @@
                     }
                     return;
                 }
-                renderRecommend(result.extend.activities);
+                renderRecommend(result.extend.list);
             },
             error: function (result) {
                 console.log(result);
@@ -464,6 +477,7 @@
         $.ajax({
             url: "/volunteer/myParticipations",
             type: "GET",
+            data: {page: 1, size: 5},
             success: function (result) {
                 if (!result || result.code !== 100 || !result.extend) {
                     if (result && result.msg) {
@@ -471,8 +485,8 @@
                     }
                     return;
                 }
-                var participations = result.extend.participations || [];
-                $("#stat_activity").text(participations.length);
+                var participations = result.extend.list || [];
+                $("#stat_activity").text(result.extend.total || participations.length);
                 renderParticipations(participations);
             },
             error: function (result) {
@@ -480,6 +494,25 @@
             }
         });
     }
+
+    /**
+     * 加载顶部未读消息数
+     */
+    function loadUnreadCount() {
+        $.ajax({
+            url: "/volunteer/notifications/unreadCount",
+            type: "GET",
+            success: function (result) {
+                if (result && result.code === 100 && result.extend) {
+                    $("#header_unread_count").text(result.extend.count || 0);
+                }
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
 
     /**
      * 报名推荐活动，返回提示直接展示给志愿者
@@ -509,6 +542,7 @@
         });
         loadPlaza();
         loadParticipations();
+        loadUnreadCount();
     });
 </script>
 </body>

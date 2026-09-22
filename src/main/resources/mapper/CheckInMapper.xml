@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.evolunteer.mapper.CheckInMapper">
-    <!-- E志愿志愿者服务平台 V1.0 志愿服务签到表 checkin 的映射文件 -->
+    <!-- E志愿志愿者服务平台 V1.0 志愿服务记录表 checkin 的映射文件 -->
 
 
     <resultMap id="BaseResultMap" type="com.evolunteer.entity.CheckIn">
@@ -13,6 +13,7 @@
             <result property="checkinEndtime" column="checkin_endtime" jdbcType="TIMESTAMP"/>
             <result property="checkinDuration" column="checkin_duration" jdbcType="FLOAT"/>
             <result property="checkinTimecheck" column="checkin_timecheck" jdbcType="VARCHAR"/>
+            <result property="checkinSource" column="checkin_source" jdbcType="VARCHAR"/>
             <result property="checkinCode" column="checkin_code" jdbcType="VARCHAR"/>
             <result property="checkinLatitude" column="checkin_latitude" jdbcType="DECIMAL"/>
             <result property="checkinLongitude" column="checkin_longitude" jdbcType="DECIMAL"/>
@@ -20,25 +21,78 @@
             <result property="checkinOutdistance" column="checkin_outdistance" jdbcType="INTEGER"/>
             <result property="checkinFlag" column="checkin_flag" jdbcType="VARCHAR"/>
             <result property="checkinRemark" column="checkin_remark" jdbcType="VARCHAR"/>
+            <result property="checkinAdminremark" column="checkin_adminremark" jdbcType="VARCHAR"/>
             <result property="checkinChecktime" column="checkin_checktime" jdbcType="TIMESTAMP"/>
     </resultMap>
 
-    <!-- 签到记录与志愿者信息关联的查询结果，供志愿者组织复核服务时长使用 -->
+    <!-- 服务记录与志愿者信息关联的查询结果，供志愿者组织复核服务时长使用 -->
     <resultMap id="WithVolunteerResultMap" type="com.evolunteer.entity.CheckIn" extends="BaseResultMap">
         <result property="volunteerId" column="volunteer_id" jdbcType="VARCHAR"/>
         <result property="volunteerName" column="volunteer_name" jdbcType="VARCHAR"/>
         <result property="volunteerTel" column="volunteer_tel" jdbcType="VARCHAR"/>
+        <result property="volunteerNum" column="volunteer_num" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!-- 补录记录与志愿者、活动、组织信息关联的查询结果，供平台管理员复核使用 -->
+    <resultMap id="ManualReviewResultMap" type="com.evolunteer.entity.CheckIn" extends="WithVolunteerResultMap">
+        <result property="activityNum" column="activity_num" jdbcType="INTEGER"/>
+        <result property="activityId" column="activity_id" jdbcType="VARCHAR"/>
+        <result property="activityName" column="activity_name" jdbcType="VARCHAR"/>
+        <result property="organizationName" column="organization_name" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         checkin_num,participate_num,checkin_begintime,
         checkin_endtime,checkin_duration,checkin_timecheck,
-        checkin_code,checkin_latitude,checkin_longitude,
+        checkin_source,checkin_code,checkin_latitude,checkin_longitude,
         checkin_distance,checkin_outdistance,checkin_flag,
-        checkin_remark,checkin_checktime
+        checkin_remark,checkin_adminremark,checkin_checktime
     </sql>
 
-    <!-- 按活动查询签到记录，关联报名与志愿者信息，供志愿者组织核对签到轨迹与服务时长 -->
+    <sql id="ReviewState_Condition">
+        <if test='state != null and state == "0"'>
+            and checkin.checkin_timecheck is null
+        </if>
+        <if test='state != null and (state == "1" or state == "2")'>
+            and checkin.checkin_timecheck = #{state,jdbcType=VARCHAR}
+        </if>
+    </sql>
+
+    <!-- 按活动分页查询服务记录，关联报名与志愿者信息，供志愿者组织核对签到轨迹与服务时长 -->
+    <select id="selectPageCheckinByActivityNum" resultMap="WithVolunteerResultMap">
+        select
+        checkin.checkin_num,
+        checkin.participate_num,
+        checkin.checkin_begintime,
+        checkin.checkin_endtime,
+        checkin.checkin_duration,
+        checkin.checkin_timecheck,
+        checkin.checkin_source,
+        checkin.checkin_code,
+        checkin.checkin_latitude,
+        checkin.checkin_longitude,
+        checkin.checkin_distance,
+        checkin.checkin_outdistance,
+        checkin.checkin_flag,
+        checkin.checkin_remark,
+        checkin.checkin_adminremark,
+        checkin.checkin_checktime,
+        volunteer.volunteer_num,
+        volunteer.volunteer_id,
+        volunteer.volunteer_name,
+        volunteer.volunteer_tel
+        from checkin, participate, volunteer
+        where checkin.participate_num = participate.participate_num
+        and participate.volunteer_num = volunteer.volunteer_num
+        and participate.activity_num = #{activityNum,jdbcType=INTEGER}
+        <if test="source != null and source != ''">
+            and checkin.checkin_source = #{source,jdbcType=VARCHAR}
+        </if>
+        <include refid="ReviewState_Condition"/>
+        order by checkin.checkin_num asc
+    </select>
+
+    <!-- 按活动查询该活动全部服务记录 -->
     <select id="selectCheckinListByActivityNum" resultMap="WithVolunteerResultMap">
         select
         checkin.checkin_num,
@@ -47,6 +101,7 @@
         checkin.checkin_endtime,
         checkin.checkin_duration,
         checkin.checkin_timecheck,
+        checkin.checkin_source,
         checkin.checkin_code,
         checkin.checkin_latitude,
         checkin.checkin_longitude,
@@ -54,7 +109,9 @@
         checkin.checkin_outdistance,
         checkin.checkin_flag,
         checkin.checkin_remark,
+        checkin.checkin_adminremark,
         checkin.checkin_checktime,
+        volunteer.volunteer_num,
         volunteer.volunteer_id,
         volunteer.volunteer_name,
         volunteer.volunteer_tel
@@ -63,6 +120,42 @@
         and participate.volunteer_num = volunteer.volunteer_num
         and participate.activity_num = #{activityNum,jdbcType=INTEGER}
         order by checkin.checkin_num asc
+    </select>
+
+    <!-- 分页查询志愿者组织补录的服务时长记录，供平台管理员复核 -->
+    <select id="selectPageManualCheckins" resultMap="ManualReviewResultMap">
+        select
+        checkin.checkin_num,
+        checkin.participate_num,
+        checkin.checkin_begintime,
+        checkin.checkin_endtime,
+        checkin.checkin_duration,
+        checkin.checkin_timecheck,
+        checkin.checkin_source,
+        checkin.checkin_remark,
+        checkin.checkin_adminremark,
+        checkin.checkin_checktime,
+        volunteer.volunteer_num,
+        volunteer.volunteer_id,
+        volunteer.volunteer_name,
+        volunteer.volunteer_tel,
+        activity.activity_num,
+        activity.activity_id,
+        activity.activity_name,
+        organization.organization_name
+        from checkin
+        join participate on participate.participate_num = checkin.participate_num
+        join volunteer on volunteer.volunteer_num = participate.volunteer_num
+        join activity on activity.activity_num = participate.activity_num
+        join organization on organization.organization_num = activity.organization_num
+        where checkin.checkin_source = '2'
+        <include refid="ReviewState_Condition"/>
+        <if test="keyword != null and keyword != ''">
+            and (volunteer.volunteer_name like concat('%', #{keyword,jdbcType=VARCHAR}, '%')
+            or volunteer.volunteer_id like concat('%', #{keyword,jdbcType=VARCHAR}, '%')
+            or activity.activity_name like concat('%', #{keyword,jdbcType=VARCHAR}, '%'))
+        </if>
+        order by checkin.checkin_num desc
     </select>
 
     <!-- 调用数据库存储过程 volunteer_checkin 完成志愿者签到 -->
@@ -93,6 +186,29 @@
     <!-- 调用数据库存储过程 organization_check_checkin 写入服务时长复核结果 -->
     <insert id="organization_check_checkin" statementType="CALLABLE">
         {call organization_check_checkin(#{checkinNum,mode=IN,jdbcType=INTEGER},
+                                         #{isPass,mode=IN,jdbcType=INTEGER},
+                                         #{remark,mode=IN,jdbcType=VARCHAR},
+                                         #{msg,mode=OUT,jdbcType=VARCHAR},
+                                         #{ok,mode=OUT,jdbcType=INTEGER})
+        }
+    </insert>
+
+    <!-- 调用数据库存储过程 organization_record_service_hours 完成服务时长补录 -->
+    <insert id="organization_record_service_hours" statementType="CALLABLE">
+        {call organization_record_service_hours(#{loginId,mode=IN,jdbcType=VARCHAR},
+                                                #{participateNum,mode=IN,jdbcType=INTEGER},
+                                                #{beginTime,mode=IN,jdbcType=TIMESTAMP},
+                                                #{endTime,mode=IN,jdbcType=TIMESTAMP},
+                                                #{remark,mode=IN,jdbcType=VARCHAR},
+                                                #{msg,mode=OUT,jdbcType=VARCHAR},
+                                                #{ok,mode=OUT,jdbcType=INTEGER})
+        }
+    </insert>
+
+    <!-- 调用数据库存储过程 admin_check_manual_checkin 完成补录复核 -->
+    <insert id="admin_check_manual_checkin" statementType="CALLABLE">
+        {call admin_check_manual_checkin(#{loginId,mode=IN,jdbcType=VARCHAR},
+                                         #{checkinNum,mode=IN,jdbcType=INTEGER},
                                          #{isPass,mode=IN,jdbcType=INTEGER},
                                          #{remark,mode=IN,jdbcType=VARCHAR},
                                          #{msg,mode=OUT,jdbcType=VARCHAR},

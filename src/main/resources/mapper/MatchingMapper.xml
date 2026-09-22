@@ -32,6 +32,7 @@
       查询志愿活动的匹配要素：
       活动技能要求由 activity_skill 聚合，距离按 ST_Distance_Sphere 计算球面距离，
       组织历史参与次数统计志愿者在该活动所属组织已报名（含待审核与候补）的活动数量。
+      limitCount 用于限制参与匹配度排序的候选集大小，为空时不限制。
     -->
     <select id="selectActivityMatches" resultMap="ActivityMatchResultMap">
         select
@@ -83,7 +84,15 @@
             and p2.volunteer_num = #{volunteerNum,jdbcType=INTEGER}
             and p2.participate_isdeleted = 0)
         </if>
+        <if test="keyword != null and keyword != ''">
+            and (a.activity_name like concat('%', #{keyword,jdbcType=VARCHAR}, '%')
+            or a.activity_id like concat('%', #{keyword,jdbcType=VARCHAR}, '%')
+            or a.activity_location like concat('%', #{keyword,jdbcType=VARCHAR}, '%'))
+        </if>
         order by a.activity_begintime asc
+        <if test="limitCount != null">
+            limit #{limitCount,jdbcType=INTEGER}
+        </if>
     </select>
 
     <!-- 查询志愿者已报名且尚未结束的活动，用于判断匹配活动与其是否时间冲突 -->

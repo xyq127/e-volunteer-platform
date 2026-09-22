@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html class="wide wow-animation" lang="zh-CN">
+<head>
+    <title>志愿秀 - E志愿志愿者服务平台 V1.0</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <link rel="stylesheet" type="text/css"
+    <link rel="stylesheet" href="/portal/css/bootstrap.css">
+    <link rel="stylesheet" href="/portal/css/fonts.css">
+    <link rel="stylesheet" href="/portal/css/style.css">
+</head>
+<body>
+<div class="preloader">
+    <div class="preloader-body">
+        <div class="preloader-item"></div>
+    </div>
+</div>
+<div class="page">
+    <header class="section page-header">
+        <!--RD Navbar-->
+        <div class="rd-navbar-wrap">
+            <nav class="rd-navbar rd-navbar-classic" data-layout="rd-navbar-fixed" data-sm-layout="rd-navbar-fixed"
+                 data-md-layout="rd-navbar-fixed" data-lg-layout="rd-navbar-static" data-xl-layout="rd-navbar-static"
+                 data-xxl-layout="rd-navbar-static" data-md-device-layout="rd-navbar-fixed"
+                 data-lg-device-layout="rd-navbar-static" data-xl-device-layout="rd-navbar-static"
+                 data-xxl-device-layout="rd-navbar-static" data-lg-stick-up-offset="46px" data-xl-stick-up-offset="46px"
+                 data-xxl-stick-up-offset="46px" data-lg-stick-up="true" data-xl-stick-up="true"
+                 data-xxl-stick-up="true">
+                <div class="rd-navbar-collapse-toggle rd-navbar-fixed-element-1"
+                     data-rd-navbar-toggle=".rd-navbar-collapse"><span></span></div>
+                <div class="rd-navbar-main-outer">
+                    <div class="rd-navbar-main">
+                        <!--RD Navbar Panel-->
+                        <div class="rd-navbar-panel">
+                            <!--RD Navbar Toggle-->
+                            <!--RD Navbar Toggle-->
+                            <button class="rd-navbar-toggle" data-rd-navbar-toggle=".rd-navbar-nav-wrap"><span></span>
+                            </button>
+                            <!--RD Navbar Brand-->
+                            <div class="rd-navbar-brand">
+                                <!--Brand--><a class="brand" href="/portal/index.html"><img class="brand-logo-dark"
+                                                                                    src="/portal/images/logo-default-334x134.png"
+                                                                                    alt="" width="167" height="67"
+                                                                                    loading="lazy"/><img
+                                    class="brand-logo-light" src="/portal/images/logo-inverse-334x134.png" alt=""
+                                    width="167" height="67" loading="lazy"/></a>
+                            </div>
+                        </div>
+                        <div class="rd-navbar-main-element">
+                            <div class="rd-navbar-nav-wrap">
+                                <ul class="rd-navbar-nav">
+                                    <li class="rd-nav-item"><a class="rd-nav-link" href="/portal/index.html">主页</a>
+                                    </li>
+                                    <li class="rd-nav-item"><a class="rd-nav-link"
+                                                               href="/portal/index.html#organizations">志愿者组织</a>
+                                    </li>
+                                    <li class="rd-nav-item"><a class="rd-nav-link"
+                                                               href="/portal/index.html#activities">志愿风采</a>
+                                    </li>
+                                    <li class="rd-nav-item active"><a class="rd-nav-link" href="/portal/shows.html">志愿秀</a>
+                                    </li>
+                                    <li class="rd-nav-item"><a class="rd-nav-link" href="/admin/login.html">志愿者登录</a>
+                                    </li>
+                                    <li class="rd-nav-item"><a class="rd-nav-link" href="/portal/verify.html">服务证明校验</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="rd-navbar-aside rd-navbar-collapse">
+                            <a class="rd-navbar-link btn btn-secondary" href="/admin/login.html">注册/登录</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+    <!-- 志愿秀广场 -->
+    <section class="section section-lg bg-default">
+        <div class="container">
+            <div class="text-block text-block-2 text-center">
+                <h2>志愿秀</h2>
+                <div class="big">志愿者分享的志愿服务故事与现场照片，数据来自平台公开的志愿秀列表</div>
+            </div>
+            <form id="showSearchForm">
+                <div class="row row-30 align-items-center">
+                    <div class="col-md-9">
+                        <input class="form-control" type="text" id="showKeyword"
+                               placeholder="请输入分享内容或分享人姓名关键字">
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-primary" type="submit" id="btn_show_search">查询</button>
+                    </div>
+                </div>
+            </form>
+            <div class="row row-30" id="showList"></div>
+            <div class="row row-30 align-items-center">
+                <div class="col-md-6">
+                    <p class="text-muted" id="showPageInfo">共 0 条</p>
+                </div>
+                <div class="col-md-6">
+                    <div style="text-align:right;">
+                        <button class="btn btn-sm btn-secondary" type="button" id="showPrevPage" disabled>上一页</button>
+                        <button class="btn btn-sm btn-secondary" type="button" id="showNextPage" disabled>下一页</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <footer class="section footer-classic small">
+        <div class="container">
+            <div class="row row-30">
+                <div class="col-md-6">
+                    <h4 class="footer-title">E志愿志愿者服务平台</h4>
+                    <p class="footer-text">面向志愿者、志愿者组织与平台管理员的志愿服务管理平台，提供志愿活动申报、活动审核、志愿者报名与志愿服务记录等功能。</p>
+                </div>
+                <div class="col-md-3">
+                    <h4 class="footer-title">快速入口</h4>
+                    <ul class="list">
+                        <li><a class="link-secondary" href="/portal/index.html">首页</a></li>
+                        <li><a class="link-secondary" href="/portal/shows.html">志愿秀</a></li>
+                        <li><a class="link-secondary" href="/admin/login.html">志愿者登录</a></li>
+                        <li><a class="link-secondary" href="/portal/verify.html">服务证明校验</a></li>
+                    </ul>
+                </div>
+            </div>
+            <p class="rights"><span>&copy;&nbsp;</span><span class="copyright-year"></span><span>&nbsp;</span><span>E志愿志愿者服务平台 V1.0</span></p>
+        </div>
+    </footer>
+</div>
+
+<!-- 志愿秀详情弹窗，内容由志愿秀广场脚本填充 -->
+<div id="portalModal"
+     style="display:none;position:fixed;left:0;top:0;right:0;bottom:0;z-index:1200;overflow-y:auto;padding:40px 15px;background:rgba(34,34,34,.6);">
+    <div style="max-width:760px;margin:0 auto;background:#fff;border-radius:8px;padding:24px;">
+        <div style="text-align:right;">
+            <button class="btn btn-sm btn-secondary" type="button" id="portalModalClose">关闭</button>
+        </div>
+        <h3 id="portalModalTitle" style="margin-top:0;"></h3>
+        <div id="portalModalBody"></div>
+    </div>
+</div>
+
+<div class="snackbars" id="form-output-global"></div>
+<script src="/portal/js/core.min.js"></script>
+<script src="/portal/js/script.js"></script>
+
+<script type="text/javascript">
+    /**
+     * 门户志愿秀广场脚本：列表与详情全部取自 /portal/site/shows、/portal/site/show 公开接口，
+     * 分页参数 page/size 与关键字 keyword 一一对应后端分页契约，接口不可用时降级为“暂无数据”。
+     */
+    var showPage = 1;
+    var showSize = 6;
+    var showKeyword = "";
+
+    // HTML 转义，避免分享内容中的特殊字符破坏页面结构
+    function portalEscapeHtml(value) {
+        if (value === null || value === undefined) {
+            return "";
+        }
+        return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
+    // 文本摘要：超过指定长度时截断并追加省略号
+    function portalSummary(value, length) {
+        var text = value === null || value === undefined ? "" : String(value);
+        return text.length > length ? text.substring(0, length) + "…" : text;
+    }
+
+    // 统一时间显示格式 yyyy-MM-dd HH:mm
+    function portalFormatTime(value) {
+        if (!value) {
+            return "—";
+        }
+        return String(value).replace("T", " ").substring(0, 16);
+    }
+
+    // 从统一响应体中取出当前页列表，缺字段时按空列表处理
+    function portalListOf(result) {
+        return result && result.extend && result.extend.list ? result.extend.list : [];
+    }
+
+    // 分页信息与翻页按钮状态
+    function portalRenderPager(total, page, size) {
+        var totalPage = total > 0 ? Math.ceil(total / size) : 0;
+        document.getElementById("showPageInfo").textContent =
+            "第 " + (totalPage > 0 ? page : 0) + " / " + totalPage + " 页，共 " + total + " 条";
+        document.getElementById("showPrevPage").disabled = page <= 1;
+        document.getElementById("showNextPage").disabled = totalPage === 0 || page >= totalPage;
+    }
+
+    // 列表为空时渲染“暂无数据”行
+    function portalEmptyList() {
+        document.getElementById("showList").innerHTML =
+            '<div class="col-12"><p class="text-muted">暂无数据</p></div>';
+    }
+
+    // 志愿秀列表：分页 + 关键字检索
+    function portalLoadShows() {
+        var container = document.getElementById("showList");
+        var url = "/portal/site/shows?page=" + showPage + "&size=" + showSize
+            + "&keyword=" + encodeURIComponent(showKeyword);
+        fetch(url).then(function (response) {
+            return response.json();
+        }).then(function (result) {
+            var list = portalListOf(result);
+            var extend = result.extend ? result.extend : {};
+            portalRenderPager(Number(extend.total || 0), Number(extend.page || showPage),
+                Number(extend.size || showSize));
+            if (!list.length) {
+                portalEmptyList();
+                return;
+            }
+            var html = "";
+            for (var i = 0; i < list.length; i++) {
+                var show = list[i];
+                html += '<div class="col-md-6 col-lg-4">'
+                    + '<div class="card portal-show-card" data-num="'
+                    + portalEscapeHtml(show.showNum) + '">';
+                if (show.pictureRoute) {
+                    html += '<img class="card-img-top" src="' + portalEscapeHtml(show.pictureRoute)
+                        + '" alt="' + portalEscapeHtml(show.activityName || "志愿秀图片")
+                        + '" style="height:200px;object-fit:cover;"/>';
+                }
+                html += '<div class="card-body">'
+                    + '<h4 class="card-title">' + portalEscapeHtml(show.volunteerName || "匿名志愿者") + '</h4>'
+                    + '<p class="text-muted">关联活动：'
+                    + portalEscapeHtml(show.activityName || "未关联活动") + '</p>'
+                    + '<p class="text-muted">分享时间：'
+                    + portalEscapeHtml(portalFormatTime(show.showSharetime)) + '</p>'
+                    + '<p class="card-text">' + portalEscapeHtml(portalSummary(show.showDetail, 60)) + '</p>'
+                    + '<p class="text-muted">浏览 ' + Number(show.showBrowse || 0)
+                    + ' 次 · 点赞 ' + Number(show.showLike || 0) + ' 次</p>'
+                    + '<button class="btn btn-secondary portal-show-detail" type="button" data-num="'
+                    + portalEscapeHtml(show.showNum) + '">查看详情</button>'
+                    + '</div></div></div>';
+            }
+            container.innerHTML = html;
+            var buttons = container.querySelectorAll(".portal-show-detail");
+            for (var j = 0; j < buttons.length; j++) {
+                buttons[j].addEventListener("click", function () {
+                    portalShowDetail(this.getAttribute("data-num"));
+                });
+            }
+        }).catch(function () {
+            portalRenderPager(0, 1, showSize);
+            portalEmptyList();
+        });
+    }
+
+    // 志愿秀详情：展示完整内容与全部图片
+    function portalShowDetail(showNum) {
+        fetch("/portal/site/show?showNum=" + encodeURIComponent(showNum)).then(function (response) {
+            return response.json();
+        }).then(function (result) {
+            var show = result.extend ? result.extend.show : null;
+            if (result.code !== 100 || !show) {
+                alert(result.msg || "该志愿秀不存在或已被删除");
+                return;
+            }
+            var pictures = show.pictureRoutes ? show.pictureRoutes : [];
+            var pictureHtml = "";
+            if (pictures.length) {
+                for (var i = 0; i < pictures.length; i++) {
+                    pictureHtml += '<p><img src="' + portalEscapeHtml(pictures[i])
+                        + '" alt="志愿秀图片" style="max-width:100%;"/></p>';
+                }
+            } else {
+                pictureHtml = '<p class="text-muted">该志愿秀没有上传图片</p>';
+            }
+            portalOpenModal(show.volunteerName || "志愿秀详情",
+                '<p class="text-muted">关联活动：' + portalEscapeHtml(show.activityName || "未关联活动")
+                + ' · 分享时间：' + portalEscapeHtml(portalFormatTime(show.showSharetime))
+                + ' · 浏览 ' + Number(show.showBrowse || 0) + ' 次 · 点赞 '
+                + Number(show.showLike || 0) + ' 次</p>'
+                + '<p>' + portalEscapeHtml(show.showDetail).replace(/\n/g, "<br>") + '</p>'
+                + '<h4>志愿秀图片</h4>' + pictureHtml);
+            // 详情接口会累加浏览次数，重新加载列表以保持展示的浏览数与后端一致
+            portalLoadShows();
+        }).catch(function () {
+            alert("志愿秀详情加载失败，请稍后重试");
+        });
+    }
+
+    // 弹窗打开与关闭
+    function portalOpenModal(title, bodyHtml) {
+        document.getElementById("portalModalTitle").textContent = title || "";
+        document.getElementById("portalModalBody").innerHTML = bodyHtml;
+        document.getElementById("portalModal").style.display = "block";
+    }
+
+    function portalCloseModal() {
+        document.getElementById("portalModal").style.display = "none";
+    }
+
+    document.getElementById("portalModalClose").addEventListener("click", portalCloseModal);
+    document.getElementById("portalModal").addEventListener("click", function (event) {
+        if (event.target === this) {
+            portalCloseModal();
+        }
+    });
+
+    // 关键字检索：重置到第一页后查询
+    document.getElementById("showSearchForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+        showKeyword = document.getElementById("showKeyword").value.trim();
+        showPage = 1;
+        portalLoadShows();
+    });
+
+    // 翻页
+    document.getElementById("showPrevPage").addEventListener("click", function () {
+        if (showPage > 1) {
+            showPage = showPage - 1;
+            portalLoadShows();
+        }
+    });
+
+    document.getElementById("showNextPage").addEventListener("click", function () {
+        showPage = showPage + 1;
+        portalLoadShows();
+    });
+
+    portalLoadShows();
+</script>
+
+</body>
+
+</html>

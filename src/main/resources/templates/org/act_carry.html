@@ -7,11 +7,6 @@
     <link rel="icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <link rel="shortcut icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <title>进行中的活动 - E志愿志愿者服务平台 V1.0</title>
-    <!-- Google font-->
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&amp;display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap" rel="stylesheet">
     <!-- Font Awesome-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/fontawesome.css">
     <!-- ico-font-->
@@ -22,8 +17,6 @@
     <link rel="stylesheet" type="text/css" href="/console/assets/css/flag-icon.css">
     <!-- Feather icon-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/feather-icon.css">
-    <!-- Plugins css start-->
-    <!-- Plugins css Ends-->
     <!-- Bootstrap css-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/bootstrap.css">
     <!-- App css-->
@@ -40,25 +33,32 @@
 </div>
 <!-- Loader ends-->
 <!-- page-wrapper Start-->
-<div class="page-wrapper" id="pageWrapper">
+<div class="page-wrapper compact-wrapper" id="pageWrapper">
     <!-- Page Header Start-->
     <div class="page-main-header">
         <div class="main-header-right row m-0">
             <div class="main-header-left">
-                <div class="logo-wrapper"><a href="index.html"><img class="img-fluid" src="/console/assets/images/logo/app-logo.svg" alt=""></a></div>
-                <div class="dark-logo-wrapper"><a href="index.html"><img class="img-fluid" src="/console/assets/images/logo/app-logo-dark.svg" alt=""></a></div>
-                <div class="toggle-sidebar"><i class="status_toggle middle" data-feather="sidebar" id="sidebar-toggle"></i></div>
+                <div class="logo-wrapper"><a href="index.html"><img class="img-fluid"
+                                                                   src="/console/assets/images/logo/app-logo.svg" alt=""></a>
+                </div>
+                <div class="dark-logo-wrapper"><a href="index.html"><img class="img-fluid"
+                                                                         src="/console/assets/images/logo/app-logo-dark.svg"
+                                                                         alt=""></a></div>
+                <div class="toggle-sidebar"><i class="status_toggle middle" data-feather="sidebar"
+                                               id="sidebar-toggle"></i></div>
             </div>
-
+            <div class="left-menu-header col">
+                <h6 class="f-w-600 mb-0">志愿者组织工作台</h6>
+            </div>
             <div class="nav-right col pull-right right-menu p-0">
                 <ul class="nav-menus">
-                    <li><a class="text-dark" href="#!" onclick="javascript:toggleFullScreen()"><i data-feather="maximize"></i></a></li>
-
-                    <li>
-                        <div class="mode"><i class="fa fa-moon-o"></i></div>
+                    <li><a class="text-dark" href="#!" onclick="javascript:toggleFullScreen()"><i
+                            data-feather="maximize"></i></a></li>
+                    <li class="p-0">
+                        <button class="btn btn-primary-light" type="button"><a href="notifications.html"><i
+                                data-feather="bell"></i>未读消息 <span id="unread_count">0</span></a></button>
                     </li>
-
-                                        <li class="p-0">
+                    <li class="p-0">
                         <button class="btn btn-primary-light" type="button"><a href="/logout"><i
                                 data-feather="power"></i>退出登录</a></button>
                     </li>
@@ -67,23 +67,22 @@
             <div class="d-lg-none mobile-toggle pull-right w-auto"><i data-feather="menu"></i></div>
         </div>
     </div>
-    <!-- Page Header Ends                              -->
+    <!-- Page Header Ends-->
     <!-- Page Body Start-->
-    <div class="page-body-wrapper horizontal-menu">
+    <div class="page-body-wrapper sidebar-icon">
         <!-- Page Sidebar Start-->
         <header class="main-nav">
-
-                        <div class="sidebar-user text-center">
+            <div class="sidebar-user text-center">
                 <a class="setting-primary" href="org_info.html"><i data-feather="settings"></i></a>
                 <img class="img-90 rounded-circle" src="/console/assets/images/dashboard/1.png" alt="">
-                <a href="org_info.html"><h6 class="mt-3 f-14 f-w-600">志愿者组织</h6></a>
+                <a href="org_info.html"><h6 class="mt-3 f-14 f-w-600" id="organization_name">志愿者组织</h6></a>
                 <p class="mb-0 font-roboto">志愿活动申报与报名管理</p>
             </div>
             <nav>
                 <div class="main-navbar">
                     <div class="left-arrow" id="left-arrow"><i data-feather="rewind"></i></div>
                     <div id="mainnav">
-                                                <ul class="nav-menu custom-scrollbar">
+                        <ul class="nav-menu custom-scrollbar">
                             <li class="back-btn">
                                 <div class="mobile-back text-end"><span>返回</span><i class="fa fa-angle-right ps-2"
                                                                                    aria-hidden="true"></i></div>
@@ -118,6 +117,15 @@
                             <li class="dropdown"><a class="nav-link menu-title" href="checkin_review.html"><i
                                     data-feather="check-square"></i><span>签到与时长复核</span></a>
                             </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="training.html"><i
+                                    data-feather="book-open"></i><span>培训管理</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="announcements.html"><i
+                                    data-feather="volume-2"></i><span>活动公告</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="notifications.html"><i
+                                    data-feather="bell"></i><span>消息通知</span></a>
+                            </li>
                             <li class="sidebar-main-title">
                                 <div><h6>组织中心</h6></div>
                             </li>
@@ -125,7 +133,6 @@
                                     data-feather="sliders"></i><span>组织资料</span></a>
                             </li>
                         </ul>
-
                     </div>
                     <div class="right-arrow" id="right-arrow"><i data-feather="play"></i></div>
                 </div>
@@ -141,14 +148,35 @@
                                 <h5>志愿活动--进行中</h5>
                             </div>
                             <div class="card-body">
-                                <div id="basicScenario">
-                                    <table class="table table-hover table-bordered " id="carryActivity_table">
+                                <div class="row mb-3">
+                                    <div class="col-md-5">
+                                        <div class="input-group">
+                                            <input class="form-control" id="keyword" type="text"
+                                                   placeholder="活动名称或活动编号">
+                                            <button class="btn btn-primary" type="button" id="search_button">查询</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-bordered" id="activity_table">
                                         <thead>
+                                        <tr class="active">
+                                            <th scope="col">活动名称</th>
+                                            <th scope="col">活动开始时间</th>
+                                            <th scope="col">活动结束时间</th>
+                                            <th scope="col">活动地点</th>
+                                            <th scope="col">需求人数</th>
+                                            <th scope="col">操作</th>
+                                        </tr>
                                         </thead>
                                         <tbody>
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">数据加载中……</td>
+                                        </tr>
                                         </tbody>
                                     </table>
                                 </div>
+                                <div id="activity_pager" class="mt-3"></div>
                             </div>
                         </div>
                     </div>
@@ -170,8 +198,6 @@
 <script src="/console/assets/js/bootstrap/bootstrap.min.js"></script>
 <!-- Theme js-->
 <script src="/console/assets/js/script.js"></script>
-<!-- login js-->
-<!-- Plugin used-->
 
 <script type="text/javascript">
     /**
@@ -183,64 +209,191 @@
         }
         return String(value).replace("T", " ").substring(0, 16);
     }
-</script>
 
-<script type="text/javascript">
-
-    function build_activity_table(result) {
-        //清空table表格
-        $("#carryActivity_table thead").empty();
-        $("#carryActivity_table tbody").empty();
-
-        var carryActivity = result.extend.carryActivity;
-
-        var activityNameTd = $("<td></td>").addClass("text-center").append("活动名称");
-        var activityBegintimeTd = $("<td></td>").addClass("text-center").append("活动开始时间");
-        var activityEndtimeTd = $("<td></td>").addClass("text-center").append("活动结束时间");
-        var activityLocationTd = $("<td></td>").addClass("text-center").append("活动地点");
-        var activityNeedpeopleTd = $("<td></td>").addClass("text-center").append("需求人数");
-        var controlTd = $("<td></td>").addClass("text-center").append("操作");
-        $("<tr></tr>").append(activityNameTd)
-            .append(activityBegintimeTd)
-            .append(activityEndtimeTd)
-            .append(activityLocationTd)
-            .append(activityNeedpeopleTd)
-            .append(controlTd)
-            .addClass("active")
-            .appendTo("#carryActivity_table thead");
-        var tabValue = ``;
-        $.each(carryActivity, function (index, item) {
-            tabValue += `<tr>
-                            <td class="text-center">${item.activityName}</td>
-                            <td class="text-center">${formatTime(item.activityBegintime)}</td>
-                            <td class="text-center">${formatTime(item.activityEndtime)}</td>
-                            <td class="text-center">${item.activityLocation}</td>
-                            <td class="text-center">${item.activityNeedpeople}</td>
-                            <td class="text-center">
-                            </td>
-                          </tr>
-                `;
-        });
-        $("#carryActivity_table tbody").html(tabValue);
+    /**
+     * 将时间转换为 datetime-local 输入框需要的 yyyy-MM-ddTHH:mm
+     */
+    function toDateTimeInput(value) {
+        if (!value) {
+            return "";
+        }
+        return String(value).replace(" ", "T").substring(0, 16);
     }
 
-    //一进网页就加载freshPage()
-    $(document).ready(function () {
+    /**
+     * 将 datetime-local 输入框的值转换为接口需要的 yyyy-MM-dd HH:mm
+     */
+    function toApiTime(value) {
+        if (!value) {
+            return "";
+        }
+        return String(value).replace("T", " ");
+    }
+
+    /**
+     * 通用分页控件渲染：holderId 为分页容器编号，onChange 接收目标页码
+     */
+    function renderPager(holderId, total, page, size, onChange) {
+        total = Number(total) || 0;
+        page = Number(page) || 1;
+        size = Number(size) || 10;
+        var totalPage = Math.ceil(total / size);
+        var currentPage = totalPage === 0 ? 0 : page;
+        var html = '<div class="d-flex justify-content-between align-items-center flex-wrap">'
+            + '<span class="text-muted">共 ' + total + ' 条，第 ' + currentPage + ' / ' + totalPage + ' 页</span>'
+            + '<div class="btn-group btn-group-pill" role="group" aria-label="分页">'
+            + '<button class="btn btn-outline-primary btn-sm pager-prev" type="button"'
+            + (page <= 1 ? ' disabled' : '') + '>上一页</button>'
+            + '<button class="btn btn-outline-primary btn-sm pager-next" type="button"'
+            + (page >= totalPage ? ' disabled' : '') + '>下一页</button>'
+            + '</div></div>';
+        var $holder = $("#" + holderId);
+        $holder.html(html);
+        $holder.find(".pager-prev").on("click", function () {
+            if (page > 1) {
+                onChange(page - 1);
+            }
+        });
+        $holder.find(".pager-next").on("click", function () {
+            if (page < totalPage) {
+                onChange(page + 1);
+            }
+        });
+    }
+
+    /**
+     * 分页响应统一取值：list 当前页数据、total 总条数、page 当前页、size 每页条数
+     */
+    function pageData(result, fallbackPage, fallbackSize) {
+        var extend = (result && result.extend) ? result.extend : {};
+        var total = Number(extend.total);
+        var currentPage = Number(extend.page);
+        var pageSize = Number(extend.size);
+        return {
+            list: extend.list || [],
+            total: (isNaN(total) || total < 0) ? 0 : total,
+            page: (isNaN(currentPage) || currentPage < 1) ? fallbackPage : currentPage,
+            size: (isNaN(pageSize) || pageSize < 1) ? fallbackSize : pageSize
+        };
+    }
+
+    /**
+     * 统一提示文案：优先使用接口返回的 msg，纯文本响应直接展示
+     */
+    function tip(result, fallback) {
+        if (result && result.msg) {
+            return result.msg;
+        }
+        if (typeof result === "string" && result) {
+            return result;
+        }
+        return fallback;
+    }
+
+    /**
+     * 查询顶部未读消息数量
+     */
+    function loadUnreadCount() {
         $.ajax({
-            url: "/activity/findCarryActivityByNumAndState",
+            url: "/org/notifications/unreadCount",
             type: "GET",
-            data: {},
             success: function (result) {
-                console.log(result);
-                build_activity_table(result);//画表格
+                var count = (result && result.extend) ? result.extend.count : 0;
+                $("#unread_count").text((count === null || count === undefined) ? 0 : count);
             },
             error: function (result) {
                 console.log(result);
             }
         });
+    }
 
+    /** 当前页码、每页条数与检索关键字 */
+    var page = 1, size = 10, keyword = "";
+
+    /**
+     * 渲染进行中的活动列表
+     */
+    function renderActivityTable(list) {
+        var tabValue = "";
+        $.each(list, function (index, item) {
+            tabValue += `<tr>
+                            <td class="text-center">${item.activityName}</td>
+                            <td class="text-center">${formatTime(item.activityBegintime)}</td>
+                            <td class="text-center">${formatTime(item.activityEndtime)}</td>
+                            <td class="text-center">${item.activityLocation || "—"}</td>
+                            <td class="text-center">${item.activityNeedpeople || 0}</td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-pill" role="group" aria-label="活动操作">
+                                    <button class="btn btn-outline-primary btn-sm" type="button"
+                                            onclick="finishActivity(${item.activityNum})">结束活动</button>
+                                    <a class="btn btn-outline-success btn-sm"
+                                       href="/org/export/participants?activityNum=${item.activityNum}">导出报名名单</a>
+                                </div>
+                            </td>
+                         </tr>`;
+        });
+        if (list.length === 0) {
+            tabValue = `<tr><td colspan="6" class="text-center text-muted">暂无数据</td></tr>`;
+        }
+        $("#activity_table tbody").html(tabValue);
+    }
+
+    /**
+     * 加载当前组织进行中的活动
+     */
+    function load() {
+        $.ajax({
+            url: "/activity/findCarryActivityByNumAndState",
+            type: "GET",
+            data: {page: page, size: size, keyword: keyword},
+            success: function (result) {
+                var data = pageData(result, page, size);
+                renderActivityTable(data.list);
+                renderPager("activity_pager", data.total, data.page, data.size, function (target) {
+                    page = target;
+                    load();
+                });
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
+    /**
+     * 结束活动：活动置为已结束，之后可进行活动结算
+     */
+    function finishActivity(activityNum) {
+        if (!confirm("确定结束该活动吗？结束后志愿者不能继续签到。")) {
+            return;
+        }
+        $.ajax({
+            url: "/activity/finishActivity",
+            type: "POST",
+            data: {"activityNum": activityNum},
+            success: function (result) {
+                var success = result && result.code === 100;
+                alert(tip(result, success ? "活动已结束" : "活动结束失败"));
+                if (success) {
+                    load();
+                }
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        loadUnreadCount();
+        load();
+        $("#search_button").click(function () {
+            page = 1;
+            keyword = $.trim($("#keyword").val());
+            load();
+        });
     });
-</script>
 
+</script>
 </body>
 </html>

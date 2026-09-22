@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/console/assets/images/favicon.png" type="image/x-icon">
+    <link rel="shortcut icon" href="/console/assets/images/favicon.png" type="image/x-icon">
+    <title>消息通知 - E志愿志愿者服务平台 V1.0</title>
+    <!-- Font Awesome-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/fontawesome.css">
+    <!-- ico-font-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/icofont.css">
+    <!-- Themify icon-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/themify.css">
+    <!-- Flag icon-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/flag-icon.css">
+    <!-- Feather icon-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/feather-icon.css">
+    <!-- Bootstrap css-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/bootstrap.css">
+    <!-- App css-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/style.css">
+    <!-- Responsive css-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/responsive.css">
+</head>
+<body>
+<!-- Loader starts-->
+<div class="loader-wrapper">
+    <div class="theme-loader">
+        <div class="loader-p"></div>
+    </div>
+</div>
+<!-- Loader ends-->
+<!-- page-wrapper Start-->
+<div class="page-wrapper compact-wrapper" id="pageWrapper">
+    <!-- Page Header Start-->
+    <div class="page-main-header">
+        <div class="main-header-right row m-0">
+            <div class="main-header-left">
+                <div class="logo-wrapper"><a href="index.html"><img class="img-fluid"
+                                                                   src="/console/assets/images/logo/app-logo.svg" alt=""></a>
+                </div>
+                <div class="dark-logo-wrapper"><a href="index.html"><img class="img-fluid"
+                                                                         src="/console/assets/images/logo/app-logo-dark.svg"
+                                                                         alt=""></a></div>
+                <div class="toggle-sidebar"><i class="status_toggle middle" data-feather="sidebar"
+                                               id="sidebar-toggle"></i></div>
+            </div>
+            <div class="left-menu-header col">
+                <h6 class="f-w-600 mb-0">志愿者工作台</h6>
+            </div>
+            <div class="nav-right col pull-right right-menu p-0">
+                <ul class="nav-menus">
+                    <li><a class="text-dark" href="#!" onclick="javascript:toggleFullScreen()"><i
+                            data-feather="maximize"></i></a></li>
+                    <li class="p-0">
+                        <button class="btn btn-primary-light" type="button"><a href="/logout"><i
+                                data-feather="power"></i>退出登录</a></button>
+                    </li>
+                </ul>
+            </div>
+            <div class="d-lg-none mobile-toggle pull-right w-auto"><i data-feather="menu"></i></div>
+        </div>
+    </div>
+    <!-- Page Header Ends-->
+    <!-- Page Body Start-->
+    <div class="page-body-wrapper sidebar-icon">
+        <!-- Page Sidebar Start-->
+        <header class="main-nav">
+            <div class="sidebar-user text-center">
+                <a class="setting-primary" href="profile.html"><i data-feather="settings"></i></a>
+                <img class="img-90 rounded-circle" src="/console/assets/images/dashboard/1.png" alt="">
+                <a href="profile.html"><h6 class="mt-3 f-14 f-w-600" id="sidebar_volunteer_name">志愿者</h6></a>
+                <p class="mb-0 font-roboto" id="sidebar_volunteer_id">编号：—</p>
+            </div>
+            <nav>
+                <div class="main-navbar">
+                    <div class="left-arrow" id="left-arrow"><i data-feather="rewind"></i></div>
+                    <div id="mainnav">
+                        <ul class="nav-menu custom-scrollbar">
+                            <li class="back-btn">
+                                <div class="mobile-back text-end"><span>返回</span><i class="fa fa-angle-right ps-2"
+                                                                                   aria-hidden="true"></i></div>
+                            </li>
+                            <li class="sidebar-main-title">
+                                <div><h6>志愿服务</h6></div>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="index.html"><i
+                                    data-feather="home"></i><span>个人工作台</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="activity_plaza.html"><i
+                                    data-feather="compass"></i><span>活动广场</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="my_participation.html"><i
+                                    data-feather="clipboard"></i><span>我的报名</span></a>
+                            </li>
+                            <li class="sidebar-main-title">
+                                <div><h6>我的中心</h6></div>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="profile.html"><i
+                                    data-feather="user"></i><span>我的档案</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title active" href="notifications.html"><i
+                                    data-feather="bell"></i><span>消息通知</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="training.html"><i
+                                    data-feather="book-open"></i><span>培训与公告</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="show.html"><i
+                                    data-feather="image"></i><span>志愿秀</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="certificate.html"><i
+                                    data-feather="award"></i><span>志愿服务证明</span></a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="right-arrow" id="right-arrow"><i data-feather="play"></i></div>
+                </div>
+            </nav>
+        </header>
+        <!-- Page Sidebar Ends-->
+        <div class="page-body">
+            <!-- Container-fluid starts-->
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-xl-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>消息通知</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-md-6">
+                                        <p class="text-muted small mb-0">未读通知以高亮行展示，可单条标记已读或一次全部标记已读。</p>
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        <button class="btn btn-outline-primary btn-sm" type="button"
+                                                onclick="markAllRead()">全部已读
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-bordernone">
+                                        <thead>
+                                        <tr>
+                                            <th scope="col">通知标题</th>
+                                            <th scope="col">通知内容</th>
+                                            <th scope="col">通知时间</th>
+                                            <th scope="col">状态</th>
+                                            <th scope="col">操作</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody id="notification_table">
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted">数据加载中……</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <span class="text-muted small" id="notif_total">共 0 条</span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <nav class="float-end">
+                                            <ul class="pagination pagination-primary mb-0">
+                                                <li class="page-item" id="notif_prev"><a class="page-link" href="#!"
+                                                        onclick="changeNotifPage(-1);return false;">上一页</a></li>
+                                                <li class="page-item disabled"><a class="page-link" href="#!"
+                                                        id="notif_page_info">第 1 / 1 页</a></li>
+                                                <li class="page-item" id="notif_next"><a class="page-link" href="#!"
+                                                        onclick="changeNotifPage(1);return false;">下一页</a></li>
+                                            </ul>
+                                        </nav>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Container-fluid Ends-->
+        </div>
+    </div>
+</div>
+<!-- latest jquery-->
+<script src="/console/assets/js/jquery-3.5.1.min.js"></script>
+<!-- feather icon js-->
+<script src="/console/assets/js/icons/feather-icon/feather.min.js"></script>
+<script src="/console/assets/js/icons/feather-icon/feather-icon.js"></script>
+<!-- Sidebar jquery-->
+<script src="/console/assets/js/sidebar-menu.js"></script>
+<script src="/console/assets/js/config.js"></script>
+<!-- Bootstrap js-->
+<script src="/console/assets/js/bootstrap/popper.min.js"></script>
+<script src="/console/assets/js/bootstrap/bootstrap.min.js"></script>
+<!-- Theme js-->
+<script src="/console/assets/js/script.js"></script>
+
+<script type="text/javascript">
+    /**
+     * 将后端返回的时间格式化为 yyyy-MM-dd HH:mm
+     */
+    function formatTime(value) {
+        if (!value) {
+            return "—";
+        }
+        return String(value).replace("T", " ").substring(0, 16);
+    }
+
+    /**
+     * 通知分页条件
+     */
+    var notifPage = 1;
+    var notifSize = 10;
+    var notifTotal = 0;
+
+    /**
+     * 判断通知是否未读（notificationRead 为 1 表示已读）
+     */
+    function isUnread(item) {
+        return String(item.notificationRead) !== "1";
+    }
+
+    /**
+     * 查询当前登录志愿者资料，并刷新侧边栏身份信息
+     */
+    function loadProfile() {
+        $.ajax({
+            url: "/volunteer/profile",
+            type: "GET",
+            success: function (result) {
+                if (!result || result.code !== 100 || !result.extend || !result.extend.profile) {
+                    if (result && result.msg) {
+                        alert(result.msg);
+                    }
+                    return;
+                }
+                var profile = result.extend.profile;
+                $("#sidebar_volunteer_name").text(profile.volunteerName || "志愿者");
+                $("#sidebar_volunteer_id").text("编号：" + (profile.volunteerId || "—"));
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
+    /**
+     * 渲染通知列表，未读通知使用高亮行
+     */
+    function renderNotifications(notifications) {
+        var html = "";
+        if (!notifications || notifications.length === 0) {
+            html = '<tr><td colspan="5" class="text-center text-muted">暂无数据</td></tr>';
+        } else {
+            $.each(notifications, function (index, item) {
+                var unread = isUnread(item);
+                html += "<tr" + (unread ? ' class="table-primary"' : "") + ">"
+                    + "<td>" + (item.notificationTitle || "—") + "</td>"
+                    + "<td>" + (item.notificationDetail || "—") + "</td>"
+                    + "<td>" + formatTime(item.notificationTime) + "</td>"
+                    + "<td>" + (unread
+                        ? '<span class="badge badge-danger">未读</span>'
+                        : '<span class="badge badge-secondary">已读</span>') + "</td>"
+                    + "<td>" + (unread
+                        ? '<button class="btn btn-primary btn-xs" type="button" onclick="markRead('
+                            + item.notificationNum + ')">标记已读</button>'
+                        : '<span class="text-muted">—</span>') + "</td>"
+                    + "</tr>";
+            });
+        }
+        $("#notification_table").html(html);
+    }
+
+    /**
+     * 渲染分页控件：条数、页码信息与上一页/下一页可用状态
+     */
+    function renderPager(total, current, pageSize) {
+        notifTotal = Number(total);
+        if (isNaN(notifTotal) || notifTotal < 0) {
+            notifTotal = 0;
+        }
+        var currentPage = Number(current);
+        if (isNaN(currentPage) || currentPage < 1) {
+            currentPage = 1;
+        }
+        var currentSize = Number(pageSize);
+        if (isNaN(currentSize) || currentSize < 1) {
+            currentSize = notifSize;
+        }
+        var totalPages = notifTotal > 0 ? Math.ceil(notifTotal / currentSize) : 1;
+        $("#notif_total").text("共 " + notifTotal + " 条");
+        $("#notif_page_info").text("第 " + currentPage + " / " + totalPages + " 页");
+        $("#notif_prev").toggleClass("disabled", currentPage <= 1);
+        $("#notif_next").toggleClass("disabled", notifTotal === 0 || currentPage >= totalPages);
+    }
+
+    /**
+     * 加载当前登录志愿者的站内通知
+     */
+    function loadNotifications() {
+        $.ajax({
+            url: "/volunteer/notifications",
+            type: "GET",
+            data: {page: notifPage, size: notifSize},
+            success: function (result) {
+                if (!result || result.code !== 100 || !result.extend) {
+                    if (result && result.msg) {
+                        alert(result.msg);
+                    }
+                    return;
+                }
+                renderNotifications(result.extend.list);
+                renderPager(result.extend.total, result.extend.page, result.extend.size);
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
+    /**
+     * 翻页：step 为 1 下一页、-1 上一页
+     */
+    function changeNotifPage(step) {
+        var nextPage = notifPage + step;
+        var totalPages = notifTotal > 0 ? Math.ceil(notifTotal / notifSize) : 1;
+        if (nextPage < 1 || nextPage > totalPages) {
+            return;
+        }
+        notifPage = nextPage;
+        loadNotifications();
+    }
+
+    /**
+     * 将单条通知标记为已读
+     */
+    function markRead(notificationNum) {
+        $.ajax({
+            url: "/volunteer/notifications/read",
+            type: "POST",
+            data: {notificationNum: notificationNum},
+            success: function (result) {
+                alert((result && result.msg) ? result.msg : "操作完成");
+                if (result && result.code === 100) {
+                    loadNotifications();
+                }
+            },
+            error: function (result) {
+                console.log(result);
+                alert("网络异常，请稍后重试");
+            }
+        });
+    }
+
+    /**
+     * 将全部通知标记为已读
+     */
+    function markAllRead() {
+        $.ajax({
+            url: "/volunteer/notifications/readAll",
+            type: "POST",
+            success: function (result) {
+                alert((result && result.msg) ? result.msg : "操作完成");
+                if (result && result.code === 100) {
+                    notifPage = 1;
+                    loadNotifications();
+                }
+            },
+            error: function (result) {
+                console.log(result);
+                alert("网络异常，请稍后重试");
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        loadProfile();
+        loadNotifications();
+    });
+</script>
+</body>
+</html>

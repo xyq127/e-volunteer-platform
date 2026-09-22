@@ -24,13 +24,17 @@ public interface MatchingMapper {
      * @param longitude    志愿者常住地点经度，未设置时传 null
      * @param activityNum  指定活动编号，传 null 时查询全部活动
      * @param openOnly     是否只查询可报名活动（未开始、报名未截止、服务未结束且本人未报名）
+     * @param keyword      活动名称或活动地点关键字，可为空
+     * @param limitCount   返回条数上限，为空时不限制，用于控制参与匹配度排序的候选集大小
      * @return 活动匹配列表
      */
     List<ActivityMatch> selectActivityMatches(@Param("volunteerNum") Integer volunteerNum,
                                               @Param("latitude") Double latitude,
                                               @Param("longitude") Double longitude,
                                               @Param("activityNum") Integer activityNum,
-                                              @Param("openOnly") boolean openOnly);
+                                              @Param("openOnly") boolean openOnly,
+                                              @Param("keyword") String keyword,
+                                              @Param("limitCount") Integer limitCount);
 
     /**
      * 查询志愿者已报名且尚未结束的活动，用于判断匹配活动的时间冲突

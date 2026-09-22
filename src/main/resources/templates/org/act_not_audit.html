@@ -7,14 +7,6 @@
     <link rel="icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <link rel="shortcut icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <title>审核未通过的活动 - E志愿志愿者服务平台 V1.0</title>
-    <!-- Google font-->
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap"
-          rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&amp;display=swap"
-          rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap"
-          rel="stylesheet">
     <!-- Font Awesome-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/fontawesome.css">
     <!-- ico-font-->
@@ -25,10 +17,6 @@
     <link rel="stylesheet" type="text/css" href="/console/assets/css/flag-icon.css">
     <!-- Feather icon-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/feather-icon.css">
-    <!-- Plugins css start-->
-    <link rel="stylesheet" type="text/css" href="/console/assets/css/animate.css">
-    <link rel="stylesheet" type="text/css" href="/console/assets/css/date-picker.css">
-    <!-- Plugins css Ends-->
     <!-- Bootstrap css-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/bootstrap.css">
     <!-- App css-->
@@ -44,14 +32,14 @@
     </div>
 </div>
 <!-- Loader ends-->
-<!-- page-wrapper Start       -->
+<!-- page-wrapper Start-->
 <div class="page-wrapper compact-wrapper" id="pageWrapper">
     <!-- Page Header Start-->
     <div class="page-main-header">
         <div class="main-header-right row m-0">
             <div class="main-header-left">
                 <div class="logo-wrapper"><a href="index.html"><img class="img-fluid"
-                                                                    src="/console/assets/images/logo/app-logo.svg" alt=""></a>
+                                                                   src="/console/assets/images/logo/app-logo.svg" alt=""></a>
                 </div>
                 <div class="dark-logo-wrapper"><a href="index.html"><img class="img-fluid"
                                                                          src="/console/assets/images/logo/app-logo-dark.svg"
@@ -59,17 +47,18 @@
                 <div class="toggle-sidebar"><i class="status_toggle middle" data-feather="sidebar"
                                                id="sidebar-toggle"></i></div>
             </div>
-
+            <div class="left-menu-header col">
+                <h6 class="f-w-600 mb-0">志愿者组织工作台</h6>
+            </div>
             <div class="nav-right col pull-right right-menu p-0">
                 <ul class="nav-menus">
                     <li><a class="text-dark" href="#!" onclick="javascript:toggleFullScreen()"><i
                             data-feather="maximize"></i></a></li>
-
-                    <li>
-                        <div class="mode"><i class="fa fa-moon-o"></i></div>
+                    <li class="p-0">
+                        <button class="btn btn-primary-light" type="button"><a href="notifications.html"><i
+                                data-feather="bell"></i>未读消息 <span id="unread_count">0</span></a></button>
                     </li>
-
-                                        <li class="p-0">
+                    <li class="p-0">
                         <button class="btn btn-primary-light" type="button"><a href="/logout"><i
                                 data-feather="power"></i>退出登录</a></button>
                     </li>
@@ -78,23 +67,22 @@
             <div class="d-lg-none mobile-toggle pull-right w-auto"><i data-feather="menu"></i></div>
         </div>
     </div>
-    <!-- Page Header Ends                              -->
+    <!-- Page Header Ends-->
     <!-- Page Body Start-->
     <div class="page-body-wrapper sidebar-icon">
         <!-- Page Sidebar Start-->
         <header class="main-nav">
-
-                        <div class="sidebar-user text-center">
+            <div class="sidebar-user text-center">
                 <a class="setting-primary" href="org_info.html"><i data-feather="settings"></i></a>
                 <img class="img-90 rounded-circle" src="/console/assets/images/dashboard/1.png" alt="">
-                <a href="org_info.html"><h6 class="mt-3 f-14 f-w-600">志愿者组织</h6></a>
+                <a href="org_info.html"><h6 class="mt-3 f-14 f-w-600" id="organization_name">志愿者组织</h6></a>
                 <p class="mb-0 font-roboto">志愿活动申报与报名管理</p>
             </div>
             <nav>
                 <div class="main-navbar">
                     <div class="left-arrow" id="left-arrow"><i data-feather="rewind"></i></div>
                     <div id="mainnav">
-                                                <ul class="nav-menu custom-scrollbar">
+                        <ul class="nav-menu custom-scrollbar">
                             <li class="back-btn">
                                 <div class="mobile-back text-end"><span>返回</span><i class="fa fa-angle-right ps-2"
                                                                                    aria-hidden="true"></i></div>
@@ -129,6 +117,15 @@
                             <li class="dropdown"><a class="nav-link menu-title" href="checkin_review.html"><i
                                     data-feather="check-square"></i><span>签到与时长复核</span></a>
                             </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="training.html"><i
+                                    data-feather="book-open"></i><span>培训管理</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="announcements.html"><i
+                                    data-feather="volume-2"></i><span>活动公告</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="notifications.html"><i
+                                    data-feather="bell"></i><span>消息通知</span></a>
+                            </li>
                             <li class="sidebar-main-title">
                                 <div><h6>组织中心</h6></div>
                             </li>
@@ -136,7 +133,6 @@
                                     data-feather="sliders"></i><span>组织资料</span></a>
                             </li>
                         </ul>
-
                     </div>
                     <div class="right-arrow" id="right-arrow"><i data-feather="play"></i></div>
                 </div>
@@ -149,30 +145,53 @@
                     <div class="col-sm-12">
                         <div class="card">
                             <div class="card-header pb-0">
-                                <h5>志愿活动--未开始</h5>
+                                <h5>志愿活动--审核未通过</h5>
                             </div>
                             <div class="card-body">
-                                <div id="basicScenario">
-                                    <table class="table table-hover table-bordered " id="notAuditActivity_table">
+                                <div class="row mb-3">
+                                    <div class="col-md-5">
+                                        <div class="input-group">
+                                            <input class="form-control" id="keyword" type="text"
+                                                   placeholder="活动名称或活动编号">
+                                            <button class="btn btn-primary" type="button" id="search_button">查询</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-bordered" id="activity_table">
                                         <thead>
+                                        <tr class="active">
+                                            <th scope="col">活动名称</th>
+                                            <th scope="col">活动开始时间</th>
+                                            <th scope="col">活动结束时间</th>
+                                            <th scope="col">活动地点</th>
+                                            <th scope="col">需求人数</th>
+                                            <th scope="col">审核时间</th>
+                                            <th scope="col">驳回原因</th>
+                                            <th scope="col">操作</th>
+                                        </tr>
                                         </thead>
                                         <tbody>
+                                        <tr>
+                                            <td colspan="8" class="text-center text-muted">数据加载中……</td>
+                                        </tr>
                                         </tbody>
                                     </table>
                                 </div>
+                                <div id="activity_pager" class="mt-3"></div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- 模态框（Modal） start-->
-        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenter" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" role="document">
+        <!-- 修改后重新申报模态框 start-->
+        <div class="modal fade" id="reviseModal" tabindex="-1" role="dialog" aria-labelledby="reviseModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">活动详情（修改后重新申报）</h5>
+                        <h5 class="modal-title" id="reviseModalLabel">活动详情（修改后重新申报）</h5>
                         <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -185,8 +204,7 @@
                 </div>
             </div>
         </div>
-        <!-- 模态框（Modal） end-->
-
+        <!-- 修改后重新申报模态框 end-->
     </div>
 </div>
 <!-- latest jquery-->
@@ -202,8 +220,6 @@
 <script src="/console/assets/js/bootstrap/bootstrap.min.js"></script>
 <!-- Theme js-->
 <script src="/console/assets/js/script.js"></script>
-<!-- login js-->
-<!-- Plugin used-->
 
 <script type="text/javascript">
     /**
@@ -215,11 +231,103 @@
         }
         return String(value).replace("T", " ").substring(0, 16);
     }
-</script>
 
-<script type="text/javascript">
+    /**
+     * 将时间转换为 datetime-local 输入框需要的 yyyy-MM-ddTHH:mm
+     */
+    function toDateTimeInput(value) {
+        if (!value) {
+            return "";
+        }
+        return String(value).replace(" ", "T").substring(0, 16);
+    }
 
-    //查看活动详情
+    /**
+     * 将 datetime-local 输入框的值转换为接口需要的 yyyy-MM-dd HH:mm
+     */
+    function toApiTime(value) {
+        if (!value) {
+            return "";
+        }
+        return String(value).replace("T", " ");
+    }
+
+    /**
+     * 通用分页控件渲染：holderId 为分页容器编号，onChange 接收目标页码
+     */
+    function renderPager(holderId, total, page, size, onChange) {
+        total = Number(total) || 0;
+        page = Number(page) || 1;
+        size = Number(size) || 10;
+        var totalPage = Math.ceil(total / size);
+        var currentPage = totalPage === 0 ? 0 : page;
+        var html = '<div class="d-flex justify-content-between align-items-center flex-wrap">'
+            + '<span class="text-muted">共 ' + total + ' 条，第 ' + currentPage + ' / ' + totalPage + ' 页</span>'
+            + '<div class="btn-group btn-group-pill" role="group" aria-label="分页">'
+            + '<button class="btn btn-outline-primary btn-sm pager-prev" type="button"'
+            + (page <= 1 ? ' disabled' : '') + '>上一页</button>'
+            + '<button class="btn btn-outline-primary btn-sm pager-next" type="button"'
+            + (page >= totalPage ? ' disabled' : '') + '>下一页</button>'
+            + '</div></div>';
+        var $holder = $("#" + holderId);
+        $holder.html(html);
+        $holder.find(".pager-prev").on("click", function () {
+            if (page > 1) {
+                onChange(page - 1);
+            }
+        });
+        $holder.find(".pager-next").on("click", function () {
+            if (page < totalPage) {
+                onChange(page + 1);
+            }
+        });
+    }
+
+    /**
+     * 分页响应统一取值：list 当前页数据、total 总条数、page 当前页、size 每页条数
+     */
+    function pageData(result, fallbackPage, fallbackSize) {
+        var extend = (result && result.extend) ? result.extend : {};
+        var total = Number(extend.total);
+        var currentPage = Number(extend.page);
+        var pageSize = Number(extend.size);
+        return {
+            list: extend.list || [],
+            total: (isNaN(total) || total < 0) ? 0 : total,
+            page: (isNaN(currentPage) || currentPage < 1) ? fallbackPage : currentPage,
+            size: (isNaN(pageSize) || pageSize < 1) ? fallbackSize : pageSize
+        };
+    }
+
+    /**
+     * 统一提示文案：优先使用接口返回的 msg，纯文本响应直接展示
+     */
+    function tip(result, fallback) {
+        if (result && result.msg) {
+            return result.msg;
+        }
+        if (typeof result === "string" && result) {
+            return result;
+        }
+        return fallback;
+    }
+
+    /**
+     * 查询顶部未读消息数量
+     */
+    function loadUnreadCount() {
+        $.ajax({
+            url: "/org/notifications/unreadCount",
+            type: "GET",
+            success: function (result) {
+                var count = (result && result.extend) ? result.extend.count : 0;
+                $("#unread_count").text((count === null || count === undefined) ? 0 : count);
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
 
     /** 固定的服务技能标签（与志愿者档案共用，顺序固定） */
     var SKILL_TAGS = ["助学支教", "助老服务", "环保公益", "社区服务", "医疗健康", "应急救援", "大型赛会", "文化宣传", "心理疏导", "信息技术"];
@@ -233,8 +341,13 @@
         SAFETY_RISK: "存在安全风险",
         OTHER: "其他原因"
     };
+
+    /** 当前页码、每页条数与检索关键字 */
+    var page = 1, size = 10, keyword = "";
     /** 当前正在修改重新申报的活动编号 */
     var currentNotAuditActivityNum = null;
+    /** 修改后重新申报模态框实例 */
+    var reviseModal = null;
 
     /**
      * 驳回原因文案：优先结构化原因码，其次审核意见，均无时显示 —
@@ -244,16 +357,6 @@
             return REASON_TEXT[item.activityReasonCode] || item.activityReasonCode;
         }
         return item.activityRemark || "—";
-    }
-
-    /**
-     * 将接口返回的时间截断为 datetime-local 需要的 yyyy-MM-ddTHH:mm
-     */
-    function toDateTimeInput(value) {
-        if (!value) {
-            return "";
-        }
-        return String(value).substring(0, 16);
     }
 
     /**
@@ -293,65 +396,49 @@
                     <div class="form-group row">
                         <label class="col-sm-3 col-form-label text-end">活动名称</label>
                         <div class="col-sm-9">
-                            <div class="input-group">
-                                <input class="form-control" id="actvity_name" type="text">
-                            </div>
+                            <input class="form-control" id="actvity_name" type="text">
                         </div>
                     </div>
                     <div class="form-group row">
                         <label class="col-sm-3 col-form-label text-end">活动内容</label>
                         <div class="col-sm-9">
-                            <div class="input-group">
-                                <textarea class="form-control" id="actvity_detail" rows="3"></textarea>
-                            </div>
+                            <textarea class="form-control" id="actvity_detail" rows="3"></textarea>
                         </div>
                     </div>
                     <div class="form-group row">
                         <label class="col-sm-3 col-form-label text-end">活动开始时间（年-月-日 时:分）</label>
                         <div class="col-sm-9">
-                            <div class="input-group">
-                                <input class="form-control" type="datetime-local" id="actvity_begintime">
-                            </div>
+                            <input class="form-control" type="datetime-local" id="actvity_begintime">
                         </div>
                     </div>
                     <div class="form-group row">
                         <label class="col-sm-3 col-form-label text-end">活动结束时间（年-月-日 时:分）</label>
                         <div class="col-sm-9">
-                            <div class="input-group">
-                                <input class="form-control" type="datetime-local" id="actvity_endtime">
-                            </div>
+                            <input class="form-control" type="datetime-local" id="actvity_endtime">
                         </div>
                     </div>
                     <div class="form-group row">
                         <label class="col-sm-3 col-form-label text-end">活动地点</label>
                         <div class="col-sm-9">
-                            <div class="input-group">
-                                <input class="form-control" id="actvity_location" type="text">
-                            </div>
+                            <input class="form-control" id="actvity_location" type="text">
                         </div>
                     </div>
                     <div class="form-group row">
                         <label class="col-sm-3 col-form-label text-end">需求人数</label>
                         <div class="col-sm-9">
-                            <div class="input-group">
-                                <input class="form-control" id="actvity_needpeople" type="text">
-                            </div>
+                            <input class="form-control" id="actvity_needpeople" type="text">
                         </div>
                     </div>
                     <div class="form-group row">
                         <label class="col-sm-3 col-form-label text-end">注意事项</label>
                         <div class="col-sm-9">
-                            <div class="input-group">
-                                <input class="form-control" id="actvity_notice" type="text">
-                            </div>
+                            <input class="form-control" id="actvity_notice" type="text">
                         </div>
                     </div>
                     <div class="form-group row">
                         <label class="col-sm-3 col-form-label text-end">报名截止时间（年-月-日 时:分）</label>
                         <div class="col-sm-9">
-                            <div class="input-group">
-                                <input class="form-control" type="datetime-local" id="actvity_signddl">
-                            </div>
+                            <input class="form-control" type="datetime-local" id="actvity_signddl">
                         </div>
                     </div>
                     <div class="form-group row">
@@ -363,74 +450,84 @@
                     <div class="form-group row">
                         <label class="col-sm-3 col-form-label text-end">活动定位</label>
                         <div class="col-sm-9">
-                            <div class="input-group">
-                                <input class="form-control" id="actvity_latitude" type="text" placeholder="纬度">
-                                <input class="form-control" id="actvity_longitude" type="text" placeholder="经度">
-                            </div>
+                            <input class="form-control" id="actvity_latitude" type="text" placeholder="纬度">
+                            <input class="form-control" id="actvity_longitude" type="text" placeholder="经度">
                         </div>
                     </div>
                     <div class="form-group row">
                         <label class="col-sm-3 col-form-label text-end">签到围栏半径（米）</label>
                         <div class="col-sm-9">
-                            <div class="input-group">
-                                <input class="form-control" id="actvity_radius" type="number" min="0" step="10">
-                            </div>
+                            <input class="form-control" id="actvity_radius" type="number" min="0" step="10">
                         </div>
                     </div>
                 </div>`;
     }
 
     /**
-     * 修改后重新申报，成功提示后跳转审核中的活动列表
+     * 渲染审核未通过的活动列表
      */
-    function submitReviseAct() {
-        if (currentNotAuditActivityNum === null) {
-            return;
+    function renderActivityTable(list) {
+        var tabValue = "";
+        $.each(list, function (index, item) {
+            tabValue += `<tr>
+                            <td class="text-center">${item.activityName}</td>
+                            <td class="text-center">${formatTime(item.activityBegintime)}</td>
+                            <td class="text-center">${formatTime(item.activityEndtime)}</td>
+                            <td class="text-center">${item.activityLocation || "—"}</td>
+                            <td class="text-center">${item.activityNeedpeople || 0}</td>
+                            <td class="text-center">${formatTime(item.activityChecktime)}</td>
+                            <td class="text-center">${reasonText(item)}</td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-pill" role="group" aria-label="活动操作">
+                                    <button class="btn btn-outline-primary btn-sm" type="button"
+                                            onclick="notAuditActivityChange(${item.activityNum})">修改</button>
+                                    <button class="btn btn-outline-danger btn-sm" type="button"
+                                            onclick="notAuditActivityDelete(${item.activityNum})">删除</button>
+                                </div>
+                            </td>
+                         </tr>`;
+        });
+        if (list.length === 0) {
+            tabValue = `<tr><td colspan="8" class="text-center text-muted">暂无数据</td></tr>`;
         }
+        $("#activity_table tbody").html(tabValue);
+    }
+
+    /**
+     * 加载当前组织的审核未通过活动
+     */
+    function load() {
         $.ajax({
-            url: "/org/reviseAct",
-            type: "POST",
-            data: {
-                "activityNum": currentNotAuditActivityNum,
-                "name": $("#actvity_name").val(),
-                "content": $("#actvity_detail").val(),
-                "startTime": $("#actvity_begintime").val(),
-                "endTime": $("#actvity_endtime").val(),
-                "location": $("#actvity_location").val(),
-                "affair": $("#actvity_notice").val(),
-                "need": $("#actvity_needpeople").val(),
-                "sign_ddl": $("#actvity_signddl").val(),
-                "tags": collectSkillTags(),
-                "latitude": $("#actvity_latitude").val(),
-                "longitude": $("#actvity_longitude").val(),
-                "radius": $("#actvity_radius").val()
-            },
+            url: "/activity/findNotAuditActivityByNumAndState",
+            type: "GET",
+            data: {page: page, size: size, keyword: keyword},
             success: function (result) {
-                var unified = result && typeof result === "object";
-                var message = unified ? (result.msg || "修改后重新申报失败") : (result || "修改后重新申报失败");
-                alert(message);
-                if (unified ? result.code === 100 : !!result) {
-                    window.location.href = "act_audit.html";
-                }
+                var data = pageData(result, page, size);
+                renderActivityTable(data.list);
+                renderPager("activity_pager", data.total, data.page, data.size, function (target) {
+                    page = target;
+                    load();
+                });
             },
             error: function (result) {
                 console.log(result);
             }
         });
     }
+
+    /**
+     * 打开“修改后重新申报”表单并回显活动信息
+     */
     function notAuditActivityChange(activityNum) {
-        console.log("修改活动申请");
         $.ajax({
             url: "/activity/activityInfo",
             type: "GET",
-            data: {
-                "activityNum": activityNum,
-            },
+            data: {"activityNum": activityNum},
             success: function (result) {
-                console.log(result);
-                var actInfo = (result && result.extend && result.extend.activityInfo) ? result.extend.activityInfo[0] : null;
+                var actInfo = (result && result.extend && result.extend.activityInfo)
+                    ? result.extend.activityInfo[0] : null;
                 if (!actInfo) {
-                    alert((result && result.msg) ? result.msg : "活动详情加载失败");
+                    alert(tip(result, "活动详情加载失败"));
                     return;
                 }
                 currentNotAuditActivityNum = actInfo.activityNum;
@@ -448,6 +545,10 @@
                 $("#actvity_radius").val(actInfo.activityRadius === null || actInfo.activityRadius === undefined ? 300 : actInfo.activityRadius);
                 $("#actvity_revision").text(actInfo.activityRevision || 0);
                 applyReviseSkillChecked(actInfo);
+                if (!reviseModal) {
+                    reviseModal = new bootstrap.Modal(document.getElementById("reviseModal"));
+                }
+                reviseModal.show();
             },
             error: function (result) {
                 console.log(result);
@@ -455,72 +556,58 @@
         });
     }
 
-    function build_activity_table(result) {
-        //清空table表格
-        $("#notAuditActivity_table thead").empty();
-        $("#notAuditActivity_table tbody").empty();
-
-        var notAuditActivity = result.extend.notAuditActivity;
-
-        var activityNameTd = $("<td></td>").addClass("text-center").append("活动名称");
-        var activityBegintimeTd = $("<td></td>").addClass("text-center").append("活动开始时间");
-        var activityEndtimeTd = $("<td></td>").addClass("text-center").append("活动结束时间");
-        var activityLocationTd = $("<td></td>").addClass("text-center").append("活动地点");
-        var activityNeedpeopleTd = $("<td></td>").addClass("text-center").append("需求人数");
-        var activityChecktimeTd = $("<td></td>").addClass("text-center").append("审核时间");
-        var activityReasonTd = $("<td></td>").addClass("text-center").append("驳回原因");
-        var controlTd = $("<td></td>").addClass("text-center").append("操作");
-        $("<tr></tr>").append(activityNameTd)
-            .append(activityBegintimeTd)
-            .append(activityEndtimeTd)
-            .append(activityLocationTd)
-            .append(activityNeedpeopleTd)
-            .append(activityChecktimeTd)
-            .append(activityReasonTd)
-            .append(controlTd)
-            .addClass("active")
-            .appendTo("#notAuditActivity_table thead");
-        var tabValue = ``;
-        $.each(notAuditActivity, function (index, item) {
-            tabValue += `<tr>
-                            <td class="text-center">${item.activityName}</td>
-                            <td class="text-center">${formatTime(item.activityBegintime)}</td>
-                            <td class="text-center">${formatTime(item.activityEndtime)}</td>
-                            <td class="text-center">${item.activityLocation}</td>
-                            <td class="text-center">${item.activityNeedpeople}</td>
-                            <td class="text-center">${formatTime(item.activityChecktime)}</td>
-                            <td class="text-center">${reasonText(item)}</td>
-                            <td class="text-center">
-                                <div class="btn-group btn-group-pill" role="group" aria-label="Basic example">
-                                    <button class="btn btn-outline-primary" type="button" onclick="notAuditActivityChange(${item.activityNum})" data-bs-toggle="modal" data-bs-target="#myModal" data-bs-original-title title>修改</button>
-                                    <button class="btn btn-outline-danger" type="button" onclick="notAuditActivityDelete(${item.activityNum})">删除</button>
-                            </div>
-                            </td>
-                          </tr>
-                `;
-        });
-        if (notAuditActivity.length === 0) {
-            tabValue = `<tr><td colspan="8" class="text-center text-muted">暂无数据</td></tr>`;
+    /**
+     * 修改后重新申报，成功提示后跳转审核中的活动列表
+     */
+    function submitReviseAct() {
+        if (currentNotAuditActivityNum === null) {
+            return;
         }
-        $("#notAuditActivity_table tbody").html(tabValue);
+        $.ajax({
+            url: "/org/reviseAct",
+            type: "POST",
+            data: {
+                "activityNum": currentNotAuditActivityNum,
+                "name": $("#actvity_name").val(),
+                "content": $("#actvity_detail").val(),
+                "startTime": toApiTime($("#actvity_begintime").val()),
+                "endTime": toApiTime($("#actvity_endtime").val()),
+                "location": $("#actvity_location").val(),
+                "affair": $("#actvity_notice").val(),
+                "need": $("#actvity_needpeople").val(),
+                "sign_ddl": toApiTime($("#actvity_signddl").val()),
+                "tags": collectSkillTags(),
+                "latitude": $("#actvity_latitude").val(),
+                "longitude": $("#actvity_longitude").val(),
+                "radius": $("#actvity_radius").val()
+            },
+            success: function (result) {
+                alert(tip(result, "修改后重新申报失败"));
+                // 审核结果以接口返回为准，重新加载当前页，已重新提交的活动不再出现在未通过列表
+                load();
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
     }
 
-    //删除该待审核的活动
+    /**
+     * 删除审核未通过的活动，删除后重新加载当前页
+     */
     function notAuditActivityDelete(activityNum) {
-        console.log("删除");
+        if (!confirm("确定删除该活动吗？删除后不可恢复。")) {
+            return;
+        }
         $.ajax({
             url: "/activity/notAuditActivityDelete",
             type: "POST",
-            data: {
-                "activityNum": activityNum,
-            },
+            data: {"activityNum": activityNum},
             success: function (result) {
-                if (result) {
-                    console.log(result);
-                    alert("修改成功");
-                    build_activity_table(result);
-                } else {
-                    alert("修改失败");
+                var success = result && result.code === 100;
+                alert(tip(result, success ? "删除成功" : "删除失败"));
+                if (success) {
+                    load();
                 }
             },
             error: function (result) {
@@ -529,28 +616,19 @@
         });
     }
 
-    //一进网页就加载freshPage()
     $(document).ready(function () {
-        $.ajax({
-            url: "/activity/findNotAuditActivityByNumAndState",
-            type: "GET",
-            data: {},
-            success: function (result) {
-                console.log(result);
-                build_activity_table(result);//画表格
-            },
-            error: function (result) {
-                console.log(result);
-            }
+        loadUnreadCount();
+        load();
+        $("#search_button").click(function () {
+            page = 1;
+            keyword = $.trim($("#keyword").val());
+            load();
         });
-
         $("#revise_act_submit").click(function () {
             submitReviseAct();
         });
-
     });
 
 </script>
-
 </body>
 </html>
