@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.evolunteer.mapper.ShowPictureMapper">
+    <!-- E志愿志愿者服务平台 V1.0 志愿秀图片表 show_picture 的映射文件 -->
+
+
+    <resultMap id="BaseResultMap" type="com.evolunteer.entity.ShowPicture">
+            <id property="pictureNum" column="picture_num" jdbcType="INTEGER"/>
+            <result property="showNum" column="show_num" jdbcType="INTEGER"/>
+            <result property="pictureId" column="picture_id" jdbcType="VARCHAR"/>
+            <result property="pictureName" column="picture_name" jdbcType="VARCHAR"/>
+            <result property="pictureRoute" column="picture_route" jdbcType="VARCHAR"/>
+            <result property="pictureUniquename" column="picture_uniquename" jdbcType="VARCHAR"/>
+            <result property="pictureIsdeleted" column="picture_isdeleted" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        picture_num,show_num,picture_id,
+        picture_name,picture_route,picture_uniquename,
+        picture_isdeleted
+    </sql>
+</mapper>

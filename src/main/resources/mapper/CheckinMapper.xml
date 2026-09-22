@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.evolunteer.mapper.CheckinMapper">
+    <!-- E志愿志愿者服务平台 V1.0 志愿服务签到表 checkin 的映射文件 -->
+
+
+    <resultMap id="BaseResultMap" type="com.evolunteer.entity.Checkin">
+            <id property="checkinNum" column="checkin_num" jdbcType="INTEGER"/>
+            <result property="participateNum" column="participate_num" jdbcType="INTEGER"/>
+            <result property="checkinBegintime" column="checkin_begintime" jdbcType="TIMESTAMP"/>
+            <result property="checkinEndtime" column="checkin_endtime" jdbcType="TIMESTAMP"/>
+            <result property="checkinDuration" column="checkin_duration" jdbcType="FLOAT"/>
+            <result property="checkinTimecheck" column="checkin_timecheck" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        checkin_num,participate_num,checkin_begintime,
+        checkin_endtime,checkin_duration,checkin_timecheck
+    </sql>
+</mapper>

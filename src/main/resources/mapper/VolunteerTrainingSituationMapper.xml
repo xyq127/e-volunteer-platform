@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.evolunteer.mapper.VolunteerTrainingSituationMapper">
+    <!-- E志愿志愿者服务平台 V1.0 志愿者培训情况表 volunteer_training_situation 的映射文件 -->
+
+
+    <resultMap id="BaseResultMap" type="com.evolunteer.entity.VolunteerTrainingSituation">
+            <id property="vtsituationNum" column="vtsituation_num" jdbcType="INTEGER"/>
+            <result property="trainingNum" column="training_num" jdbcType="INTEGER"/>
+            <result property="volunteerNum" column="volunteer_num" jdbcType="INTEGER"/>
+            <result property="vtsituationId" column="vtsituation_id" jdbcType="VARCHAR"/>
+            <result property="vtsituationBegintime" column="vtsituation_begintime" jdbcType="TIMESTAMP"/>
+            <result property="vtsituationEndtime" column="vtsituation_endtime" jdbcType="TIMESTAMP"/>
+            <result property="vtsituationIsdeleted" column="vtsituation_isdeleted" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        vtsituation_num,training_num,volunteer_num,
+        vtsituation_id,vtsituation_begintime,vtsituation_endtime,
+        vtsituation_isdeleted
+    </sql>
+</mapper>

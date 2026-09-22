@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- E志愿志愿者服务平台 V1.0 统一用户表 e_user 的映射文件 -->
+<mapper namespace="com.evolunteer.mapper.EUserMapper">
+
+    <resultMap id="BaseResultMap" type="com.evolunteer.entity.EUser">
+        <result property="id" column="id" jdbcType="VARCHAR"/>
+        <result property="password" column="password" jdbcType="VARCHAR"/>
+        <result property="role" column="role" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,password,role
+    </sql>
+
+    <!-- 按登录账号查询用户认证信息 -->
+    <select id="selectByLoginId" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from e_user
+        where
+        id = #{id,jdbcType=VARCHAR}
+    </select>
+</mapper>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.evolunteer.mapper.TrainingMapper">
+    <!-- E志愿志愿者服务平台 V1.0 志愿培训表 training 的映射文件 -->
+
+
+    <resultMap id="BaseResultMap" type="com.evolunteer.entity.Training">
+            <id property="trainingNum" column="training_num" jdbcType="INTEGER"/>
+            <result property="trainingId" column="training_id" jdbcType="VARCHAR"/>
+            <result property="activityNum" column="activity_num" jdbcType="INTEGER"/>
+            <result property="trainingName" column="training_name" jdbcType="VARCHAR"/>
+            <result property="trainingDetail" column="training_detail" jdbcType="VARCHAR"/>
+            <result property="trainingBegintime" column="training_begintime" jdbcType="TIMESTAMP"/>
+            <result property="trainingEndtime" column="training_endtime" jdbcType="TIMESTAMP"/>
+            <result property="trainingLocation" column="training_location" jdbcType="VARCHAR"/>
+            <result property="trainingCheckin" column="training_checkin" jdbcType="VARCHAR"/>
+            <result property="trainingIsdeleted" column="training_isdeleted" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        training_num,training_id,activity_num,
+        training_name,training_detail,training_begintime,
+        training_endtime,training_location,training_checkin,
+        training_isdeleted
+    </sql>
+</mapper>

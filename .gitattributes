@@ -1,0 +1,18 @@
+# 统一使用 LF 行尾，避免在不同操作系统上检出后行尾不一致
+* text=auto eol=lf
+
+# 二进制文件不做行尾转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.otf binary
+*.jar binary
+*.mp4 binary
+*.ogg binary

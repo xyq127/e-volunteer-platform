@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.evolunteer.mapper.OrganizationMapper">
+    <!-- E志愿志愿者服务平台 V1.0 志愿者组织表 organization 的映射文件 -->
+
+
+    <resultMap id="BaseResultMap" type="com.evolunteer.entity.Organization">
+            <id property="organizationNum" column="organization_num" jdbcType="INTEGER"/>
+            <result property="organizationId" column="organization_id" jdbcType="VARCHAR"/>
+            <result property="organizationPassword" column="organization_password" jdbcType="VARCHAR"/>
+            <result property="organizationName" column="organization_name" jdbcType="VARCHAR"/>
+            <result property="organizationEstablishdate" column="organization_establishdate" jdbcType="DATE"/>
+            <result property="organizationIntroduction" column="organization_introduction" jdbcType="VARCHAR"/>
+            <result property="organizationIsdeleted" column="organization_isdeleted" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        organization_num,organization_id,organization_password,
+        organization_name,organization_establishdate,organization_introduction,
+        organization_isdeleted
+    </sql>
+    <select id="selectByOrganizationName" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from organization
+        where
+        organization_name = #{organizationName,jdbcType=VARCHAR}
+    </select>
+
+    <select id="selectByOrganizationId" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from organization
+        where
+        organization_id = #{organizationId,jdbcType=VARCHAR}
+    </select>
+    <update id="updateOrganizationNameAndOrganizationIntroductionByOrganizationId">
+update organization
+ set organization_name = #{organizationName,jdbcType=VARCHAR},
+ organization_introduction = #{organizationIntroduction,jdbcType=VARCHAR}
+where
+organization_id = #{organizationId,jdbcType=VARCHAR}
+</update>
+</mapper>
