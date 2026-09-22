@@ -124,6 +124,22 @@ public class AdminController {
     }
 
     /**
+     * 分页查询命中时长异常规则且尚未裁定的服务记录，供平台管理员裁定
+     *
+     * @param page    页码
+     * @param size    每页条数
+     * @param keyword 志愿者姓名、志愿者编号或活动名称关键字
+     * @return 异常记录分页结果
+     */
+    @RequestMapping(value = "/review/anomalies", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiResponse anomalies(@RequestParam(value = "page", required = false) Integer page,
+                                 @RequestParam(value = "size", required = false) Integer size,
+                                 @RequestParam(value = "keyword", required = false) String keyword) {
+        return PageSupport.toResponse(checkInService.pageAnomalies(keyword, page, size));
+    }
+
+    /**
      * 平台管理员复核志愿者组织补录的服务时长
      *
      * @param checkinNum     签到编号
@@ -141,7 +157,7 @@ public class AdminController {
                                         Authentication authentication, HttpServletRequest request) {
 
         String loginId = ((User) authentication.getPrincipal()).getUsername();
-        Map<Object, Object> result = checkInService.reviewManualCheckin(loginId, checkinNum, isPass, remark);
+        Map<Object, Object> result = checkInService.reviewByAdmin(loginId, checkinNum, isPass, remark);
         String msg = (String) result.get("msg");
         Object ok = result.get("ok");
         if (ok == null || ((Number) ok).intValue() != 1) {
@@ -150,7 +166,7 @@ public class AdminController {
         }
         auditLogService.record(loginId, "ROLE_ADMIN", AuditActionEnum.MANUAL_HOUR_REVIEW,
                 "签到编号 " + checkinNum, msg, request.getRemoteAddr());
-        log.info("平台管理员完成补录服务时长复核，签到编号：{}，结果：{}", checkinNum, msg);
+        log.info("平台管理员完成服务时长裁定，签到编号：{}，结果：{}", checkinNum, msg);
         return ApiResponse.success(msg);
     }
 }

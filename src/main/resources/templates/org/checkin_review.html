@@ -243,6 +243,7 @@
                                     <div class="col-md-4">
                                         <p class="mb-1 text-muted">当前签到码</p>
                                         <h4 class="mb-0" id="checkin_code">尚未生成</h4>
+                                        <p class="mb-0 mt-1 text-muted" id="checkin_code_expire">剩余有效时间：—</p>
                                     </div>
                                     <div class="col-md-8">
                                         <div class="btn-group btn-group-pill" role="group" aria-label="签到码操作">
@@ -250,12 +251,12 @@
                                                     id="generate_checkin_code">生成签到码
                                             </button>
                                             <button class="btn btn-outline-secondary" type="button"
-                                                    id="refresh_checkin_code">重新生成
+                                                    id="refresh_checkin_code">更换密钥并重新生成
                                             </button>
                                         </div>
                                     </div>
                                 </div>
-                                <p class="mb-0 mt-3 text-muted">请在活动现场向志愿者公布该签到码，志愿者签到时须填写该签到码。</p>
+                                <p class="mb-0 mt-3 text-muted">签到码每 120 秒自动轮换，请在活动现场向志愿者公布当前签到码</p>
                             </div>
                         </div>
                     </div>
@@ -307,6 +308,8 @@
                                             <th scope="col">服务时长</th>
                                             <th scope="col">签到距离（米）</th>
                                             <th scope="col">轨迹标记</th>
+                                            <th scope="col">服务对象确认</th>
+                                            <th scope="col">异常标记</th>
                                             <th scope="col">复核状态</th>
                                             <th scope="col">复核意见</th>
                                             <th scope="col">操作</th>
@@ -314,7 +317,7 @@
                                         </thead>
                                         <tbody>
                                         <tr>
-                                            <td colspan="12" class="text-center text-muted">数据加载中……</td>
+                                            <td colspan="14" class="text-center text-muted">数据加载中……</td>
                                         </tr>
                                         </tbody>
                                     </table>
@@ -400,6 +403,52 @@
             </div>
         </div>
         <!-- 补录服务时长模态框（Modal） end-->
+
+        <!-- 服务确认单模态框（Modal） start-->
+        <div class="modal fade" id="confirmSheetModal" tabindex="-1" role="dialog"
+             aria-labelledby="confirmSheetModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmSheetModalLabel">生成服务确认单</h5>
+                        <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-2 text-muted" id="confirm_sheet_information"></p>
+                        <div id="confirm_sheet_form">
+                            <div class="form-group row">
+                                <label class="col-sm-4 col-form-label text-end">服务对象名称</label>
+                                <div class="col-sm-8">
+                                    <input class="form-control" type="text" id="confirm_object_name"
+                                           placeholder="请输入服务对象的姓名或名称">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-4 col-form-label text-end">服务对象手机号</label>
+                                <div class="col-sm-8">
+                                    <input class="form-control" type="text" id="confirm_object_phone"
+                                           placeholder="请输入服务对象本人的手机号">
+                                </div>
+                            </div>
+                            <p class="text-muted mb-0">提交后生成一次性服务确认码，请交由服务对象本人核对手机号后确认本次服务。</p>
+                        </div>
+                        <div class="d-none" id="confirm_code_area">
+                            <p class="mb-1 text-muted">服务确认码</p>
+                            <h3 class="mb-2 text-primary" id="confirm_code_value" style="letter-spacing: 4px">—</h3>
+                            <button class="btn btn-outline-primary btn-sm" type="button" id="confirm_code_copy">
+                                复制确认码
+                            </button>
+                            <p class="mb-0 mt-3 text-muted" id="confirm_code_hint"></p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" type="button" id="confirm_sheet_submit">提交</button>
+                        <button class="btn btn-light" type="button" data-bs-dismiss="modal">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 服务确认单模态框（Modal） end-->
     </div>
 </div>
 <!-- latest jquery-->
@@ -563,6 +612,11 @@
     var reviewTarget = {checkinNum: null, isPass: null};
     /** 补录模态框实例 */
     var manualModal = null;
+    /** 服务确认单模态框实例与当前生成确认单的记录编号 */
+    var confirmSheetModal = null;
+    var confirmSheetTarget = null;
+    /** 签到码剩余有效秒数，取接口返回的 expiresInSeconds 后本地倒计时 */
+    var checkinCodeRemain = 0;
 
     /**
      * 渲染活动列表（未开始 / 进行中 / 已结束）
@@ -626,8 +680,13 @@
         } else {
             $("#settle_activity").addClass("d-none");
         }
+        reviewState = $("#review_state").val() || "";
+        reviewSource = $("#review_source").val() || "";
         reviewPage = 1;
         $("#manageArea").removeClass("d-none");
+        $("#checkin_code").text("加载中……");
+        checkinCodeRemain = 0;
+        renderCodeExpire();
         loadCheckinCode();
         loadReviewList();
         document.getElementById("manageArea").scrollIntoView();
@@ -645,13 +704,49 @@
             type: "GET",
             data: {"activityNum": currentActivityNum},
             success: function (result) {
-                var checkinCode = (result && result.extend) ? result.extend.checkinCode : null;
-                $("#checkin_code").text(checkinCode ? checkinCode : "尚未生成");
+                var extend = (result && result.extend) ? result.extend : {};
+                if (!result || result.code !== 100 || !extend.checkinCode) {
+                    $("#checkin_code").text("尚未生成");
+                    checkinCodeRemain = 0;
+                    $("#checkin_code_expire").text((result && result.msg) ? result.msg : "当前没有生效的签到码");
+                    return;
+                }
+                checkinCodeRemain = Number(extend.expiresInSeconds);
+                if (isNaN(checkinCodeRemain) || checkinCodeRemain < 0) {
+                    checkinCodeRemain = 0;
+                }
+                $("#checkin_code").text(extend.checkinCode);
+                renderCodeExpire();
             },
             error: function (result) {
                 console.log(result);
             }
         });
+    }
+
+    /**
+     * 签到码剩余有效秒数文案
+     */
+    function renderCodeExpire() {
+        if (checkinCodeRemain > 0) {
+            $("#checkin_code_expire").text("剩余有效 " + checkinCodeRemain + " 秒，到期后自动轮换");
+            return;
+        }
+        $("#checkin_code_expire").text("正在获取当前签到码……");
+    }
+
+    /**
+     * 签到码倒计时：每秒递减，归零时立即拉取轮换后的签到码
+     */
+    function tickCheckinCode() {
+        if (currentActivityNum === null || checkinCodeRemain <= 0) {
+            return;
+        }
+        checkinCodeRemain = checkinCodeRemain - 1;
+        renderCodeExpire();
+        if (checkinCodeRemain === 0) {
+            loadCheckinCode();
+        }
     }
 
     /**
@@ -661,7 +756,7 @@
         if (currentActivityNum === null) {
             return;
         }
-        if (refresh && !confirm("重新生成后原签到码立即失效，确定重新生成吗？")) {
+        if (refresh && !confirm("更换密钥后原签到码立即失效，将立即生成新的签到码，确定更换吗？")) {
             return;
         }
         $.ajax({
@@ -669,11 +764,10 @@
             type: "POST",
             data: {"activityNum": currentActivityNum},
             success: function (result) {
-                if (result && result.extend && result.extend.checkinCode) {
-                    $("#checkin_code").text(result.extend.checkinCode);
-                    alert("签到码已生成，请在活动现场向志愿者公布");
-                } else {
-                    alert(tip(result, "签到码生成失败"));
+                var success = result && result.code === 100;
+                alert(tip(result, success ? "签到码已生成" : "签到码生成失败"));
+                if (success) {
+                    loadCheckinCode();
                 }
             },
             error: function (result) {
@@ -715,11 +809,11 @@
      * 复核状态列：组织补录记录标注由平台管理员复核
      */
     function reviewStateHtml(item) {
+        var text = item.checkinTimecheckText || stateText(item.checkinTimecheck);
         if (item.checkinSource === "2") {
-            return '组织补录（待平台管理员复核）'
-                + '<div class="text-muted small">平台管理员复核结果：' + stateText(item.checkinTimecheck) + '</div>';
+            return text + '<div class="text-muted small">组织补录，由平台管理员复核</div>';
         }
-        return stateText(item.checkinTimecheck);
+        return text;
     }
 
     /**
@@ -746,21 +840,58 @@
     }
 
     /**
+     * 服务对象确认列：已确认绿色、已否认红色、待确认为默认色
+     */
+    function objectConfirmHtml(item) {
+        var text = item.checkinObjectconfirmText || "—";
+        if (item.checkinObjectconfirm === "1") {
+            return '<span style="color: green">' + text + '</span>';
+        }
+        if (item.checkinObjectconfirm === "2") {
+            return '<span style="color: red">' + text + '</span>';
+        }
+        return text;
+    }
+
+    /**
+     * 异常标记列：命中异常规则时展示红色规则名称徽标，未命中展示 —
+     */
+    function anomalyHtml(item) {
+        if (item.checkinAnomalyname) {
+            return '<span class="badge badge-danger">' + item.checkinAnomalyname + '</span>';
+        }
+        return "—";
+    }
+
+    /**
+     * 服务确认单按钮：已有签退时间且服务对象尚未确认的记录可生成服务确认单
+     */
+    function confirmSheetButtonHtml(item) {
+        if (!item.checkinEndtime || item.checkinObjectconfirm === "1") {
+            return "";
+        }
+        return '<button class="btn btn-outline-primary btn-sm me-1 mb-1" type="button" onclick="openConfirmSheetModal('
+            + item.checkinNum + ')">生成服务确认单</button>';
+    }
+
+    /**
      * 复核操作列：仅平台签到记录可由志愿者组织复核，组织补录由平台管理员复核
      */
     function reviewControlHtml(item) {
+        var control = "";
         if (item.checkinSource === "2") {
-            return '<span class="text-muted">由平台管理员复核</span>';
-        }
-        if (!item.checkinTimecheck) {
-            return '<div class="btn-group btn-group-pill" role="group" aria-label="时长复核">'
-                + '<button class="btn btn-outline-primary btn-sm" type="button" onclick="openReviewModal('
+            control = '<span class="text-muted">由平台管理员复核</span>';
+        } else if (!item.checkinTimecheck) {
+            control = '<button class="btn btn-outline-primary btn-sm me-1 mb-1" type="button" onclick="openReviewModal('
                 + item.checkinNum + ',1)">确认时长</button>'
-                + '<button class="btn btn-outline-danger btn-sm" type="button" onclick="openReviewModal('
-                + item.checkinNum + ',2)">驳回</button>'
-                + '</div>';
+                + '<button class="btn btn-outline-danger btn-sm me-1 mb-1" type="button" onclick="openReviewModal('
+                + item.checkinNum + ',2)">驳回</button>';
         }
-        return "—";
+        var confirmButton = confirmSheetButtonHtml(item);
+        if (!control && !confirmButton) {
+            return "—";
+        }
+        return confirmButton + control;
     }
 
     /**
@@ -798,13 +929,15 @@
                                     <td>${duration}</td>
                                     <td>${distance}</td>
                                     <td>${checkinFlagText(item.checkinFlag)}</td>
+                                    <td>${objectConfirmHtml(item)}</td>
+                                    <td>${anomalyHtml(item)}</td>
                                     <td>${reviewStateHtml(item)}</td>
                                     <td>${reviewRemarkText(item)}</td>
                                     <td class="text-center">${reviewControlHtml(item)}</td>
                                  </tr>`;
                 });
                 if (data.list.length === 0) {
-                    tabValue = `<tr><td colspan="12" class="text-center text-muted">暂无数据</td></tr>`;
+                    tabValue = `<tr><td colspan="14" class="text-center text-muted">暂无数据</td></tr>`;
                 }
                 $("#checkinReview_table tbody").html(tabValue);
                 renderPager("review_pager", data.total, data.page, data.size, function (target) {
@@ -984,6 +1117,92 @@
         });
     }
 
+    /**
+     * 打开生成服务确认单弹窗，重置上一次填写内容与确认码
+     */
+    function openConfirmSheetModal(checkinNum) {
+        confirmSheetTarget = checkinNum;
+        $("#confirm_sheet_information").text("为签到编号 " + checkinNum + " 的服务记录生成服务确认单");
+        $("#confirm_object_name").val("");
+        $("#confirm_object_phone").val("");
+        $("#confirm_code_value").text("—");
+        $("#confirm_code_hint").text("");
+        $("#confirm_sheet_form").removeClass("d-none");
+        $("#confirm_sheet_submit").removeClass("d-none");
+        $("#confirm_code_area").addClass("d-none");
+        if (!confirmSheetModal) {
+            confirmSheetModal = new bootstrap.Modal(document.getElementById("confirmSheetModal"));
+        }
+        confirmSheetModal.show();
+    }
+
+    /**
+     * 提交服务确认单，成功后在同一弹窗内展示服务确认码
+     */
+    function submitConfirmSheet() {
+        if (confirmSheetTarget === null) {
+            alert("请先选择需要生成服务确认单的服务记录");
+            return;
+        }
+        var objectName = $.trim($("#confirm_object_name").val());
+        var objectPhone = $.trim($("#confirm_object_phone").val());
+        if (!objectName) {
+            alert("请填写服务对象名称");
+            return;
+        }
+        if (!/^\d{11}$/.test(objectPhone)) {
+            alert("请填写服务对象本人的 11 位手机号");
+            return;
+        }
+        $.ajax({
+            url: "/checkin/confirmSheet",
+            type: "POST",
+            data: {
+                "checkinNum": confirmSheetTarget,
+                "objectName": objectName,
+                "objectPhone": objectPhone
+            },
+            success: function (result) {
+                var extend = (result && result.extend) ? result.extend : {};
+                var success = result && result.code === 100;
+                alert(tip(result, success ? "服务确认单已生成" : "服务确认单生成失败"));
+                if (!success || !extend.confirmCode) {
+                    return;
+                }
+                $("#confirm_code_value").text(extend.confirmCode);
+                $("#confirm_code_hint").text("请将确认码交由服务对象本人核对手机号后确认本次服务");
+                $("#confirm_sheet_form").addClass("d-none");
+                $("#confirm_sheet_submit").addClass("d-none");
+                $("#confirm_code_area").removeClass("d-none");
+                loadReviewList();
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
+    /**
+     * 复制服务确认码，浏览器不支持复制命令时提示手动记录
+     */
+    function copyConfirmCode() {
+        var confirmCode = $.trim($("#confirm_code_value").text());
+        if (!confirmCode || confirmCode === "—") {
+            alert("当前没有可复制的服务确认码");
+            return;
+        }
+        var $temp = $("<textarea></textarea>").val(confirmCode)
+            .css({position: "fixed", top: "-1000px"}).appendTo("body");
+        $temp[0].select();
+        try {
+            document.execCommand("copy");
+            alert("服务确认码已复制");
+        } catch (error) {
+            alert("复制失败，请手动记录服务确认码：" + confirmCode);
+        }
+        $temp.remove();
+    }
+
     $(document).ready(function () {
         loadUnreadCount();
         reloadActivityLists();
@@ -1016,6 +1235,14 @@
         $("#manual_submit").click(function () {
             submitManual();
         });
+        $("#confirm_sheet_submit").click(function () {
+            submitConfirmSheet();
+        });
+        $("#confirm_code_copy").click(function () {
+            copyConfirmCode();
+        });
+        setInterval(tickCheckinCode, 1000);
+        setInterval(loadCheckinCode, 30000);
     });
 
 </script>

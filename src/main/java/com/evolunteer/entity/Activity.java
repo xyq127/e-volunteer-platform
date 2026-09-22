@@ -73,9 +73,6 @@ public class Activity implements Serializable {
     /** 审核意见 */
     private String activityRemark;
 
-    /** 现场签到码，志愿者签到凭证之一 */
-    private String activityCheckinCode;
-
     /** 活动地点纬度 */
     private BigDecimal activityLatitude;
 

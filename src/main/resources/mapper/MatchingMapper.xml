@@ -19,7 +19,6 @@
         <result property="activityPublishtime" column="activity_publishtime" jdbcType="TIMESTAMP"/>
         <result property="activitySignddl" column="activity_signddl" jdbcType="TIMESTAMP"/>
         <result property="activityState" column="activity_state" jdbcType="VARCHAR"/>
-        <result property="activityCheckinCode" column="activity_checkin_code" jdbcType="VARCHAR"/>
         <result property="activityLatitude" column="activity_latitude" jdbcType="DECIMAL"/>
         <result property="activityLongitude" column="activity_longitude" jdbcType="DECIMAL"/>
         <result property="activityRadius" column="activity_radius" jdbcType="INTEGER"/>
@@ -49,7 +48,6 @@
         a.activity_publishtime,
         a.activity_signddl,
         a.activity_state,
-        a.activity_checkin_code,
         a.activity_latitude,
         a.activity_longitude,
         a.activity_radius,

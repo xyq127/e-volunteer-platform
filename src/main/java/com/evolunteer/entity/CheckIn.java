@@ -62,8 +62,32 @@ public class CheckIn implements Serializable {
     /** 志愿者组织的复核意见 */
     private String checkinRemark;
 
-    /** 平台管理员对补录记录的复核意见 */
+    /** 平台管理员对补录记录或异常记录的复核意见 */
     private String checkinAdminremark;
+
+    /** 命中的时长异常规则编码，为空表示未命中异常规则 */
+    private String checkinAnomaly;
+
+    /** 异常规则裁定意见，写入后表示该异常已裁定 */
+    private String checkinAnomalyremark;
+
+    /** 服务对象名称（受助人或带队人） */
+    private String checkinObjectname;
+
+    /** 服务对象手机号，查询接口只返回掩码，不返回完整号码 */
+    private String checkinObjectphone;
+
+    /** 服务确认码，由志愿者组织交给服务对象 */
+    private String checkinConfirmcode;
+
+    /** 服务对象确认状态，空 待确认、1 已确认、2 已否认 */
+    private String checkinObjectconfirm;
+
+    /** 服务对象确认时间 */
+    private Date checkinObjectconfirmtime;
+
+    /** 服务对象确认意见 */
+    private String checkinObjectremark;
 
     /** 复核时间 */
     private Date checkinChecktime;
@@ -103,6 +127,18 @@ public class CheckIn implements Serializable {
     /** 记录来源文案，用于页面展示 */
     @TableField(exist = false)
     private String checkinSourceText;
+
+    /** 服务对象确认状态文案，用于页面展示 */
+    @TableField(exist = false)
+    private String checkinObjectconfirmText;
+
+    /** 命中的异常规则名称，用于页面展示 */
+    @TableField(exist = false)
+    private String checkinAnomalyname;
+
+    /** 复核状态文案，用于页面展示 */
+    @TableField(exist = false)
+    private String checkinTimecheckText;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

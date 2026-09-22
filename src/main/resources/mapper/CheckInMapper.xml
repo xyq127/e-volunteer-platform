@@ -22,11 +22,20 @@
             <result property="checkinFlag" column="checkin_flag" jdbcType="VARCHAR"/>
             <result property="checkinRemark" column="checkin_remark" jdbcType="VARCHAR"/>
             <result property="checkinAdminremark" column="checkin_adminremark" jdbcType="VARCHAR"/>
+            <result property="checkinAnomaly" column="checkin_anomaly" jdbcType="VARCHAR"/>
+            <result property="checkinAnomalyremark" column="checkin_anomalyremark" jdbcType="VARCHAR"/>
+            <result property="checkinObjectname" column="checkin_objectname" jdbcType="VARCHAR"/>
+            <result property="checkinObjectphone" column="checkin_objectphone" jdbcType="VARCHAR"/>
+            <result property="checkinConfirmcode" column="checkin_confirmcode" jdbcType="VARCHAR"/>
+            <result property="checkinObjectconfirm" column="checkin_objectconfirm" jdbcType="VARCHAR"/>
+            <result property="checkinObjectconfirmtime" column="checkin_objectconfirmtime" jdbcType="TIMESTAMP"/>
+            <result property="checkinObjectremark" column="checkin_objectremark" jdbcType="VARCHAR"/>
             <result property="checkinChecktime" column="checkin_checktime" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <!-- 服务记录与志愿者信息关联的查询结果，供志愿者组织复核服务时长使用 -->
     <resultMap id="WithVolunteerResultMap" type="com.evolunteer.entity.CheckIn" extends="BaseResultMap">
+        <result property="checkinAnomalyname" column="checkin_anomalyname" jdbcType="VARCHAR"/>
         <result property="volunteerId" column="volunteer_id" jdbcType="VARCHAR"/>
         <result property="volunteerName" column="volunteer_name" jdbcType="VARCHAR"/>
         <result property="volunteerTel" column="volunteer_tel" jdbcType="VARCHAR"/>
@@ -39,6 +48,7 @@
         <result property="activityId" column="activity_id" jdbcType="VARCHAR"/>
         <result property="activityName" column="activity_name" jdbcType="VARCHAR"/>
         <result property="organizationName" column="organization_name" jdbcType="VARCHAR"/>
+        <result property="checkinAnomalyname" column="checkin_anomalyname" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -77,14 +87,24 @@
         checkin.checkin_remark,
         checkin.checkin_adminremark,
         checkin.checkin_checktime,
+        checkin.checkin_anomaly,
+        checkin.checkin_anomalyremark,
+        checkin.checkin_objectname,
+        checkin.checkin_objectphone,
+        checkin.checkin_confirmcode,
+        checkin.checkin_objectconfirm,
+        checkin.checkin_objectconfirmtime,
+        checkin.checkin_objectremark,
+        rule.rule_name as checkin_anomalyname,
         volunteer.volunteer_num,
         volunteer.volunteer_id,
         volunteer.volunteer_name,
         volunteer.volunteer_tel
-        from checkin, participate, volunteer
-        where checkin.participate_num = participate.participate_num
-        and participate.volunteer_num = volunteer.volunteer_num
-        and participate.activity_num = #{activityNum,jdbcType=INTEGER}
+        from checkin
+        join participate on participate.participate_num = checkin.participate_num
+        join volunteer on volunteer.volunteer_num = participate.volunteer_num
+        left join anomaly_rule rule on rule.rule_code = checkin.checkin_anomaly
+        where participate.activity_num = #{activityNum,jdbcType=INTEGER}
         <if test="source != null and source != ''">
             and checkin.checkin_source = #{source,jdbcType=VARCHAR}
         </if>
@@ -111,14 +131,16 @@
         checkin.checkin_remark,
         checkin.checkin_adminremark,
         checkin.checkin_checktime,
+        rule.rule_name as checkin_anomalyname,
         volunteer.volunteer_num,
         volunteer.volunteer_id,
         volunteer.volunteer_name,
         volunteer.volunteer_tel
-        from checkin, participate, volunteer
-        where checkin.participate_num = participate.participate_num
-        and participate.volunteer_num = volunteer.volunteer_num
-        and participate.activity_num = #{activityNum,jdbcType=INTEGER}
+        from checkin
+        join participate on participate.participate_num = checkin.participate_num
+        join volunteer on volunteer.volunteer_num = participate.volunteer_num
+        left join anomaly_rule rule on rule.rule_code = checkin.checkin_anomaly
+        where participate.activity_num = #{activityNum,jdbcType=INTEGER}
         order by checkin.checkin_num asc
     </select>
 
@@ -205,16 +227,86 @@
         }
     </insert>
 
-    <!-- 调用数据库存储过程 admin_check_manual_checkin 完成补录复核 -->
-    <insert id="admin_check_manual_checkin" statementType="CALLABLE">
-        {call admin_check_manual_checkin(#{loginId,mode=IN,jdbcType=VARCHAR},
-                                         #{checkinNum,mode=IN,jdbcType=INTEGER},
-                                         #{isPass,mode=IN,jdbcType=INTEGER},
-                                         #{remark,mode=IN,jdbcType=VARCHAR},
-                                         #{msg,mode=OUT,jdbcType=VARCHAR},
-                                         #{ok,mode=OUT,jdbcType=INTEGER})
+    <!-- 调用数据库存储过程 admin_check_checkin 完成补录记录与异常记录的复核裁定 -->
+    <insert id="admin_check_checkin" statementType="CALLABLE">
+        {call admin_check_checkin(#{loginId,mode=IN,jdbcType=VARCHAR},
+                                  #{checkinNum,mode=IN,jdbcType=INTEGER},
+                                  #{isPass,mode=IN,jdbcType=INTEGER},
+                                  #{remark,mode=IN,jdbcType=VARCHAR},
+                                  #{msg,mode=OUT,jdbcType=VARCHAR},
+                                  #{ok,mode=OUT,jdbcType=INTEGER})
         }
     </insert>
+
+    <!-- 调用数据库存储过程 organization_issue_confirm_sheet 生成服务确认单 -->
+    <insert id="organization_issue_confirm_sheet" statementType="CALLABLE">
+        {call organization_issue_confirm_sheet(#{loginId,mode=IN,jdbcType=VARCHAR},
+                                               #{checkinNum,mode=IN,jdbcType=INTEGER},
+                                               #{objectName,mode=IN,jdbcType=VARCHAR},
+                                               #{objectPhone,mode=IN,jdbcType=VARCHAR},
+                                               #{confirmCode,mode=OUT,jdbcType=VARCHAR},
+                                               #{msg,mode=OUT,jdbcType=VARCHAR},
+                                               #{ok,mode=OUT,jdbcType=INTEGER})
+        }
+    </insert>
+
+    <!-- 调用数据库存储过程 service_object_confirm 完成服务对象确认 -->
+    <insert id="service_object_confirm" statementType="CALLABLE">
+        {call service_object_confirm(#{confirmCode,mode=IN,jdbcType=VARCHAR},
+                                     #{objectPhone,mode=IN,jdbcType=VARCHAR},
+                                     #{resultValue,mode=IN,jdbcType=INTEGER},
+                                     #{objectRemark,mode=IN,jdbcType=VARCHAR},
+                                     #{msg,mode=OUT,jdbcType=VARCHAR},
+                                     #{ok,mode=OUT,jdbcType=INTEGER})
+        }
+    </insert>
+
+    <!-- 调用数据库存储过程 service_anomaly_scan 标记超限的已计入服务记录 -->
+    <insert id="service_anomaly_scan" statementType="CALLABLE">
+        {call service_anomaly_scan(#{flaggedCount,mode=OUT,jdbcType=INTEGER})
+        }
+    </insert>
+
+    <!-- 分页查询命中异常规则且尚未裁定的服务记录，供平台管理员裁定 -->
+    <select id="selectPageAnomalies" resultMap="ManualReviewResultMap">
+        select
+        checkin.checkin_num,
+        checkin.participate_num,
+        checkin.checkin_begintime,
+        checkin.checkin_endtime,
+        checkin.checkin_duration,
+        checkin.checkin_timecheck,
+        checkin.checkin_source,
+        checkin.checkin_remark,
+        checkin.checkin_adminremark,
+        checkin.checkin_checktime,
+        checkin.checkin_anomaly,
+        checkin.checkin_anomalyremark,
+        checkin.checkin_objectconfirm,
+        rule.rule_name as checkin_anomalyname,
+        volunteer.volunteer_num,
+        volunteer.volunteer_id,
+        volunteer.volunteer_name,
+        volunteer.volunteer_tel,
+        activity.activity_num,
+        activity.activity_id,
+        activity.activity_name,
+        organization.organization_name
+        from checkin
+        join participate on participate.participate_num = checkin.participate_num
+        join volunteer on volunteer.volunteer_num = participate.volunteer_num
+        join activity on activity.activity_num = participate.activity_num
+        join organization on organization.organization_num = activity.organization_num
+        left join anomaly_rule rule on rule.rule_code = checkin.checkin_anomaly
+        where checkin.checkin_anomaly is not null
+        and checkin.checkin_anomalyremark is null
+        <if test="keyword != null and keyword != ''">
+            and (volunteer.volunteer_name like concat('%', #{keyword,jdbcType=VARCHAR}, '%')
+            or volunteer.volunteer_id like concat('%', #{keyword,jdbcType=VARCHAR}, '%')
+            or activity.activity_name like concat('%', #{keyword,jdbcType=VARCHAR}, '%'))
+        </if>
+        order by checkin.checkin_num desc
+    </select>
 
     <!-- 调用数据库存储过程 organization_settle_activity 结算活动考勤 -->
     <insert id="organization_settle_activity" statementType="CALLABLE">

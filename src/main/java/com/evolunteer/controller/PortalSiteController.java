@@ -4,6 +4,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.evolunteer.entity.Activity;
 import com.evolunteer.entity.ApiResponse;
+import com.evolunteer.enums.AuditActionEnum;
+import com.evolunteer.service.AuditLogService;
+import com.evolunteer.service.CheckInService;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 import com.evolunteer.entity.Organization;
 import com.evolunteer.entity.PolicyFile;
 import com.evolunteer.entity.PortalAnnouncementView;
@@ -48,6 +53,41 @@ public class PortalSiteController {
 
     @Autowired
     VolunteerService volunteerService;
+
+    @Autowired
+    CheckInService checkInService;
+
+    @Autowired
+    AuditLogService auditLogService;
+
+    /**
+     * 服务对象确认或否认本次服务：服务对象使用志愿者组织交付的确认码与本人手机号核对，无需登录
+     *
+     * @param confirmCode  服务确认码
+     * @param objectPhone  服务对象手机号
+     * @param resultValue  确认结果（1 确认、2 否认）
+     * @param objectRemark 确认意见
+     * @param request      请求对象
+     * @return 处理结果
+     */
+    @RequestMapping(value = "/service-confirm", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResponse serviceConfirm(@RequestParam(value = "confirmCode") String confirmCode,
+                                      @RequestParam(value = "objectPhone") String objectPhone,
+                                      @RequestParam(value = "resultValue") Integer resultValue,
+                                      @RequestParam(value = "objectRemark", required = false) String objectRemark,
+                                      HttpServletRequest request) {
+
+        Map<Object, Object> result = checkInService.objectConfirm(confirmCode, objectPhone, resultValue, objectRemark);
+        String msg = (String) result.get("msg");
+        Object ok = result.get("ok");
+        if (ok == null || ((Number) ok).intValue() != 1) {
+            return ApiResponse.fail(msg);
+        }
+        auditLogService.record("服务对象", "PUBLIC", AuditActionEnum.SERVICE_OBJECT_CONFIRM,
+                "确认码 " + confirmCode, msg, request.getRemoteAddr());
+        return ApiResponse.success(msg);
+    }
 
     /**
      * 分页查询门户通知公告，每条公告附带附件列表

@@ -50,11 +50,41 @@ public interface CheckInMapper extends BaseMapper<CheckIn> {
     void organization_record_service_hours(Map<Object, Object> map);
 
     /**
-     * 调用数据库存储过程 admin_check_manual_checkin，平台管理员复核补录记录
+     * 调用数据库存储过程 admin_check_checkin，平台管理员复核补录记录与命中异常规则的服务记录
      *
      * @param map 复核参数，包含管理员账号、签到编号、复核结果、复核意见与输出参数 msg、ok
      */
-    void admin_check_manual_checkin(Map<Object, Object> map);
+    void admin_check_checkin(Map<Object, Object> map);
+
+    /**
+     * 调用数据库存储过程 organization_issue_confirm_sheet，志愿者组织生成服务确认单
+     *
+     * @param map 参数，包含组织账号、签到编号、服务对象名称、手机号与输出参数 confirmCode、msg、ok
+     */
+    void organization_issue_confirm_sheet(Map<Object, Object> map);
+
+    /**
+     * 调用数据库存储过程 service_object_confirm，服务对象确认或否认本次服务（无需登录）
+     *
+     * @param map 参数，包含确认码、手机号、确认结果、意见与输出参数 msg、ok
+     */
+    void service_object_confirm(Map<Object, Object> map);
+
+    /**
+     * 调用数据库存储过程 service_anomaly_scan，标记单日已计入时长超过上限的服务记录
+     *
+     * @param map 输出参数容器，包含 flaggedCount
+     */
+    void service_anomaly_scan(Map<Object, Object> map);
+
+    /**
+     * 分页查询命中异常规则且尚未裁定的服务记录，供平台管理员裁定
+     *
+     * @param page    分页对象
+     * @param keyword 志愿者姓名、志愿者编号或活动名称关键字，可为空
+     * @return 异常记录分页结果
+     */
+    IPage<CheckIn> selectPageAnomalies(Page<CheckIn> page, @Param("keyword") String keyword);
 
     /**
      * 调用数据库存储过程 organization_settle_activity，结算活动考勤并记录爽约

@@ -194,6 +194,62 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-xl-12">
+                        <div class="card">
+                            <div class="card-header pb-0">
+                                <h5>异常时长待裁定</h5>
+                                <p class="mb-0 text-muted small">命中时长异常规则且尚未裁定的服务记录；已计入的记录维持不变，冲销会扣回累计时长与信用分</p>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-5">
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" id="anomaly_keyword"
+                                                   placeholder="志愿者姓名、志愿者编号或活动名称">
+                                            <button class="btn btn-primary" type="button" id="btn_search_anomaly">查询
+                                            </button>
+                                            <button class="btn btn-light" type="button" id="btn_reset_anomaly">重置
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-bordernone">
+                                        <thead>
+                                        <tr>
+                                            <th scope="col">志愿者</th>
+                                            <th scope="col">所属活动</th>
+                                            <th scope="col">申报组织</th>
+                                            <th scope="col">服务开始时间</th>
+                                            <th scope="col">服务结束时间</th>
+                                            <th scope="col">服务时长（小时）</th>
+                                            <th scope="col">命中规则</th>
+                                            <th scope="col">复核状态</th>
+                                            <th scope="col">操作</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody id="anomaly_table">
+                                        <tr>
+                                            <td colspan="9" class="text-center text-muted">数据加载中……</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <div class="text-muted" id="anomaly_pager_info">共 0 条</div>
+                                    <div>
+                                        <button class="btn btn-outline-primary btn-sm" type="button"
+                                                id="btn_prev_anomaly_page">上一页
+                                        </button>
+                                        <span class="mx-2" id="anomaly_pager_page">第 1 / 1 页</span>
+                                        <button class="btn btn-outline-primary btn-sm" type="button"
+                                                id="btn_next_anomaly_page">下一页
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <!-- Container-fluid Ends-->
@@ -227,6 +283,36 @@
             </div>
         </div>
         <!-- 复核模态框 end-->
+
+        <!-- 异常时长裁定模态框 start-->
+        <div class="modal fade" id="anomalyModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">异常时长裁定</h5>
+                        <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-2" id="anomaly_information"></p>
+                        <p class="mb-2 text-muted small">已计入的记录维持不变，冲销会扣回累计时长与信用分</p>
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label text-end" for="anomaly_remark">裁定意见</label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+                                    <textarea class="form-control" id="anomaly_remark" rows="3"
+                                              placeholder="填写裁定意见，冲销时请说明原因"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" type="button" id="btn_submit_anomaly">提交裁定</button>
+                        <button class="btn btn-light" type="button" data-bs-dismiss="modal">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 异常时长裁定模态框 end-->
     </div>
 </div>
 <!-- latest jquery-->
@@ -261,6 +347,23 @@
      * 复核模态框实例
      */
     var reviewModal = null;
+
+    /**
+     * 异常待裁定区块独立的分页与检索状态
+     */
+    var anomalyPage = 1;
+    var anomalySize = 10;
+    var anomalyKeyword = "";
+
+    /**
+     * 当前正在裁定的异常记录编号与裁定结果（1 维持计入、2 冲销）
+     */
+    var anomalyTarget = {checkinNum: null, isPass: null};
+
+    /**
+     * 异常时长裁定模态框实例
+     */
+    var anomalyModal = null;
 
     /**
      * 将后端返回的时间格式化为 yyyy-MM-dd HH:mm
@@ -405,6 +508,130 @@
     }
 
     /**
+     * 渲染异常记录分页控件，与补录记录分页互不影响
+     */
+    function renderAnomalyPager(totalCount, currentPage, pageSize) {
+        var total = totalCount || 0;
+        anomalyPage = currentPage || 1;
+        anomalySize = pageSize || anomalySize;
+        var pages = total === 0 ? 1 : Math.ceil(total / anomalySize);
+        $("#anomaly_pager_info").text("共 " + total + " 条");
+        $("#anomaly_pager_page").text("第 " + anomalyPage + " / " + pages + " 页");
+        $("#btn_prev_anomaly_page").prop("disabled", anomalyPage <= 1);
+        $("#btn_next_anomaly_page").prop("disabled", anomalyPage >= pages);
+    }
+
+    /**
+     * 渲染命中异常规则且尚未裁定的服务记录
+     */
+    function renderAnomalies(records) {
+        var $body = $("#anomaly_table").empty();
+        if (!records || records.length === 0) {
+            $body.append('<tr><td colspan="9" class="text-center text-muted">暂无数据</td></tr>');
+            return;
+        }
+        var html = "";
+        $.each(records, function (index, record) {
+            var anomalyName = record.checkinAnomalyname || record.checkinAnomaly || "—";
+            html += `<tr>
+                        <td>${record.volunteerName || "—"}
+                            <span class="d-block text-muted small">${record.volunteerId || ""} ${record.volunteerTel || ""}</span>
+                        </td>
+                        <td>${record.activityName || "—"}</td>
+                        <td>${record.organizationName || "—"}</td>
+                        <td>${formatTime(record.checkinBegintime)}</td>
+                        <td>${formatTime(record.checkinEndtime)}</td>
+                        <td>${record.checkinDuration || 0}</td>
+                        <td><span class="badge badge-danger">${anomalyName}</span></td>
+                        <td>${record.checkinTimecheckText || "待复核"}</td>
+                        <td>
+                            <div class="btn-group btn-group-pill" role="group" aria-label="异常时长裁定">
+                                <button class="btn btn-outline-primary btn-sm" type="button"
+                                        onclick="openAnomaly(${record.checkinNum},1)">维持计入</button>
+                                <button class="btn btn-outline-danger btn-sm" type="button"
+                                        onclick="openAnomaly(${record.checkinNum},2)">冲销</button>
+                            </div>
+                        </td>
+                     </tr>`;
+        });
+        $body.html(html);
+    }
+
+    /**
+     * 按当前分页与关键字查询待裁定的异常记录
+     */
+    function loadAnomalies() {
+        $.ajax({
+            url: "/admin/review/anomalies",
+            type: "GET",
+            data: {
+                "page": anomalyPage,
+                "size": anomalySize,
+                "keyword": anomalyKeyword
+            },
+            success: function (result) {
+                if (!result || result.code !== 100 || !result.extend) {
+                    alert((result && result.msg) ? result.msg : "异常记录加载失败");
+                    return;
+                }
+                renderAnomalies(result.extend.list);
+                renderAnomalyPager(result.extend.total, result.extend.page, result.extend.size);
+            },
+            error: function () {
+                alert("异常记录加载失败，请稍后重试");
+            }
+        });
+    }
+
+    /**
+     * 打开异常时长裁定弹窗，isPass 为 1 维持计入、2 冲销
+     */
+    function openAnomaly(checkinNum, isPass) {
+        anomalyTarget.checkinNum = checkinNum;
+        anomalyTarget.isPass = isPass;
+        $("#anomaly_information").text("正在裁定的服务记录：签到编号 " + checkinNum
+            + "，裁定结果：" + (isPass === 1 ? "维持计入" : "冲销"));
+        $("#anomaly_remark").val("");
+        if (!anomalyModal) {
+            anomalyModal = new bootstrap.Modal(document.getElementById("anomalyModal"));
+        }
+        anomalyModal.show();
+    }
+
+    /**
+     * 提交异常时长裁定，成功后刷新异常待裁定列表
+     */
+    function submitAnomaly() {
+        if (anomalyTarget.checkinNum === null) {
+            alert("请先选择需要裁定的异常记录");
+            return;
+        }
+        $.ajax({
+            url: "/admin/review/manualHours/check",
+            type: "POST",
+            data: {
+                "checkinNum": anomalyTarget.checkinNum,
+                "isPass": anomalyTarget.isPass,
+                "remark": $.trim($("#anomaly_remark").val())
+            },
+            success: function (result) {
+                alert((result && result.msg) ? result.msg : "裁定已完成");
+                if (result && result.code === 100) {
+                    if (anomalyModal) {
+                        anomalyModal.hide();
+                    }
+                    anomalyTarget.checkinNum = null;
+                    anomalyTarget.isPass = null;
+                    loadAnomalies();
+                }
+            },
+            error: function () {
+                alert("裁定提交失败，请稍后重试");
+            }
+        });
+    }
+
+    /**
      * 点击查询：按关键字与复核状态从第一页开始检索
      */
     $("#btn_search_manual").click(function () {
@@ -469,10 +696,58 @@
     });
 
     /**
-     * 进入页面即加载待复核的补录记录
+     * 异常待裁定区块的查询与重置
+     */
+    $("#btn_search_anomaly").click(function () {
+        anomalyKeyword = $.trim($("#anomaly_keyword").val());
+        anomalyPage = 1;
+        loadAnomalies();
+    });
+
+    $("#btn_reset_anomaly").click(function () {
+        $("#anomaly_keyword").val("");
+        anomalyKeyword = "";
+        anomalyPage = 1;
+        loadAnomalies();
+    });
+
+    /**
+     * 异常待裁定区块回车即查询
+     */
+    $("#anomaly_keyword").keydown(function (event) {
+        if (event.keyCode === 13) {
+            $("#btn_search_anomaly").click();
+        }
+    });
+
+    /**
+     * 异常待裁定区块分页按钮，与补录记录分页互不影响
+     */
+    $("#btn_prev_anomaly_page").click(function () {
+        if (anomalyPage > 1) {
+            anomalyPage = anomalyPage - 1;
+            loadAnomalies();
+        }
+    });
+
+    $("#btn_next_anomaly_page").click(function () {
+        anomalyPage = anomalyPage + 1;
+        loadAnomalies();
+    });
+
+    /**
+     * 异常时长裁定弹窗提交按钮
+     */
+    $("#btn_submit_anomaly").click(function () {
+        submitAnomaly();
+    });
+
+    /**
+     * 进入页面即加载待复核的补录记录与待裁定的异常记录
      */
     $(document).ready(function () {
         loadManualHours();
+        loadAnomalies();
     });
 </script>
 </body>

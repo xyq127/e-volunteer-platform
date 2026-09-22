@@ -104,7 +104,7 @@ CREATE TABLE e_user
 
 -- -----------------------------------------------------------------------------
 -- 6. 志愿活动表：保存志愿者组织申报的志愿活动及其审核、开展状态
---    activity_checkin_code 现场签到码，可信签到的凭证之一
+--    activity_checkin_secret 签到密钥，平台按签到密钥与时间窗口派生短时轮换的现场签到码
 --    activity_latitude/activity_longitude/activity_radius 活动地点与签到地理围栏
 --    activity_reason_code 审核不通过的结构化原因，activity_revision 申报被退回后修改提交的次数
 --    activity_settle_time 活动结算时间，结算后统计爽约并计入志愿者信用
@@ -130,7 +130,7 @@ CREATE TABLE activity
     activity_leaderid    INT            DEFAULT NULL COMMENT '活动负责人编号',
     activity_checktime   DATETIME       DEFAULT NULL COMMENT '审核时间',
     activity_remark      VARCHAR(500)   DEFAULT NULL COMMENT '审核意见',
-    activity_checkin_code VARCHAR(16)   DEFAULT NULL COMMENT '现场签到码',
+    activity_checkin_secret VARCHAR(32)  DEFAULT NULL COMMENT '签到密钥，用于派生短时轮换的现场签到码',
     activity_latitude    DECIMAL(10, 7) DEFAULT NULL COMMENT '活动地点纬度',
     activity_longitude   DECIMAL(10, 7) DEFAULT NULL COMMENT '活动地点经度',
     activity_radius      INT            DEFAULT 300 COMMENT '签到地理围栏半径（米）',
@@ -205,6 +205,14 @@ CREATE TABLE checkin
     checkin_duration   DOUBLE         DEFAULT NULL COMMENT '服务时长（小时）',
     checkin_timecheck  VARCHAR(4)     DEFAULT NULL COMMENT '服务时长复核状态，空 待复核、1 已确认、2 已驳回',
     checkin_source     VARCHAR(4)     DEFAULT '1' COMMENT '记录来源，1 平台签到、2 志愿者组织补录（需平台管理员复核）',
+    checkin_anomaly    VARCHAR(32)    DEFAULT NULL COMMENT '异常规则编码，命中时长异常规则时写入，需平台管理员裁定',
+    checkin_anomalyremark VARCHAR(200) DEFAULT NULL COMMENT '异常裁定意见',
+    checkin_objectname VARCHAR(50)    DEFAULT NULL COMMENT '服务对象名称（受助人或带队人）',
+    checkin_objectphone VARCHAR(20)   DEFAULT NULL COMMENT '服务对象手机号，仅用于服务对象确认时校验，查询接口只返回掩码',
+    checkin_confirmcode VARCHAR(16)   DEFAULT NULL COMMENT '服务确认码，由志愿者组织交给服务对象',
+    checkin_objectconfirm VARCHAR(4)  DEFAULT NULL COMMENT '服务对象确认状态，空 待确认、1 已确认、2 已否认',
+    checkin_objectconfirmtime DATETIME DEFAULT NULL COMMENT '服务对象确认时间',
+    checkin_objectremark VARCHAR(200) DEFAULT NULL COMMENT '服务对象确认意见',
     checkin_code       VARCHAR(16)    DEFAULT NULL COMMENT '签到使用的现场签到码',
     checkin_latitude   DECIMAL(10, 7) DEFAULT NULL COMMENT '签到地点纬度',
     checkin_longitude  DECIMAL(10, 7) DEFAULT NULL COMMENT '签到地点经度',
@@ -404,8 +412,26 @@ CREATE TABLE audit_log
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='操作审计表';
 
+-- -----------------------------------------------------------------------------
+-- 20. 时长异常规则表：保存服务时长异常检测规则的阈值与开关，规则由存储过程读取后执行
+--     rule_threshold 含义：SINGLE_DAY_TOTAL 为单日累计小时上限、SINGLE_RECORD 为单条小时上限、
+--     NIGHT_SERVICE 为夜间起始小时、MANUAL_BATCH 为同一报名补录条数上限
+-- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS anomaly_rule;
+CREATE TABLE anomaly_rule
+(
+    rule_num       INT AUTO_INCREMENT COMMENT '规则编号，主键自增',
+    rule_code      VARCHAR(32)  NOT NULL COMMENT '规则编码',
+    rule_name      VARCHAR(100) DEFAULT NULL COMMENT '规则名称',
+    rule_threshold DECIMAL(6, 2) DEFAULT 0 COMMENT '规则阈值',
+    rule_enabled   INT          DEFAULT 1 COMMENT '是否启用，1 启用、0 停用',
+    PRIMARY KEY (rule_num),
+    UNIQUE KEY uk_anomaly_rule_code (rule_code)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='时长异常规则表';
+
 -- =============================================================================
--- 存储过程
+-- 存储过程与函数
 -- =============================================================================
 DELIMITER $$
 
@@ -490,7 +516,7 @@ CREATE PROCEDURE organization_insert_activity(IN loginId VARCHAR(32),
 BEGIN
     DECLARE orgNum INT DEFAULT NULL;
     DECLARE newNum INT DEFAULT 0;
-    DECLARE newCode VARCHAR(16) DEFAULT NULL;
+    DECLARE newSecret VARCHAR(32) DEFAULT NULL;
 
     SELECT organization_num INTO orgNum FROM organization WHERE organization_id = loginId LIMIT 1;
 
@@ -512,11 +538,11 @@ BEGIN
                 activityLatitude, activityLongitude, IFNULL(activityRadius, 300),
                 0);
         SET newNum = LAST_INSERT_ID();
-        -- 现场签到码随活动生成，志愿者组织可在活动现场公布，用于可信签到
-        SET newCode = UPPER(SUBSTRING(MD5(CONCAT(newNum, RAND(), NOW())), 1, 6));
+        -- 现场签到码由签到密钥与时间窗口派生，每个活动生成独立的随机密钥
+        SET newSecret = UPPER(SUBSTRING(SHA2(CONCAT(newNum, RAND(), NOW(), UUID()), 256), 1, 32));
         UPDATE activity
         SET activity_id = CONCAT('act_', LPAD(newNum, 5, '0')),
-            activity_checkin_code = newCode
+            activity_checkin_secret = newSecret
         WHERE activity_num = newNum;
         CALL activity_skill_replace(newNum, activitySkillNames);
         SET msg = '志愿活动申报成功，等待平台管理员审核';
@@ -847,7 +873,8 @@ BEGIN
     DECLARE activityState VARCHAR(4) DEFAULT NULL;
     DECLARE activityBegintimeValue DATETIME DEFAULT NULL;
     DECLARE activityEndtimeValue DATETIME DEFAULT NULL;
-    DECLARE activityCode VARCHAR(16) DEFAULT NULL;
+    DECLARE activitySecret VARCHAR(32) DEFAULT NULL;
+    DECLARE rotationIndex BIGINT DEFAULT 0;
     DECLARE activityLatitudeValue DECIMAL(10, 7) DEFAULT NULL;
     DECLARE activityLongitudeValue DECIMAL(10, 7) DEFAULT NULL;
     DECLARE activityRadiusValue INT DEFAULT NULL;
@@ -858,13 +885,16 @@ BEGIN
     SET flag = '1';
     SET ok = 0;
 
-    SELECT activity_state, activity_begintime, activity_endtime, activity_checkin_code,
+    SELECT activity_state, activity_begintime, activity_endtime, activity_checkin_secret,
            activity_latitude, activity_longitude, activity_radius
-    INTO activityState, activityBegintimeValue, activityEndtimeValue, activityCode,
+    INTO activityState, activityBegintimeValue, activityEndtimeValue, activitySecret,
         activityLatitudeValue, activityLongitudeValue, activityRadiusValue
     FROM activity
     WHERE activity_num = activityNum
       AND activity_isdeleted = 0;
+
+    -- 现场签到码每 120 秒轮换一次，接受当前与上一个时间窗口，兼容志愿者输入耗时与时钟偏差
+    SET rotationIndex = FLOOR(UNIX_TIMESTAMP(NOW()) / 120);
 
     SELECT participate_num INTO participateNumValue
     FROM participate
@@ -899,8 +929,10 @@ BEGIN
             SET msg = '签到尚未开始，请在活动开始前 60 分钟内签到';
         ELSEIF activityEndtimeValue IS NOT NULL AND NOW() > activityEndtimeValue THEN
             SET msg = '该志愿活动已结束，无法签到';
-        ELSEIF activityCode IS NULL OR UPPER(TRIM(inputCode)) <> UPPER(activityCode) THEN
-            SET msg = '签到码不正确，请向活动负责人确认现场签到码';
+        ELSEIF activitySecret IS NULL
+            OR (UPPER(TRIM(inputCode)) <> activity_checkin_code(activitySecret, activityNum, rotationIndex)
+                AND UPPER(TRIM(inputCode)) <> activity_checkin_code(activitySecret, activityNum, rotationIndex - 1)) THEN
+            SET msg = '签到码不正确或已过期，请向活动负责人确认当前签到码';
         ELSE
             -- 计算签到位置与活动地点的球面距离，超出地理围栏则标记为异常待复核
             IF activityLatitudeValue IS NOT NULL AND activityLongitudeValue IS NOT NULL
@@ -1042,11 +1074,14 @@ BEGIN
     DECLARE participateNumValue INT DEFAULT NULL;
     DECLARE volunteerNumValue INT DEFAULT NULL;
     DECLARE sourceValue VARCHAR(4) DEFAULT NULL;
+    DECLARE objectConfirmValue VARCHAR(4) DEFAULT NULL;
+    DECLARE anomalyCode VARCHAR(32) DEFAULT NULL;
+    DECLARE anomalyMessage VARCHAR(200) DEFAULT NULL;
 
     SET ok = 0;
 
-    SELECT checkin_timecheck, checkin_duration, participate_num, checkin_source
-    INTO timecheckValue, durationValue, participateNumValue, sourceValue
+    SELECT checkin_timecheck, checkin_duration, participate_num, checkin_source, checkin_objectconfirm
+    INTO timecheckValue, durationValue, participateNumValue, sourceValue, objectConfirmValue
     FROM checkin
     WHERE checkin_num = checkinNum;
 
@@ -1057,12 +1092,25 @@ BEGIN
         SET msg = '未找到对应的签到记录';
     ELSEIF timecheckValue IS NOT NULL THEN
         SET msg = '该服务时长已复核，无需重复处理';
-    ELSE
-        SELECT volunteer_num INTO volunteerNumValue
-        FROM participate
-        WHERE participate_num = participateNumValue;
+    ELSEIF objectConfirmValue = '2' THEN
+        -- 服务对象已否认该次服务，责任方不能直接确认时长，需由平台管理员裁定
+        SET msg = '服务对象已否认该次服务，请核实后联系平台管理员处理';
+    ELSEIF isPass = 1 THEN
+        CALL service_anomaly_check(checkinNum, anomalyCode, anomalyMessage);
 
-        IF isPass = 1 THEN
+        IF anomalyCode IS NOT NULL THEN
+            -- 命中时长异常规则：本次不计入累计时长，转平台管理员裁定
+            UPDATE checkin
+            SET checkin_anomaly = anomalyCode,
+                checkin_remark  = remark
+            WHERE checkin_num = checkinNum;
+            SET msg = CONCAT('已提交复核，', anomalyMessage, '，需平台管理员裁定后计入累计时长');
+            SET ok = 1;
+        ELSE
+            SELECT volunteer_num INTO volunteerNumValue
+            FROM participate
+            WHERE participate_num = participateNumValue;
+
             UPDATE checkin
             SET checkin_timecheck = '1',
                 checkin_checktime = NOW(),
@@ -1081,20 +1129,20 @@ BEGIN
 
             SET msg = CONCAT('已确认服务时长 ', IFNULL(durationValue, 0), ' 小时，并计入志愿者累计服务时长');
             SET ok = 1;
-        ELSE
-            UPDATE checkin
-            SET checkin_timecheck = '2',
-                checkin_checktime = NOW(),
-                checkin_remark    = remark
-            WHERE checkin_num = checkinNum;
-
-            UPDATE participate
-            SET participate_timecheck = '2'
-            WHERE participate_num = participateNumValue;
-
-            SET msg = '已驳回该服务时长记录，本次时长不计入累计服务时长';
-            SET ok = 1;
         END IF;
+    ELSE
+        UPDATE checkin
+        SET checkin_timecheck = '2',
+            checkin_checktime = NOW(),
+            checkin_remark    = remark
+        WHERE checkin_num = checkinNum;
+
+        UPDATE participate
+        SET participate_timecheck = '2'
+        WHERE participate_num = participateNumValue;
+
+        SET msg = '已驳回该服务时长记录，本次时长不计入累计服务时长';
+        SET ok = 1;
     END IF;
 END $$
 
@@ -1256,6 +1304,9 @@ BEGIN
     DECLARE isDeletedValue INT DEFAULT 0;
     DECLARE durationValue DOUBLE DEFAULT NULL;
     DECLARE overlapCount INT DEFAULT 0;
+    DECLARE newCheckinNum INT DEFAULT NULL;
+    DECLARE anomalyCode VARCHAR(32) DEFAULT NULL;
+    DECLARE anomalyMessage VARCHAR(200) DEFAULT NULL;
 
     SET ok = 0;
 
@@ -1295,7 +1346,17 @@ BEGIN
                 INSERT INTO checkin(participate_num, checkin_begintime, checkin_endtime, checkin_duration,
                                     checkin_source, checkin_flag, checkin_remark)
                 VALUES (participateNum, beginTime, endTime, durationValue, '2', '1', remark);
-                SET msg = CONCAT('已补录服务时长 ', durationValue, ' 小时，待平台管理员复核后计入累计时长');
+                SET newCheckinNum = LAST_INSERT_ID();
+
+                -- 补录同样接受时长异常规则检测，命中规则的记录在管理员裁定前不计入累计时长
+                CALL service_anomaly_check(newCheckinNum, anomalyCode, anomalyMessage);
+                IF anomalyCode IS NOT NULL THEN
+                    UPDATE checkin SET checkin_anomaly = anomalyCode WHERE checkin_num = newCheckinNum;
+                    SET msg = CONCAT('已补录服务时长 ', durationValue, ' 小时，但', anomalyMessage,
+                        '，需平台管理员裁定后计入累计时长');
+                ELSE
+                    SET msg = CONCAT('已补录服务时长 ', durationValue, ' 小时，待平台管理员复核后计入累计时长');
+                END IF;
                 SET ok = 1;
             END IF;
         END IF;
@@ -1303,20 +1364,23 @@ BEGIN
 END $$
 
 -- -----------------------------------------------------------------------------
--- 补录复核：平台管理员复核志愿者组织补录的服务时长，确认后计入累计时长
+-- 服务时长裁定：平台管理员复核志愿者组织补录的服务时长，以及命中异常规则的平台签到记录
+--   补录记录由平台管理员复核（录入与复核分离）；平台签到记录命中时长异常规则时同样转平台管理员裁定
 -- -----------------------------------------------------------------------------
-DROP PROCEDURE IF EXISTS admin_check_manual_checkin $$
-CREATE PROCEDURE admin_check_manual_checkin(IN loginId VARCHAR(32),
-                                            IN checkinNum INT,
-                                            IN isPass INT,
-                                            IN remark VARCHAR(200),
-                                            OUT msg VARCHAR(200),
-                                            OUT ok INT)
+DROP PROCEDURE IF EXISTS admin_check_checkin $$
+CREATE PROCEDURE admin_check_checkin(IN loginId VARCHAR(32),
+                                     IN checkinNum INT,
+                                     IN isPass INT,
+                                     IN remark VARCHAR(200),
+                                     OUT msg VARCHAR(200),
+                                     OUT ok INT)
 BEGIN
     DECLARE adminCount INT DEFAULT 0;
     DECLARE sourceValue VARCHAR(4) DEFAULT NULL;
     DECLARE timecheckValue VARCHAR(4) DEFAULT NULL;
-    DECLARE durationValue DOUBLE DEFAULT NULL;
+    DECLARE anomalyValue VARCHAR(32) DEFAULT NULL;
+    DECLARE anomalyRemarkValue VARCHAR(200) DEFAULT NULL;
+    DECLARE durationValue DOUBLE DEFAULT 0;
     DECLARE participateNumValue INT DEFAULT NULL;
     DECLARE volunteerNumValue INT DEFAULT NULL;
     DECLARE confirmedCount INT DEFAULT 0;
@@ -1325,8 +1389,10 @@ BEGIN
 
     SELECT COUNT(*) INTO adminCount FROM admin WHERE admin_id = loginId;
 
-    SELECT checkin_source, checkin_timecheck, checkin_duration, participate_num
-    INTO sourceValue, timecheckValue, durationValue, participateNumValue
+    SELECT checkin_source, checkin_timecheck, checkin_duration, participate_num,
+           checkin_anomaly, checkin_anomalyremark
+    INTO sourceValue, timecheckValue, durationValue, participateNumValue,
+        anomalyValue, anomalyRemarkValue
     FROM checkin
     WHERE checkin_num = checkinNum;
 
@@ -1334,50 +1400,87 @@ BEGIN
         SET msg = '未找到平台管理员信息，请重新登录后再试';
     ELSEIF participateNumValue IS NULL THEN
         SET msg = '未找到对应的服务时长记录';
-    ELSEIF sourceValue <> '2' THEN
-        SET msg = '该记录为平台签到记录，请由志愿者组织复核';
-    ELSEIF timecheckValue IS NOT NULL THEN
+    ELSEIF anomalyValue IS NULL AND sourceValue <> '2' THEN
+        SET msg = '该记录为平台签到记录且未命中异常规则，请由志愿者组织复核';
+    ELSEIF anomalyValue IS NOT NULL AND anomalyRemarkValue IS NOT NULL THEN
+        SET msg = '该异常记录已裁定，无需重复处理';
+    ELSEIF anomalyValue IS NULL AND timecheckValue IS NOT NULL THEN
         SET msg = '该服务时长已复核，无需重复处理';
     ELSE
-        SELECT volunteer_num INTO volunteerNumValue FROM participate WHERE participate_num = participateNumValue;
+        SELECT volunteer_num INTO volunteerNumValue
+        FROM participate WHERE participate_num = participateNumValue;
+
+        SELECT COUNT(*) INTO confirmedCount
+        FROM checkin
+        WHERE participate_num = participateNumValue
+          AND checkin_timecheck = '1'
+          AND checkin_num <> checkinNum;
 
         IF isPass = 1 THEN
+            IF timecheckValue = '1' THEN
+                -- 已计入的异常记录：裁定维持计入，仅记录裁定意见
+                UPDATE checkin
+                SET checkin_adminremark   = remark,
+                    checkin_anomalyremark = remark
+                WHERE checkin_num = checkinNum;
+                SET msg = CONCAT('已裁定维持计入该服务时长 ', IFNULL(durationValue, 0), ' 小时');
+            ELSE
+                UPDATE checkin
+                SET checkin_timecheck     = '1',
+                    checkin_checktime     = NOW(),
+                    checkin_adminremark   = remark,
+                    checkin_anomalyremark = IF(anomalyValue IS NULL, checkin_anomalyremark, remark)
+                WHERE checkin_num = checkinNum;
+
+                UPDATE participate
+                SET participate_timecheck = '1',
+                    participate_duration  = IFNULL(participate_duration, 0) + IFNULL(durationValue, 0)
+                WHERE participate_num = participateNumValue;
+
+                UPDATE volunteer
+                SET volunteer_totalduration = volunteer_totalduration + IFNULL(durationValue, 0),
+                    volunteer_credit        = LEAST(120, volunteer_credit + 2)
+                WHERE volunteer_num = volunteerNumValue;
+
+                SET msg = CONCAT('已确认服务时长 ', IFNULL(durationValue, 0), ' 小时，并计入志愿者累计服务时长');
+            END IF;
+            SET ok = 1;
+        ELSEIF timecheckValue = '1' THEN
+            -- 已计入的异常记录被驳回：冲销已计入的时长与信用分
             UPDATE checkin
-            SET checkin_timecheck = '1',
-                checkin_checktime = NOW(),
-                checkin_adminremark = remark
+            SET checkin_timecheck     = '3',
+                checkin_checktime     = NOW(),
+                checkin_adminremark   = remark,
+                checkin_anomalyremark = remark
             WHERE checkin_num = checkinNum;
 
             UPDATE participate
-            SET participate_timecheck = '1',
-                participate_duration  = IFNULL(participate_duration, 0) + IFNULL(durationValue, 0)
+            SET participate_duration  = GREATEST(0, IFNULL(participate_duration, 0) - IFNULL(durationValue, 0)),
+                participate_timecheck = IF(confirmedCount > 0, '1', '2')
             WHERE participate_num = participateNumValue;
 
             UPDATE volunteer
-            SET volunteer_totalduration = volunteer_totalduration + IFNULL(durationValue, 0),
-                volunteer_credit        = LEAST(120, volunteer_credit + 2)
+            SET volunteer_totalduration = GREATEST(0, volunteer_totalduration - IFNULL(durationValue, 0)),
+                volunteer_credit        = GREATEST(0, volunteer_credit - 2)
             WHERE volunteer_num = volunteerNumValue;
 
-            SET msg = CONCAT('已确认补录服务时长 ', IFNULL(durationValue, 0), ' 小时，并计入志愿者累计服务时长');
+            SET msg = CONCAT('已冲销该服务时长 ', IFNULL(durationValue, 0), ' 小时，并从累计服务时长中扣回');
+            SET ok = 1;
         ELSE
             UPDATE checkin
-            SET checkin_timecheck = '2',
-                checkin_checktime = NOW(),
-                checkin_adminremark = remark
+            SET checkin_timecheck     = '2',
+                checkin_checktime     = NOW(),
+                checkin_adminremark   = remark,
+                checkin_anomalyremark = IF(anomalyValue IS NULL, checkin_anomalyremark, remark)
             WHERE checkin_num = checkinNum;
-
-            SELECT COUNT(*) INTO confirmedCount
-            FROM checkin
-            WHERE participate_num = participateNumValue
-              AND checkin_timecheck = '1';
 
             UPDATE participate
             SET participate_timecheck = IF(confirmedCount > 0, '1', '2')
             WHERE participate_num = participateNumValue;
 
-            SET msg = '已驳回该补录记录，本次时长不计入累计服务时长';
+            SET msg = '已驳回该服务时长记录，本次时长不计入累计服务时长';
+            SET ok = 1;
         END IF;
-        SET ok = 1;
     END IF;
 END $$
 
@@ -1721,6 +1824,286 @@ BEGIN
     END IF;
 END $$
 
+-- -----------------------------------------------------------------------------
+-- 现场签到码派生函数：由活动签到密钥、活动编号与时间窗口序号派生短时轮换的签到码
+--   每 120 秒为一个时间窗口，签到码为 8 位字符（字符集剔除易混淆的 0、1、I、O）
+-- -----------------------------------------------------------------------------
+DROP FUNCTION IF EXISTS activity_checkin_code $$
+CREATE FUNCTION activity_checkin_code(secret VARCHAR(32), activityNum INT, rotationIndex BIGINT)
+    RETURNS VARCHAR(16)
+    DETERMINISTIC
+BEGIN
+    DECLARE hashValue VARCHAR(64) DEFAULT '';
+    DECLARE checkinCode VARCHAR(16) DEFAULT '';
+    DECLARE position INT DEFAULT 1;
+    DECLARE nibble CHAR(1) DEFAULT '';
+    DECLARE alphabet VARCHAR(16) DEFAULT '23456789ABCDEFGH';
+
+    SET hashValue = UPPER(SHA2(CONCAT(secret, '#', activityNum, '#', rotationIndex), 256));
+
+    WHILE position <= 8 DO
+        SET nibble = SUBSTRING(hashValue, position, 1);
+        SET checkinCode = CONCAT(checkinCode, SUBSTRING(alphabet, CONV(nibble, 16, 10) + 1, 1));
+        SET position = position + 1;
+    END WHILE;
+
+    RETURN checkinCode;
+END $$
+
+-- -----------------------------------------------------------------------------
+-- 时长异常规则检测：按异常规则表的阈值判断一条服务记录是否命中异常规则
+--   命中时返回规则编码与说明，由调用方决定是否计入累计时长（当前实现为转平台管理员裁定）
+-- -----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS service_anomaly_check $$
+CREATE PROCEDURE service_anomaly_check(IN checkinNum INT,
+                                       OUT anomalyCode VARCHAR(32),
+                                       OUT msg VARCHAR(200))
+BEGIN
+    DECLARE durationValue DOUBLE DEFAULT 0;
+    DECLARE beginValue DATETIME DEFAULT NULL;
+    DECLARE volunteerNumValue INT DEFAULT NULL;
+    DECLARE serviceDate DATE DEFAULT NULL;
+    DECLARE singleRecordLimit DECIMAL(6, 2) DEFAULT 12;
+    DECLARE singleDayLimit DECIMAL(6, 2) DEFAULT 12;
+    DECLARE nightLimit DECIMAL(6, 2) DEFAULT 5;
+    DECLARE manualBatchLimit DECIMAL(6, 2) DEFAULT 3;
+    DECLARE dayTotal DOUBLE DEFAULT 0;
+    DECLARE manualCount INT DEFAULT 0;
+
+    SET anomalyCode = NULL;
+    SET msg = NULL;
+
+    SELECT c.checkin_duration, c.checkin_begintime, p.volunteer_num
+    INTO durationValue, beginValue, volunteerNumValue
+    FROM checkin c
+    JOIN participate p ON p.participate_num = c.participate_num
+    WHERE c.checkin_num = checkinNum;
+
+    -- 规则阈值由异常规则表配置，未配置或已停用时沿用默认阈值
+    SELECT rule_threshold INTO singleRecordLimit
+    FROM anomaly_rule WHERE rule_code = 'SINGLE_RECORD' AND rule_enabled = 1 LIMIT 1;
+    SELECT rule_threshold INTO singleDayLimit
+    FROM anomaly_rule WHERE rule_code = 'SINGLE_DAY_TOTAL' AND rule_enabled = 1 LIMIT 1;
+    SELECT rule_threshold INTO nightLimit
+    FROM anomaly_rule WHERE rule_code = 'NIGHT_SERVICE' AND rule_enabled = 1 LIMIT 1;
+    SELECT rule_threshold INTO manualBatchLimit
+    FROM anomaly_rule WHERE rule_code = 'MANUAL_BATCH' AND rule_enabled = 1 LIMIT 1;
+
+    IF durationValue IS NULL OR beginValue IS NULL OR volunteerNumValue IS NULL THEN
+        SET msg = NULL;
+    ELSE
+        SET serviceDate = DATE(beginValue);
+
+        -- 单日已计入时长（不含本记录）+ 本记录时长
+        SELECT IFNULL(SUM(c.checkin_duration), 0) INTO dayTotal
+        FROM checkin c
+        JOIN participate p ON p.participate_num = c.participate_num
+        WHERE p.volunteer_num = volunteerNumValue
+          AND c.checkin_timecheck = '1'
+          AND c.checkin_num <> checkinNum
+          AND DATE(c.checkin_begintime) = serviceDate;
+
+        SELECT COUNT(*) INTO manualCount
+        FROM checkin c
+        JOIN participate p ON p.participate_num = c.participate_num
+        WHERE p.activity_num = (SELECT activity_num FROM participate WHERE participate_num =
+                (SELECT participate_num FROM checkin WHERE checkin_num = checkinNum))
+          AND p.volunteer_num = volunteerNumValue
+          AND c.checkin_source = '2';
+
+        IF durationValue > singleRecordLimit THEN
+            SET anomalyCode = 'SINGLE_RECORD';
+            SET msg = CONCAT('单条服务时长 ', durationValue, ' 小时超过上限 ', singleRecordLimit, ' 小时');
+        ELSEIF DAYOFMONTH(beginValue) = DAYOFMONTH(beginValue)
+            AND HOUR(beginValue) < nightLimit THEN
+            SET anomalyCode = 'NIGHT_SERVICE';
+            SET msg = CONCAT('服务开始于 ', DATE_FORMAT(beginValue, '%H:%i'),
+                '，属于夜间时段（0 时至 ', nightLimit, ' 时），需人工核对');
+        ELSEIF dayTotal + durationValue > singleDayLimit THEN
+            SET anomalyCode = 'SINGLE_DAY_TOTAL';
+            SET msg = CONCAT('当日已计入 ', ROUND(dayTotal, 2), ' 小时，叠加本次将达到 ',
+                ROUND(dayTotal + durationValue, 2), ' 小时，超过单日上限 ', singleDayLimit, ' 小时');
+        ELSEIF manualCount >= manualBatchLimit THEN
+            SET anomalyCode = 'MANUAL_BATCH';
+            SET msg = CONCAT('该志愿者在本活动已有 ', manualCount, ' 条补录记录，达到补录条数上限 ',
+                manualBatchLimit, ' 条，需人工核对');
+        END IF;
+    END IF;
+END $$
+
+-- -----------------------------------------------------------------------------
+-- 服务确认单：志愿者组织为一条已确认的服务记录生成服务确认码，交给服务对象核对
+-- -----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS organization_issue_confirm_sheet $$
+CREATE PROCEDURE organization_issue_confirm_sheet(IN loginId VARCHAR(32),
+                                                  IN checkinNum INT,
+                                                  IN objectName VARCHAR(50),
+                                                  IN objectPhone VARCHAR(20),
+                                                  OUT confirmCode VARCHAR(16),
+                                                  OUT msg VARCHAR(200),
+                                                  OUT ok INT)
+BEGIN
+    DECLARE orgNum INT DEFAULT NULL;
+    DECLARE ownerOrgNum INT DEFAULT NULL;
+    DECLARE endValue DATETIME DEFAULT NULL;
+    DECLARE objectConfirmValue VARCHAR(4) DEFAULT NULL;
+    DECLARE newCode VARCHAR(16) DEFAULT NULL;
+
+    SET ok = 0;
+    SET confirmCode = NULL;
+
+    SELECT organization_num INTO orgNum FROM organization WHERE organization_id = loginId LIMIT 1;
+
+    SELECT a.organization_num, c.checkin_endtime, c.checkin_objectconfirm
+    INTO ownerOrgNum, endValue, objectConfirmValue
+    FROM checkin c
+    JOIN participate p ON p.participate_num = c.participate_num
+    JOIN activity a ON a.activity_num = p.activity_num
+    WHERE c.checkin_num = checkinNum;
+
+    IF ownerOrgNum IS NULL THEN
+        SET msg = '未找到对应的服务记录';
+    ELSEIF ownerOrgNum <> orgNum THEN
+        SET msg = '只能为本组织活动中的服务记录生成服务确认单';
+    ELSEIF endValue IS NULL THEN
+        SET msg = '该服务尚未结束，暂不能生成服务确认单';
+    ELSEIF objectConfirmValue IS NOT NULL THEN
+        SET msg = '该记录已完成服务对象确认，无需重复生成';
+    ELSEIF objectName IS NULL OR TRIM(objectName) = ''
+        OR objectPhone IS NULL OR LENGTH(TRIM(objectPhone)) < 7 THEN
+        SET msg = '请填写服务对象名称与有效手机号，用于服务对象确认时校验';
+    ELSE
+        SET newCode = UPPER(SUBSTRING(SHA2(CONCAT(checkinNum, RAND(), NOW()), 256), 1, 8));
+        UPDATE checkin
+        SET checkin_objectname    = TRIM(objectName),
+            checkin_objectphone   = TRIM(objectPhone),
+            checkin_confirmcode   = newCode,
+            checkin_objectconfirm = NULL
+        WHERE checkin_num = checkinNum;
+
+        SET confirmCode = newCode;
+        SET msg = CONCAT('服务确认单已生成，请将确认码交给服务对象「', TRIM(objectName),
+            '」，由其本人核对手机号后确认或否认本次服务');
+        SET ok = 1;
+    END IF;
+END $$
+
+-- -----------------------------------------------------------------------------
+-- 服务对象确认：服务对象使用确认码与本人手机号确认或否认本次服务（无需登录）
+--   确认为正向补强；否认时若该时长已计入累计时长，平台立即冲销并通知志愿者组织核实
+-- -----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS service_object_confirm $$
+CREATE PROCEDURE service_object_confirm(IN inputCode VARCHAR(16),
+                                        IN inputPhone VARCHAR(20),
+                                        IN resultValue INT,
+                                        IN remark VARCHAR(200),
+                                        OUT msg VARCHAR(200),
+                                        OUT ok INT)
+BEGIN
+    DECLARE checkinNumValue INT DEFAULT NULL;
+    DECLARE objectPhoneValue VARCHAR(20) DEFAULT NULL;
+    DECLARE durationValue DOUBLE DEFAULT 0;
+    DECLARE timecheckValue VARCHAR(4) DEFAULT NULL;
+    DECLARE participateNumValue INT DEFAULT NULL;
+    DECLARE volunteerNumValue INT DEFAULT NULL;
+    DECLARE confirmedCount INT DEFAULT 0;
+
+    SET ok = 0;
+
+    SELECT checkin_num, checkin_objectphone, checkin_duration, checkin_timecheck, participate_num
+    INTO checkinNumValue, objectPhoneValue, durationValue, timecheckValue, participateNumValue
+    FROM checkin
+    WHERE checkin_confirmcode = UPPER(TRIM(inputCode));
+
+    IF checkinNumValue IS NULL THEN
+        SET msg = '确认码不存在或已失效，请与服务组织核对';
+    ELSEIF objectPhoneValue IS NULL OR TRIM(inputPhone) <> objectPhoneValue THEN
+        SET msg = '手机号与预留号码不一致，无法确认本次服务';
+    ELSEIF timecheckValue = '2' OR timecheckValue = '3' THEN
+        SET msg = '该服务记录已处理完毕，无需再次确认';
+    ELSE
+        SELECT p.volunteer_num INTO volunteerNumValue
+        FROM participate p WHERE p.participate_num = participateNumValue;
+
+        IF resultValue = 1 THEN
+            UPDATE checkin
+            SET checkin_objectconfirm     = '1',
+                checkin_objectconfirmtime = NOW(),
+                checkin_objectremark      = remark
+            WHERE checkin_num = checkinNumValue;
+            SET msg = '感谢您的确认，本次服务已由服务对象确认';
+            SET ok = 1;
+        ELSEIF resultValue = 2 THEN
+            UPDATE checkin
+            SET checkin_objectconfirm     = '2',
+                checkin_objectconfirmtime = NOW(),
+                checkin_objectremark      = remark
+            WHERE checkin_num = checkinNumValue;
+
+            IF timecheckValue = '1' THEN
+                -- 已计入累计时长的记录被否认时立即冲销，冲销只执行一次
+                UPDATE checkin SET checkin_timecheck = '3' WHERE checkin_num = checkinNumValue;
+
+                SELECT COUNT(*) INTO confirmedCount
+                FROM checkin
+                WHERE participate_num = participateNumValue
+                  AND checkin_timecheck = '1'
+                  AND checkin_num <> checkinNumValue;
+
+                UPDATE participate
+                SET participate_duration  = GREATEST(0, IFNULL(participate_duration, 0) - IFNULL(durationValue, 0)),
+                    participate_timecheck = IF(confirmedCount > 0, '1', '2')
+                WHERE participate_num = participateNumValue;
+
+                UPDATE volunteer
+                SET volunteer_totalduration = GREATEST(0, volunteer_totalduration - IFNULL(durationValue, 0)),
+                    volunteer_credit        = GREATEST(0, volunteer_credit - 2)
+                WHERE volunteer_num = volunteerNumValue;
+
+                SET msg = CONCAT('已记录您的反馈，本次服务时长 ', IFNULL(durationValue, 0),
+                    ' 小时已冲销，平台将通知志愿者组织核实');
+            ELSE
+                SET msg = '已记录您的反馈，本次服务不会被计入服务时长';
+            END IF;
+            SET ok = 1;
+        ELSE
+            SET msg = '请选择确认或否认本次服务';
+        END IF;
+    END IF;
+END $$
+
+-- -----------------------------------------------------------------------------
+-- 异常时长巡检：定时标记单日已计入时长超过上限的服务记录，供平台管理员裁定
+-- -----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS service_anomaly_scan $$
+CREATE PROCEDURE service_anomaly_scan(OUT flaggedCount INT)
+BEGIN
+    DECLARE singleDayLimit DECIMAL(6, 2) DEFAULT 12;
+
+    SET flaggedCount = 0;
+
+    SELECT rule_threshold INTO singleDayLimit
+    FROM anomaly_rule WHERE rule_code = 'SINGLE_DAY_TOTAL' AND rule_enabled = 1 LIMIT 1;
+
+    UPDATE checkin c
+        JOIN participate p ON p.participate_num = c.participate_num
+        JOIN (SELECT p2.volunteer_num AS volunteer_num,
+                     DATE(c2.checkin_begintime) AS service_date,
+                     SUM(c2.checkin_duration) AS day_total
+              FROM checkin c2
+              JOIN participate p2 ON p2.participate_num = c2.participate_num
+              WHERE c2.checkin_timecheck = '1'
+              GROUP BY p2.volunteer_num, DATE(c2.checkin_begintime)) t
+             ON t.volunteer_num = p.volunteer_num
+                 AND t.service_date = DATE(c.checkin_begintime)
+    SET c.checkin_anomaly = 'SINGLE_DAY_TOTAL'
+    WHERE c.checkin_timecheck = '1'
+      AND c.checkin_anomaly IS NULL
+      AND t.day_total > singleDayLimit;
+
+    SET flaggedCount = ROW_COUNT();
+END $$
+
 DELIMITER ;
 
 -- =============================================================================
@@ -1771,7 +2154,7 @@ VALUES (1, '助学支教'), (1, '环保公益'), (1, '社区服务'),
 INSERT INTO activity(organization_num, activity_id, activity_name, activity_detail,
                      activity_begintime, activity_endtime, activity_location, activity_needpeople,
                      activity_notice, activity_publishtime, activity_signddl, activity_state,
-                     admin_num, activity_checkin, activity_checkin_code,
+                     admin_num, activity_checkin, activity_checkin_secret,
                      activity_latitude, activity_longitude, activity_radius,
                      activity_checktime, activity_remark, activity_reason_code,
                      activity_revision, activity_settle_time, activity_isdeleted)
@@ -1789,12 +2172,12 @@ VALUES (1, 'act_00001', '社区爱心助学志愿活动',
         '沿城市公园步道开展垃圾分类宣传与沿途垃圾清理。',
         '2023-10-14 08:30:00', '2023-10-14 11:30:00', '城市中心公园南门', 20,
         '请穿着运动鞋，自备饮用水。', '2023-08-20 15:00:00', '2023-10-08 18:00:00', '1',
-        1, '现场签到', 'X3P8Q1', 31.2304000, 121.4737000, 300, '2023-08-21 10:00:00', '活动方案完整，审核通过', NULL, 0, NULL, 0),
+        1, '现场签到', '9F2C41A7D3E85B60C1A94F7D2E638B51', 31.2304000, 121.4737000, 300, '2023-08-21 10:00:00', '活动方案完整，审核通过', NULL, 0, NULL, 0),
        (1, 'act_00004', '图书馆图书整理志愿服务',
         '协助图书馆整理书架、修补图书并引导读者检索。',
         '2023-08-05 09:00:00', '2023-08-05 12:00:00', '市图书馆三楼', 6,
         '保持安静，服从图书管理员安排。', '2023-07-20 11:00:00', '2023-08-01 18:00:00', '3',
-        1, '现场签到', 'B5T1W7', 31.2400000, 121.4800000, 300, '2023-07-21 09:30:00', '审核通过', NULL, 0, '2023-08-06 10:30:00', 0),
+        1, '现场签到', '3D7A18C4F92B60E51A7C3D8F49B216E7', 31.2400000, 121.4800000, 300, '2023-07-21 09:30:00', '审核通过', NULL, 0, '2023-08-06 10:30:00', 0),
        (1, 'act_00005', '暑期乡村支教志愿活动',
         '到乡村小学开展暑期支教活动，内容包含兴趣课程与安全教育。',
         '2023-07-10 09:00:00', '2023-07-20 17:00:00', '青山乡中心小学', 15,
@@ -1809,17 +2192,22 @@ VALUES (1, 'act_00001', '社区爱心助学志愿活动',
         '整理社区图书漂流角、登记图书流转信息并引导居民参与图书交换。',
         '2026-10-18 09:00:00', '2026-10-18 12:00:00', '阳光社区活动中心', 1,
         '请提前十分钟到场，携带本人志愿者编号。', '2026-09-15 10:00:00', '2026-10-15 18:00:00', '1',
-        1, '现场签到', 'A7K2M9', 31.2304000, 121.4737000, 300, '2026-09-16 09:00:00', '活动方案完整，审核通过', NULL, 0, NULL, 0),
+        1, '现场签到', 'C41F9A72D3B865E01F4A7C29D8B36E15', 31.2304000, 121.4737000, 300, '2026-09-16 09:00:00', '活动方案完整，审核通过', NULL, 0, NULL, 0),
        (1, 'act_00008', '城市应急救护知识宣传',
         '在公园向市民演示心肺复苏与止血包扎，发放应急救护手册。',
         '2026-10-25 09:00:00', '2026-10-25 16:00:00', '城市中心公园北门', 10,
         '服务时长较长，请自备饮用水与防晒用品。', '2026-09-18 14:00:00', '2026-10-20 18:00:00', '1',
-        1, '现场签到', 'C4N8R2', 31.2360000, 121.4800000, 300, '2026-09-19 10:30:00', '审核通过', NULL, 0, NULL, 0),
+        1, '现场签到', '7E1B93D5A2C64F80B3D7E19C4A28F65D', 31.2360000, 121.4800000, 300, '2026-09-19 10:30:00', '审核通过', NULL, 0, NULL, 0),
        (2, 'act_00009', '敬老助餐志愿服务',
         '在社区食堂协助分餐、送餐并陪伴独居老人用餐。',
         '2026-11-01 08:30:00', '2026-11-01 12:00:00', '和平社区广场', 8,
         '请穿着便于活动的服装，注意食品卫生。', '2026-09-20 09:00:00', '2026-10-28 18:00:00', '1',
-        1, '现场签到', 'D9W3K5', 31.3000000, 121.6000000, 500, '2026-09-20 15:00:00', '审核通过', NULL, 0, NULL, 0);
+        1, '现场签到', 'A6C2E84F1B973D50E2A6C4F89B1D7350', 31.3000000, 121.6000000, 500, '2026-09-20 15:00:00', '审核通过', NULL, 0, NULL, 0);
+
+-- 为未单独指定签到密钥的历史活动补充随机密钥，保证每个活动都能派生轮换签到码
+UPDATE activity
+SET activity_checkin_secret = UPPER(SUBSTRING(SHA2(CONCAT(activity_num, RAND(), NOW(), UUID()), 256), 1, 32))
+WHERE activity_checkin_secret IS NULL;
 
 INSERT INTO activity_skill(activity_num, skill_name)
 VALUES (1, '助学支教'),
@@ -1852,11 +2240,11 @@ VALUES (1, 3, '2023-08-25 09:10:00', '1', '2023-08-26 10:00:00', '已完成岗�
 INSERT INTO checkin(participate_num, checkin_begintime, checkin_endtime, checkin_duration, checkin_timecheck,
                     checkin_code, checkin_latitude, checkin_longitude, checkin_distance, checkin_outdistance,
                     checkin_flag, checkin_remark, checkin_checktime, checkin_source, checkin_adminremark)
-VALUES (1, '2023-10-14 08:25:00', '2023-10-14 11:35:00', 3.0, '1', 'X3P8Q1',
+VALUES (1, '2023-10-14 08:25:00', '2023-10-14 11:35:00', 3.0, '1', 'H8HH72G5',
         31.2305000, 121.4738000, 120, 95, '1', '签到轨迹与活动地点一致，服务时长予以确认', '2023-10-15 09:00:00', '1', NULL),
-       (2, '2023-10-14 08:28:00', '2023-10-14 11:32:00', 3.0, NULL, 'X3P8Q1',
+       (2, '2023-10-14 08:28:00', '2023-10-14 11:32:00', 3.0, NULL, 'H8HH72G5',
         31.2500000, 121.5000000, 1860, 60, '2', NULL, NULL, '1', NULL),
-       (4, '2023-08-05 09:02:00', '2023-08-05 12:05:00', 3.0, '1', 'B5T1W7',
+       (4, '2023-08-05 09:02:00', '2023-08-05 12:05:00', 3.0, '1', 'G3F8B2D7',
         31.2401000, 121.4801000, 85, 70, '1', '服务时长与活动计划一致，予以确认', '2023-08-06 10:00:00', '1', NULL),
        (4, '2023-08-05 13:00:00', '2023-08-05 15:00:00', 2.0, NULL, NULL,
         NULL, NULL, NULL, NULL, '1', '当日午后加做图书整理，由志愿者组织补录', NULL, '2', NULL);
@@ -1889,6 +2277,12 @@ VALUES ('sho_00001', '参加城市环保徒步宣传，向市民讲解垃圾分�
 
 INSERT INTO show_picture(show_num, picture_id, picture_name, picture_route, picture_uniquename, picture_isdeleted)
 VALUES (1, 'pic_00001', '环保徒步宣传现场', '/upload/show/2023/10/15/001.jpg', '20231015001.jpg', 0);
+
+INSERT INTO anomaly_rule(rule_code, rule_name, rule_threshold, rule_enabled)
+VALUES ('SINGLE_DAY_TOTAL', '单日累计服务时长上限（小时）', 12, 1),
+       ('SINGLE_RECORD', '单条服务时长上限（小时）', 12, 1),
+       ('NIGHT_SERVICE', '夜间服务开始时间（时）', 5, 1),
+       ('MANUAL_BATCH', '同一报名补录条数上限', 3, 1);
 
 INSERT INTO notification(receiver_id, receiver_role, notification_title, notification_detail,
                          notification_read, notification_time)

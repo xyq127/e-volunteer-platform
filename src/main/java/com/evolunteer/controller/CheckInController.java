@@ -1,6 +1,7 @@
 package com.evolunteer.controller;
 
 import com.evolunteer.entity.ApiResponse;
+import com.evolunteer.entity.CheckinCodeView;
 import com.evolunteer.entity.Volunteer;
 import com.evolunteer.enums.AuditActionEnum;
 import com.evolunteer.service.AuditLogService;
@@ -197,7 +198,43 @@ public class CheckInController {
     @RequestMapping(value = "/code", method = RequestMethod.GET)
     @ResponseBody
     public ApiResponse getCheckinCode(@RequestParam(value = "activityNum") Integer activityNum) {
-        return ApiResponse.success().add("checkinCode", checkInService.getCheckinCode(activityNum));
+        CheckinCodeView codeInfo = checkInService.currentCheckinCode(activityNum);
+        if (codeInfo == null) {
+            return ApiResponse.fail("未找到对应的志愿活动，无法获取签到码");
+        }
+        return ApiResponse.success()
+                .add("checkinCode", codeInfo.getCheckinCode())
+                .add("expiresInSeconds", codeInfo.getExpiresInSeconds());
+    }
+
+    /**
+     * 志愿者组织为一条服务记录生成服务确认单，交给服务对象核对确认
+     *
+     * @param checkinNum     签到编号
+     * @param objectName     服务对象名称
+     * @param objectPhone    服务对象手机号
+     * @param request        请求对象
+     * @param authentication 当前登录用户信息
+     * @return 处理结果，确认码见 confirmCode 字段
+     */
+    @RequestMapping(value = "/confirmSheet", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResponse confirmSheet(@RequestParam(value = "checkinNum") Integer checkinNum,
+                                    @RequestParam(value = "objectName") String objectName,
+                                    @RequestParam(value = "objectPhone") String objectPhone,
+                                    HttpServletRequest request, Authentication authentication) {
+
+        String loginId = operator(authentication);
+        Map<Object, Object> result = checkInService.issueConfirmSheet(loginId, checkinNum, objectName, objectPhone);
+        String msg = (String) result.get("msg");
+        if (!isSuccess(result)) {
+            log.warn("生成服务确认单未完成，签到编号：{}，原因：{}", checkinNum, msg);
+            return ApiResponse.fail(msg);
+        }
+        auditLogService.record(loginId, "ROLE_ORGANIZATION", AuditActionEnum.SERVICE_CONFIRM_SHEET,
+                "签到编号 " + checkinNum, "生成服务确认单：" + objectName, request.getRemoteAddr());
+        log.info("志愿者组织生成服务确认单，签到编号：{}，服务对象：{}", checkinNum, objectName);
+        return ApiResponse.success(msg).add("confirmCode", result.get("confirmCode"));
     }
 
     /**
@@ -213,8 +250,11 @@ public class CheckInController {
         if (checkinCode == null) {
             return ApiResponse.fail("未找到对应的志愿活动，无法生成签到码");
         }
-        log.info("志愿者组织重新生成现场签到码，活动编号：{}", activityNum);
-        return ApiResponse.success().add("checkinCode", checkinCode);
+        CheckinCodeView codeInfo = checkInService.currentCheckinCode(activityNum);
+        log.info("志愿者组织更换签到密钥并重新生成现场签到码，活动编号：{}", activityNum);
+        return ApiResponse.success()
+                .add("checkinCode", checkinCode)
+                .add("expiresInSeconds", codeInfo == null ? null : codeInfo.getExpiresInSeconds());
     }
 
     /**

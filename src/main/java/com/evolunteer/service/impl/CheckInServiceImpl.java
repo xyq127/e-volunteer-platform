@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.evolunteer.entity.Activity;
 import com.evolunteer.entity.CheckIn;
+import com.evolunteer.entity.CheckinCodeView;
 import com.evolunteer.entity.Participation;
 import com.evolunteer.entity.Volunteer;
 import com.evolunteer.mapper.ActivityMapper;
@@ -18,11 +19,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.security.SecureRandom;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * E志愿志愿者服务平台 V1.0
@@ -33,16 +34,6 @@ import java.util.Map;
 @Slf4j
 @Service
 public class CheckInServiceImpl implements CheckInService {
-
-    /**
-     * 现场签到码使用的字符集合，去掉了容易混淆的 0、1、I、O
-     */
-    private static final char[] CODE_CHARACTERS = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ".toCharArray();
-
-    /**
-     * 现场签到码长度
-     */
-    private static final int CODE_LENGTH = 6;
 
     @Autowired
     private CheckInMapper checkInMapper;
@@ -119,9 +110,7 @@ public class CheckInServiceImpl implements CheckInService {
         Page<CheckIn> page = PageSupport.of(pageNum, pageSize);
         IPage<CheckIn> result = checkInMapper.selectPageCheckinByActivityNum(page, activityNum,
                 PageSupport.normalizeKeyword(state), PageSupport.normalizeKeyword(source));
-        for (CheckIn checkIn : result.getRecords()) {
-            checkIn.setCheckinSourceText(sourceText(checkIn.getCheckinSource()));
-        }
+        decorate(result.getRecords());
         return result;
     }
 
@@ -134,9 +123,7 @@ public class CheckInServiceImpl implements CheckInService {
     @Override
     public List<CheckIn> listCheckinRecords(Integer activityNum) {
         List<CheckIn> records = checkInMapper.selectCheckinListByActivityNum(activityNum);
-        for (CheckIn checkIn : records) {
-            checkIn.setCheckinSourceText(sourceText(checkIn.getCheckinSource()));
-        }
+        decorate(records);
         return records;
     }
 
@@ -216,10 +203,41 @@ public class CheckInServiceImpl implements CheckInService {
         Page<CheckIn> page = PageSupport.of(pageNum, pageSize);
         IPage<CheckIn> result = checkInMapper.selectPageManualCheckins(page,
                 PageSupport.normalizeKeyword(state), PageSupport.normalizeKeyword(keyword));
-        for (CheckIn checkIn : result.getRecords()) {
-            checkIn.setCheckinSourceText(sourceText(checkIn.getCheckinSource()));
-        }
+        decorate(result.getRecords());
         return result;
+    }
+
+    /**
+     * 分页查询命中异常规则且尚未裁定的服务记录
+     *
+     * @param keyword  志愿者姓名、志愿者编号或活动名称关键字，可为空
+     * @param pageNum  页码
+     * @param pageSize 每页条数
+     * @return 异常记录分页结果
+     */
+    @Override
+    public IPage<CheckIn> pageAnomalies(String keyword, Integer pageNum, Integer pageSize) {
+        Page<CheckIn> page = PageSupport.of(pageNum, pageSize);
+        IPage<CheckIn> result = checkInMapper.selectPageAnomalies(page, PageSupport.normalizeKeyword(keyword));
+        decorate(result.getRecords());
+        return result;
+    }
+
+    /**
+     * 定时巡检：标记单日已计入时长超过上限的服务记录
+     *
+     * @return 处理结果，包含标记数量 flaggedCount
+     */
+    @Override
+    public Map<Object, Object> scanAnomalies() {
+        Map<Object, Object> map = new HashMap<>();
+        checkInMapper.service_anomaly_scan(map);
+        Object flagged = map.get("flaggedCount");
+        int flaggedCount = flagged == null ? 0 : ((Number) flagged).intValue();
+        if (flaggedCount > 0) {
+            log.warn("异常时长巡检标记 {} 条服务记录，等待平台管理员裁定", flaggedCount);
+        }
+        return map;
     }
 
     /**
@@ -232,20 +250,65 @@ public class CheckInServiceImpl implements CheckInService {
      * @return 处理结果，包含提示信息 msg 与处理标记 ok
      */
     @Override
-    public Map<Object, Object> reviewManualCheckin(String loginId, Integer checkinNum, Integer isPass,
-                                                   String remark) {
+    public Map<Object, Object> reviewByAdmin(String loginId, Integer checkinNum, Integer isPass,
+                                             String remark) {
 
         Map<Object, Object> map = new HashMap<>();
         map.put("loginId", loginId);
         map.put("checkinNum", checkinNum);
         map.put("isPass", isPass);
         map.put("remark", remark);
-        checkInMapper.admin_check_manual_checkin(map);
+        checkInMapper.admin_check_checkin(map);
 
         if (isSuccess(map)) {
-            log.info("平台管理员复核补录服务时长，签到编号：{}，结果：{}", checkinNum, map.get("msg"));
+            log.info("平台管理员裁定服务时长，签到编号：{}，结果：{}", checkinNum, map.get("msg"));
             notifyVolunteerOfReview(checkinNum, (String) map.get("msg"));
         }
+        return map;
+    }
+
+    /**
+     * 志愿者组织为服务记录生成服务确认单
+     *
+     * @param loginId     志愿者组织登录账号
+     * @param checkinNum  签到编号
+     * @param objectName  服务对象名称
+     * @param objectPhone 服务对象手机号
+     * @return 处理结果，包含提示信息 msg、处理标记 ok 与确认码 confirmCode
+     */
+    @Override
+    public Map<Object, Object> issueConfirmSheet(String loginId, Integer checkinNum, String objectName,
+                                                 String objectPhone) {
+        Map<Object, Object> map = new HashMap<>();
+        map.put("loginId", loginId);
+        map.put("checkinNum", checkinNum);
+        map.put("objectName", objectName);
+        map.put("objectPhone", objectPhone);
+        checkInMapper.organization_issue_confirm_sheet(map);
+        if (isSuccess(map)) {
+            log.info("志愿者组织生成服务确认单，签到编号：{}，服务对象：{}", checkinNum, objectName);
+        }
+        return map;
+    }
+
+    /**
+     * 服务对象确认或否认本次服务（公开接口，无需登录）
+     *
+     * @param confirmCode  服务确认码
+     * @param objectPhone  服务对象手机号
+     * @param resultValue  确认结果（1 确认、2 否认）
+     * @param objectRemark 确认意见
+     * @return 处理结果，包含提示信息 msg 与处理标记 ok
+     */
+    @Override
+    public Map<Object, Object> objectConfirm(String confirmCode, String objectPhone, Integer resultValue,
+                                             String objectRemark) {
+        Map<Object, Object> map = new HashMap<>();
+        map.put("confirmCode", confirmCode);
+        map.put("objectPhone", objectPhone);
+        map.put("resultValue", resultValue);
+        map.put("objectRemark", objectRemark);
+        checkInMapper.service_object_confirm(map);
         return map;
     }
 
@@ -264,22 +327,27 @@ public class CheckInServiceImpl implements CheckInService {
     }
 
     /**
-     * 查询活动的现场签到码
+     * 查询活动当前生效的轮换签到码与剩余有效秒数
      *
      * @param activityNum 活动编号
-     * @return 现场签到码，活动不存在或尚未生成时返回 null
+     * @return 签到码信息，活动不存在时返回 null
      */
     @Override
-    public String getCheckinCode(Integer activityNum) {
-        List<Activity> activities = activityMapper.selectByActivityNum(activityNum);
-        return activities.isEmpty() ? null : activities.get(0).getActivityCheckinCode();
+    public CheckinCodeView currentCheckinCode(Integer activityNum) {
+        CheckinCodeView codeInfo = activityMapper.selectCheckinCodeInfo(activityNum);
+        if (codeInfo != null && (codeInfo.getSecretGenerated() == null || codeInfo.getSecretGenerated() == 0)) {
+            // 历史活动可能尚未生成签到密钥，首次查看时自动生成，保证签到码可用
+            refreshCheckinCode(activityNum);
+            codeInfo = activityMapper.selectCheckinCodeInfo(activityNum);
+        }
+        return codeInfo;
     }
 
     /**
-     * 生成或重新生成活动的现场签到码
+     * 更换活动的签到密钥以立即重新生成签到码，旧签到码随之失效
      *
      * @param activityNum 活动编号
-     * @return 生成后的现场签到码，活动不存在时返回 null
+     * @return 重新生成后的签到码，活动不存在时返回 null
      */
     @Override
     public String refreshCheckinCode(Integer activityNum) {
@@ -287,21 +355,68 @@ public class CheckInServiceImpl implements CheckInService {
         if (activities.isEmpty()) {
             return null;
         }
-        String checkinCode = randomCheckinCode();
-        activityMapper.updateActivityCheckinCode(checkinCode, activityNum);
-        return checkinCode;
+        activityMapper.updateActivityCheckinSecret(randomCheckinSecret(), activityNum);
+        CheckinCodeView codeInfo = activityMapper.selectCheckinCodeInfo(activityNum);
+        return codeInfo == null ? null : codeInfo.getCheckinCode();
     }
 
     /**
-     * 生成随机现场签到码
+     * 生成随机签到密钥，签到码由密钥与时间窗口派生
      */
-    private String randomCheckinCode() {
-        SecureRandom random = new SecureRandom();
-        StringBuilder checkinCode = new StringBuilder(CODE_LENGTH);
-        for (int i = 0; i < CODE_LENGTH; i++) {
-            checkinCode.append(CODE_CHARACTERS[random.nextInt(CODE_CHARACTERS.length)]);
+    private String randomCheckinSecret() {
+        return (UUID.randomUUID().toString().replace("-", "")
+                + UUID.randomUUID().toString().replace("-", "")).substring(0, 32).toUpperCase();
+    }
+
+    /**
+     * 补充服务记录的展示文案，并对服务对象手机号做掩码处理，避免完整手机号外泄
+     */
+    private void decorate(List<CheckIn> records) {
+        for (CheckIn checkIn : records) {
+            checkIn.setCheckinSourceText(sourceText(checkIn.getCheckinSource()));
+            checkIn.setCheckinObjectconfirmText(objectConfirmText(checkIn.getCheckinObjectconfirm()));
+            checkIn.setCheckinTimecheckText(timecheckText(checkIn.getCheckinTimecheck()));
+            checkIn.setCheckinObjectphone(maskPhone(checkIn.getCheckinObjectphone()));
         }
-        return checkinCode.toString();
+    }
+
+    /**
+     * 服务对象确认状态文案
+     */
+    private String objectConfirmText(String objectConfirm) {
+        if ("1".equals(objectConfirm)) {
+            return "服务对象已确认";
+        }
+        if ("2".equals(objectConfirm)) {
+            return "服务对象已否认";
+        }
+        return "待服务对象确认";
+    }
+
+    /**
+     * 复核状态文案
+     */
+    private String timecheckText(String timecheck) {
+        if ("1".equals(timecheck)) {
+            return "已确认";
+        }
+        if ("2".equals(timecheck)) {
+            return "已驳回";
+        }
+        if ("3".equals(timecheck)) {
+            return "已冲销";
+        }
+        return "待复核";
+    }
+
+    /**
+     * 手机号掩码：保留前三位与后四位
+     */
+    private String maskPhone(String phone) {
+        if (phone == null || phone.length() < 7) {
+            return phone;
+        }
+        return phone.substring(0, 3) + "****" + phone.substring(phone.length() - 4);
     }
 
     /**

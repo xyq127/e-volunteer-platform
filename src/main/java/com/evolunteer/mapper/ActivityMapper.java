@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.evolunteer.entity.Activity;
+import com.evolunteer.entity.CheckinCodeView;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
@@ -131,14 +132,22 @@ public interface ActivityMapper extends BaseMapper<Activity> {
     List<Activity> selectByActivityName(@Param("activityName") String activityName);
 
     /**
-     * 更新志愿活动的现场签到码
+     * 更新志愿活动的签到密钥，重新生成签到码即更换密钥，旧签到码立即失效
      *
-     * @param activityCheckinCode 现场签到码
-     * @param activityNum         活动编号
+     * @param activityCheckinSecret 签到密钥
+     * @param activityNum           活动编号
      * @return 受影响的行数
      */
-    int updateActivityCheckinCode(@Param("activityCheckinCode") String activityCheckinCode,
-                                  @Param("activityNum") Integer activityNum);
+    int updateActivityCheckinSecret(@Param("activityCheckinSecret") String activityCheckinSecret,
+                                    @Param("activityNum") Integer activityNum);
+
+    /**
+     * 查询活动当前生效的轮换签到码与剩余有效秒数
+     *
+     * @param activityNum 活动编号
+     * @return 签到码信息，活动不存在时返回 null
+     */
+    CheckinCodeView selectCheckinCodeInfo(@Param("activityNum") Integer activityNum);
 
     /**
      * 逻辑删除活动

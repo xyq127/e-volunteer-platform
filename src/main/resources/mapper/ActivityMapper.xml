@@ -24,7 +24,6 @@
         <result property="activityLeaderid" column="activity_leaderid" jdbcType="INTEGER"/>
         <result property="activityChecktime" column="activity_checktime" jdbcType="TIMESTAMP"/>
         <result property="activityRemark" column="activity_remark" jdbcType="VARCHAR"/>
-        <result property="activityCheckinCode" column="activity_checkin_code" jdbcType="VARCHAR"/>
         <result property="activityLatitude" column="activity_latitude" jdbcType="DECIMAL"/>
         <result property="activityLongitude" column="activity_longitude" jdbcType="DECIMAL"/>
         <result property="activityRadius" column="activity_radius" jdbcType="INTEGER"/>
@@ -41,7 +40,7 @@
         activity_notice,activity_publishtime,activity_signddl,
         activity_state,admin_num,activity_checkin,
         activity_leaderid,activity_checktime,activity_remark,
-        activity_checkin_code,activity_latitude,activity_longitude,
+        activity_latitude,activity_longitude,
         activity_radius,activity_reason_code,activity_revision,
         activity_settle_time,activity_isdeleted
     </sql>
@@ -188,12 +187,25 @@
         where activity_name = #{activityName,jdbcType=VARCHAR}
     </select>
 
-    <!-- 更新志愿活动的现场签到码 -->
-    <update id="updateActivityCheckinCode">
+    <!-- 更新志愿活动的签到密钥，重新生成签到码即更换密钥 -->
+    <update id="updateActivityCheckinSecret">
         update activity
-        set activity_checkin_code = #{activityCheckinCode,jdbcType=VARCHAR}
+        set activity_checkin_secret = #{activityCheckinSecret,jdbcType=VARCHAR}
         where activity_num = #{activityNum,jdbcType=NUMERIC}
     </update>
+
+    <!-- 按签到密钥与当前时间窗口派生签到码，并给出该签到码的剩余有效秒数 -->
+    <select id="selectCheckinCodeInfo" resultType="com.evolunteer.entity.CheckinCodeView">
+        select
+        activity_num as activityNum,
+        activity_checkin_code(activity_checkin_secret, activity_num,
+        floor(unix_timestamp(now()) / 120)) as checkinCode,
+        (120 - (unix_timestamp(now()) % 120)) as expiresInSeconds,
+        case when activity_checkin_secret is null then 0 else 1 end as secret_generated
+        from activity
+        where activity_num = #{activityNum,jdbcType=NUMERIC}
+          and activity_isdeleted = 0
+    </select>
 
     <!-- 逻辑删除活动 -->
     <update id="updateActivityIsdeletedByActivityNum">
