@@ -22,7 +22,7 @@ public class EVolunteerApplication {
 }
 
 ================================================================================================
-源码文件 2：src/main/java/com/evolunteer/config/MybatisPlusConfig.java（Java 源程序）
+源码文件 2：src/main/java/com/evolunteer/config/MyBatisPlusConfig.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.config;
 
@@ -41,7 +41,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @MapperScan(value = "com.evolunteer.mapper")
-public class MybatisPlusConfig {
+public class MyBatisPlusConfig {
 
     /**
      * 注册 MyBatis-Plus 拦截器，启用 MySQL 分页与乐观锁能力
@@ -69,9 +69,9 @@ E志愿志愿者服务平台 V1.0                                               
 ================================================================================================
 package com.evolunteer.config;
 
-import com.evolunteer.service.impl.UserServiceImpl;
-import com.evolunteer.utils.LoginSuccessHandle;
-import com.evolunteer.utils.MyPasswordEncoder;
+import com.evolunteer.service.impl.UserDetailsServiceImpl;
+import com.evolunteer.utils.LoginSuccessHandler;
+import com.evolunteer.utils.MD5PasswordEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -89,7 +89,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
-    UserServiceImpl user;
+    UserDetailsServiceImpl userDetailsService;
 
     /**
      * 配置登录认证使用的用户信息来源与密码校验规则
@@ -98,7 +98,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
      */
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(user).passwordEncoder(passwordEncoder());
+        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
     }
 E志愿志愿者服务平台 V1.0                                                      第 3 页
 
@@ -116,7 +116,7 @@ E志愿志愿者服务平台 V1.0                                               
                 .loginProcessingUrl("/login")
                 .usernameParameter("username")
                 .passwordParameter("password")
-                .successHandler(new LoginSuccessHandle());
+                .successHandler(new LoginSuccessHandler());
 
         http
                 .logout()
@@ -155,7 +155,7 @@ E志愿志愿者服务平台 V1.0                                               
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new MyPasswordEncoder();
+        return new MD5PasswordEncoder();
     }
 }
 
@@ -165,11 +165,11 @@ E志愿志愿者服务平台 V1.0                                               
 package com.evolunteer.controller;
 
 import com.evolunteer.entity.Activity;
-import com.evolunteer.entity.Msg;
-import com.evolunteer.entity.Participate;
+import com.evolunteer.entity.ApiResponse;
+import com.evolunteer.entity.Participation;
 import com.evolunteer.service.ActivityService;
 import com.evolunteer.service.OrganizationService;
-import com.evolunteer.service.ParticipateService;
+import com.evolunteer.service.ParticipationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -199,7 +199,7 @@ public class ActivityController {
     OrganizationService organizationService;
 
     @Autowired
-    ParticipateService participateService;
+    ParticipationService participationService;
 
     /**
 E志愿志愿者服务平台 V1.0                                                      第 5 页
@@ -210,10 +210,10 @@ E志愿志愿者服务平台 V1.0                                               
      */
     @RequestMapping(value = "/findAuditActivityByNumAndState", method = RequestMethod.GET)
     @ResponseBody
-    public Msg findAuditActivityByNumAndState(Authentication authentication) {
+    public ApiResponse findAuditActivityByNumAndState(Authentication authentication) {
         Integer num = currentOrganizationNum(authentication);
         List<Activity> auditActivity = activityService.getActivityByNumAndState(num, "0");
-        return Msg.success().add("auditActivity", auditActivity);
+        return ApiResponse.success().add("auditActivity", auditActivity);
     }
 
     /**
@@ -224,9 +224,9 @@ E志愿志愿者服务平台 V1.0                                               
      */
     @RequestMapping(value = "/activityInfo", method = RequestMethod.GET)
     @ResponseBody
-    public Msg activityInfo(@RequestParam(value = "activityNum") Integer activityNum) {
+    public ApiResponse activityInfo(@RequestParam(value = "activityNum") Integer activityNum) {
         List<Activity> activityInfo = activityService.activityInfo(activityNum);
-        return Msg.success().add("activityInfo", activityInfo);
+        return ApiResponse.success().add("activityInfo", activityInfo);
     }
 
     /**
@@ -238,7 +238,7 @@ E志愿志愿者服务平台 V1.0                                               
      */
     @RequestMapping(value = "/auditActivityDelete", method = RequestMethod.POST)
     @ResponseBody
-    public Msg auditActivityDelete(@RequestParam(value = "activityNum") Integer activityNum,
+    public ApiResponse auditActivityDelete(@RequestParam(value = "activityNum") Integer activityNum,
                                    Authentication authentication) {
         activityService.deleteAct(activityNum);
         log.info("志愿者组织删除审核中的活动，活动编号：{}", activityNum);
@@ -255,7 +255,7 @@ E志愿志愿者服务平台 V1.0                                               
     @RequestMapping(value = "/notAuditActivityDelete", method = RequestMethod.POST)
 E志愿志愿者服务平台 V1.0                                                      第 6 页
     @ResponseBody
-    public Msg notAuditActivityDelete(@RequestParam(value = "activityNum") Integer activityNum,
+    public ApiResponse notAuditActivityDelete(@RequestParam(value = "activityNum") Integer activityNum,
                                       Authentication authentication) {
         activityService.deleteAct(activityNum);
         log.info("志愿者组织删除审核未通过的活动，活动编号：{}", activityNum);
@@ -270,10 +270,10 @@ E志愿志愿者服务平台 V1.0                                               
      */
     @RequestMapping(value = "/findNotStartActivityByNumAndState", method = RequestMethod.GET)
     @ResponseBody
-    public Msg findNotStartActivityByNumAndState(Authentication authentication) {
+    public ApiResponse findNotStartActivityByNumAndState(Authentication authentication) {
         Integer num = currentOrganizationNum(authentication);
         List<Activity> notStartActivity = activityService.getActivityByNumAndState(num, "1");
-        return Msg.success().add("auditActivity", notStartActivity);
+        return ApiResponse.success().add("auditActivity", notStartActivity);
     }
 
     /**
@@ -284,9 +284,9 @@ E志愿志愿者服务平台 V1.0                                               
      */
     @RequestMapping(value = "/volRecruit", method = RequestMethod.GET)
     @ResponseBody
-    public Msg volRecruit(@RequestParam(value = "activityNum") Integer activityNum) {
-        List<Participate> volunteerList = participateService.getVolunteerList(activityNum);
-        return Msg.success().add("volunteerList", volunteerList);
+    public ApiResponse volRecruit(@RequestParam(value = "activityNum") Integer activityNum) {
+        List<Participation> volunteerList = participationService.getVolunteerList(activityNum);
+        return ApiResponse.success().add("volunteerList", volunteerList);
     }
 
     /**
@@ -297,10 +297,10 @@ E志愿志愿者服务平台 V1.0                                               
      */
     @RequestMapping(value = "/findCarryActivityByNumAndState", method = RequestMethod.GET)
     @ResponseBody
-    public Msg findCarryActivityByNumAndState(Authentication authentication) {
+    public ApiResponse findCarryActivityByNumAndState(Authentication authentication) {
         Integer num = currentOrganizationNum(authentication);
         List<Activity> carryActivity = activityService.getActivityByNumAndState(num, "2");
-        return Msg.success().add("carryActivity", carryActivity);
+        return ApiResponse.success().add("carryActivity", carryActivity);
     }
 
     /**
@@ -312,10 +312,10 @@ E志愿志愿者服务平台 V1.0                                               
      */
     @RequestMapping(value = "/findEndActivityByNumAndState", method = RequestMethod.GET)
     @ResponseBody
-    public Msg findEndActivityByNumAndState(Authentication authentication) {
+    public ApiResponse findEndActivityByNumAndState(Authentication authentication) {
         Integer num = currentOrganizationNum(authentication);
         List<Activity> endActivity = activityService.getActivityByNumAndState(num, "3");
-        return Msg.success().add("endActivity", endActivity);
+        return ApiResponse.success().add("endActivity", endActivity);
     }
 
     /**
@@ -326,10 +326,10 @@ E志愿志愿者服务平台 V1.0                                               
      */
     @RequestMapping(value = "/findNotAuditActivityByNumAndState", method = RequestMethod.GET)
     @ResponseBody
-    public Msg findNotAuditActivityByNumAndState(Authentication authentication) {
+    public ApiResponse findNotAuditActivityByNumAndState(Authentication authentication) {
         Integer num = currentOrganizationNum(authentication);
         List<Activity> notAuditActivity = activityService.getActivityByNumAndState(num, "4");
-        return Msg.success().add("notAuditActivity", notAuditActivity);
+        return ApiResponse.success().add("notAuditActivity", notAuditActivity);
     }
 
     /**
@@ -350,7 +350,7 @@ E志愿志愿者服务平台 V1.0                                               
 package com.evolunteer.controller;
 
 import com.evolunteer.entity.Activity;
-import com.evolunteer.entity.Msg;
+import com.evolunteer.entity.ApiResponse;
 import com.evolunteer.service.ActivityService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -387,9 +387,9 @@ public class AdminController {
      */
     @RequestMapping(value = "/findAuditActivityByState", method = RequestMethod.GET)
     @ResponseBody
-    public Msg findAuditActivityByState() {
+    public ApiResponse findAuditActivityByState() {
         List<Activity> auditActivity = activityService.getActivityByState("0");
-        return Msg.success().add("auditActivity", auditActivity);
+        return ApiResponse.success().add("auditActivity", auditActivity);
     }
 
     /**
@@ -494,7 +494,7 @@ E志愿志愿者服务平台 V1.0                                               
 ================================================================================================
 package com.evolunteer.controller;
 
-import com.evolunteer.entity.Msg;
+import com.evolunteer.entity.ApiResponse;
 import com.evolunteer.entity.Organization;
 import com.evolunteer.service.ActivityService;
 import com.evolunteer.service.OrganizationService;
@@ -623,10 +623,10 @@ E志愿志愿者服务平台 V1.0                                               
      */
     @RequestMapping(value = "/info", method = RequestMethod.GET)
     @ResponseBody
-    public Msg getInfo(Authentication authentication) {
+    public ApiResponse getInfo(Authentication authentication) {
         User user = (User) authentication.getPrincipal();
         Organization organization = organizationService.getOrgInfo(user.getUsername());
-        return Msg.success().add("organization", organization);
+        return ApiResponse.success().add("organization", organization);
     }
 
     /**
@@ -639,7 +639,7 @@ E志愿志愿者服务平台 V1.0                                               
      */
     @RequestMapping(value = "/infoChange", method = RequestMethod.POST)
     @ResponseBody
-    public Msg infoChange(@RequestParam(value = "name") String name,
+    public ApiResponse infoChange(@RequestParam(value = "name") String name,
                           @RequestParam(value = "introduction") String introduction,
                           Authentication authentication) {
         User user = (User) authentication.getPrincipal();
@@ -650,19 +650,19 @@ E志愿志愿者服务平台 V1.0                                               
 
         if (organizationService.changeInfo(user.getUsername(), organization)) {
             log.info("志愿者组织修改组织资料，组织账号：{}", user.getUsername());
-            return Msg.success();
+            return ApiResponse.success();
         }
-        return Msg.fail();
+        return ApiResponse.fail();
     }
 }
 
 ================================================================================================
-源码文件 8：src/main/java/com/evolunteer/controller/ParticipateController.java（Java 源程序）
+源码文件 8：src/main/java/com/evolunteer/controller/ParticipationController.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.controller;
 
 E志愿志愿者服务平台 V1.0                                                      第 14 页
-import com.evolunteer.service.ParticipateService;
+import com.evolunteer.service.ParticipationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -682,10 +682,10 @@ import java.util.Map;
 @Slf4j
 @Controller
 @RequestMapping(value = "/participate")
-public class ParticipateController {
+public class ParticipationController {
 
     @Autowired
-    ParticipateService participateService;
+    ParticipationService participationService;
 
     /**
      * 通过志愿者的报名申请
@@ -696,12 +696,12 @@ public class ParticipateController {
     @RequestMapping(value = "/volPassRecruit", method = RequestMethod.POST)
     @ResponseBody
     public String volPassRecruit(@RequestParam(value = "participateNum") Integer participateNum) {
-        Map<Object, Object> map = new HashMap<>();
-        map.put("participateNum", participateNum);
-        map.put("isPass", 1);
-        Object msg = participateService.volCheckRecruit(map);
+        Map<Object, Object> params = new HashMap<>();
+        params.put("participateNum", participateNum);
+        params.put("isPass", 1);
+        Object message = participationService.volCheckRecruit(params);
         log.info("志愿者组织通过报名申请，报名编号：{}", participateNum);
-        return (String) msg;
+        return (String) message;
     }
 
     /**
@@ -714,63 +714,17 @@ public class ParticipateController {
     @ResponseBody
 E志愿志愿者服务平台 V1.0                                                      第 15 页
     public String volUnPassRecruit(@RequestParam(value = "participateNum") Integer participateNum) {
-        Map<Object, Object> map = new HashMap<>();
-        map.put("participateNum", participateNum);
-        map.put("isPass", 2);
-        Object msg = participateService.volCheckRecruit(map);
+        Map<Object, Object> params = new HashMap<>();
+        params.put("participateNum", participateNum);
+        params.put("isPass", 2);
+        Object message = participationService.volCheckRecruit(params);
         log.info("志愿者组织驳回报名申请，报名编号：{}", participateNum);
-        return (String) msg;
+        return (String) message;
     }
 }
 
 ================================================================================================
-源码文件 9：src/main/java/com/evolunteer/entity/ActAnnouncement.java（Java 源程序）
-================================================================================================
-package com.evolunteer.entity;
-
-import com.baomidou.mybatisplus.annotation.*;
-
-import java.io.Serializable;
-import lombok.Data;
-
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 志愿活动公告表 act_announcement，保存志愿者组织针对志愿活动发布的公告。
- */
-@TableName(value ="act_announcement")
-@Data
-public class ActAnnouncement implements Serializable {
-    /** 公告编号 */
-    @TableId(type = IdType.AUTO)
-    private Integer actannouncementNum;
-
-    /** 活动编号 */
-    private Integer activityNum;
-
-    /** 公告业务编号 */
-    private String actannouncementId;
-
-    /** 公告标题 */
-    private String actannouncementName;
-
-    /** 公告内容 */
-    private String actannouncementDetail;
-
-    /** 组织编号 */
-    private Integer organizationNum;
-
-    /** 删除标记 */
-    @TableLogic
-    private Integer actannouncementIsdeleted;
-E志愿志愿者服务平台 V1.0                                                      第 16 页
-
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
-}
-
-================================================================================================
-源码文件 10：src/main/java/com/evolunteer/entity/Activity.java（Java 源程序）
+源码文件 9：src/main/java/com/evolunteer/entity/Activity.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.entity;
 
@@ -809,12 +763,12 @@ public class Activity implements Serializable {
     /** 活动开始时间 */
     private Date activityBegintime;
 
+E志愿志愿者服务平台 V1.0                                                      第 16 页
     /** 活动结束时间 */
     private Date activityEndtime;
 
     /** 活动地点 */
     private String activityLocation;
-E志愿志愿者服务平台 V1.0                                                      第 17 页
 
     /** 需求人数 */
     private Integer activityNeedpeople;
@@ -848,6 +802,52 @@ E志愿志愿者服务平台 V1.0                                               
 
     /** 删除标记 */
     private Integer activityIsdeleted;
+
+    @TableField(exist = false)
+    private static final long serialVersionUID = 1L;
+}
+
+================================================================================================
+源码文件 10：src/main/java/com/evolunteer/entity/ActivityAnnouncement.java（Java 源程序）
+================================================================================================
+package com.evolunteer.entity;
+
+import com.baomidou.mybatisplus.annotation.*;
+
+E志愿志愿者服务平台 V1.0                                                      第 17 页
+import java.io.Serializable;
+import lombok.Data;
+
+/**
+ * E志愿志愿者服务平台 V1.0
+ * <p>
+ * 志愿活动公告表 act_announcement，保存志愿者组织针对志愿活动发布的公告。
+ */
+@TableName(value ="act_announcement")
+@Data
+public class ActivityAnnouncement implements Serializable {
+    /** 公告编号 */
+    @TableId(type = IdType.AUTO)
+    private Integer actannouncementNum;
+
+    /** 活动编号 */
+    private Integer activityNum;
+
+    /** 公告业务编号 */
+    private String actannouncementId;
+
+    /** 公告标题 */
+    private String actannouncementName;
+
+    /** 公告内容 */
+    private String actannouncementDetail;
+
+    /** 组织编号 */
+    private Integer organizationNum;
+
+    /** 删除标记 */
+    @TableLogic
+    private Integer actannouncementIsdeleted;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
@@ -892,86 +892,7 @@ public class Admin implements Serializable {
 }
 
 ================================================================================================
-源码文件 12：src/main/java/com/evolunteer/entity/Checkin.java（Java 源程序）
-================================================================================================
-package com.evolunteer.entity;
-
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
-import java.util.Date;
-import lombok.Data;
-
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 志愿服务签到表 checkin，保存志愿者参与志愿服务的签到时间与服务时长。
- */
-@TableName(value ="checkin")
-@Data
-public class Checkin implements Serializable {
-    /** 签到编号 */
-    @TableId(type = IdType.AUTO)
-    private Integer checkinNum;
-
-E志愿志愿者服务平台 V1.0                                                      第 19 页
-    /** 报名编号 */
-    private Integer participateNum;
-
-    /** 签到时间 */
-    private Date checkinBegintime;
-
-    /** 签退时间 */
-    private Date checkinEndtime;
-
-    /** 服务时长 */
-    private Double checkinDuration;
-
-    /** 服务时长审核状态 */
-    private String checkinTimecheck;
-
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
-}
-
-================================================================================================
-源码文件 13：src/main/java/com/evolunteer/entity/EUser.java（Java 源程序）
-================================================================================================
-package com.evolunteer.entity;
-
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
-import lombok.Data;
-
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 统一用户表 e_user，保存志愿者组织与平台管理员的登录账号、密码密文与角色权限。
- */
-@TableName(value ="e_user")
-@Data
-public class EUser implements Serializable {
-    /** 登录账号 */
-    private String id;
-
-    /** 密码密文 */
-    private String password;
-
-    /** 角色权限 */
-    private String role;
-
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
-E志愿志愿者服务平台 V1.0                                                      第 20 页
-}
-
-================================================================================================
-源码文件 14：src/main/java/com/evolunteer/entity/Msg.java（Java 源程序）
+源码文件 12：src/main/java/com/evolunteer/entity/ApiResponse.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.entity;
 
@@ -984,7 +905,7 @@ import java.util.Map;
  * 统一响应结果类：控制器统一返回该对象，code 为 100 表示处理成功、200 表示处理失败，
  * msg 为提示信息，extend 存放返回给页面的业务数据。
  */
-public class Msg {
+public class ApiResponse {
 
     /**
      * 处理成功状态码
@@ -995,6 +916,7 @@ public class Msg {
      * 处理失败状态码
      */
     private static final int CODE_FAIL = 200;
+E志愿志愿者服务平台 V1.0                                                      第 19 页
 
     /**
      * 状态码
@@ -1016,9 +938,8 @@ public class Msg {
      *
      * @return 处理成功的响应结果
      */
-    public static Msg success() {
-        Msg result = new Msg();
-E志愿志愿者服务平台 V1.0                                                      第 21 页
+    public static ApiResponse success() {
+        ApiResponse result = new ApiResponse();
         result.setCode(CODE_SUCCESS);
         result.setMsg("处理成功！");
         return result;
@@ -1029,8 +950,8 @@ E志愿志愿者服务平台 V1.0                                               
      *
      * @return 处理失败的响应结果
      */
-    public static Msg fail() {
-        Msg result = new Msg();
+    public static ApiResponse fail() {
+        ApiResponse result = new ApiResponse();
         result.setCode(CODE_FAIL);
         result.setMsg("处理失败！");
         return result;
@@ -1043,9 +964,10 @@ E志愿志愿者服务平台 V1.0                                               
      * @param value 数据内容
      * @return 当前响应结果
      */
-    public Msg add(String key, Object value) {
+    public ApiResponse add(String key, Object value) {
         this.extend.put(key, value);
         return this;
+E志愿志愿者服务平台 V1.0                                                      第 20 页
     }
 
     public int getCode() {
@@ -1069,13 +991,57 @@ E志愿志愿者服务平台 V1.0                                               
     }
 
     public void setExtend(Map<String, Object> extend) {
-E志愿志愿者服务平台 V1.0                                                      第 22 页
         this.extend = extend;
     }
 }
 
 ================================================================================================
-源码文件 15：src/main/java/com/evolunteer/entity/Organization.java（Java 源程序）
+源码文件 13：src/main/java/com/evolunteer/entity/CheckIn.java（Java 源程序）
+================================================================================================
+package com.evolunteer.entity;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import java.io.Serializable;
+import java.util.Date;
+import lombok.Data;
+
+/**
+ * E志愿志愿者服务平台 V1.0
+ * <p>
+ * 志愿服务签到表 checkin，保存志愿者参与志愿服务的签到时间与服务时长。
+ */
+@TableName(value ="checkin")
+@Data
+public class CheckIn implements Serializable {
+    /** 签到编号 */
+    @TableId(type = IdType.AUTO)
+E志愿志愿者服务平台 V1.0                                                      第 21 页
+    private Integer checkinNum;
+
+    /** 报名编号 */
+    private Integer participateNum;
+
+    /** 签到时间 */
+    private Date checkinBegintime;
+
+    /** 签退时间 */
+    private Date checkinEndtime;
+
+    /** 服务时长 */
+    private Double checkinDuration;
+
+    /** 服务时长审核状态 */
+    private String checkinTimecheck;
+
+    @TableField(exist = false)
+    private static final long serialVersionUID = 1L;
+}
+
+================================================================================================
+源码文件 14：src/main/java/com/evolunteer/entity/Organization.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.entity;
 
@@ -1103,6 +1069,7 @@ public class Organization implements Serializable {
     /** 登录密码密文 */
     private String organizationPassword;
 
+E志愿志愿者服务平台 V1.0                                                      第 22 页
     /** 组织名称 */
     private String organizationName;
 
@@ -1120,9 +1087,8 @@ public class Organization implements Serializable {
     private static final long serialVersionUID = 1L;
 }
 
-E志愿志愿者服务平台 V1.0                                                      第 23 页
 ================================================================================================
-源码文件 16：src/main/java/com/evolunteer/entity/Participate.java（Java 源程序）
+源码文件 15：src/main/java/com/evolunteer/entity/Participation.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.entity;
 
@@ -1139,7 +1105,7 @@ import lombok.Data;
  */
 @TableName(value ="participate")
 @Data
-public class Participate implements Serializable {
+public class Participation implements Serializable {
     /** 报名编号 */
     @TableId(type = IdType.AUTO)
     private Integer participateNum;
@@ -1154,6 +1120,7 @@ public class Participate implements Serializable {
     private Date participateApplytime;
 
     /** 报名审核状态 */
+E志愿志愿者服务平台 V1.0                                                      第 23 页
     private String participateApplystate;
 
     /** 报名审核时间 */
@@ -1171,7 +1138,6 @@ public class Participate implements Serializable {
     /** 服务时长 */
     private Double participateDuration;
 
-E志愿志愿者服务平台 V1.0                                                      第 24 页
     /** 服务时长审核状态 */
     private String participateTimecheck;
 
@@ -1190,7 +1156,7 @@ E志愿志愿者服务平台 V1.0                                               
 }
 
 ================================================================================================
-源码文件 17：src/main/java/com/evolunteer/entity/PolicyAnnouncement.java（Java 源程序）
+源码文件 16：src/main/java/com/evolunteer/entity/PolicyAnnouncement.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.entity;
 
@@ -1205,6 +1171,7 @@ import lombok.Data;
  * 政策公告表 policy_announcement，保存平台管理员发布的通知公告。
  */
 @TableName(value ="policy_announcement")
+E志愿志愿者服务平台 V1.0                                                      第 24 页
 @Data
 public class PolicyAnnouncement implements Serializable {
     /** 公告编号 */
@@ -1222,7 +1189,6 @@ public class PolicyAnnouncement implements Serializable {
 
     /** 公告附件 */
     private String policyannouncementFile;
-E志愿志愿者服务平台 V1.0                                                      第 25 页
 
     /** 管理员编号 */
     private Integer adminNum;
@@ -1236,7 +1202,7 @@ E志愿志愿者服务平台 V1.0                                               
 }
 
 ================================================================================================
-源码文件 18：src/main/java/com/evolunteer/entity/PolicyFile.java（Java 源程序）
+源码文件 17：src/main/java/com/evolunteer/entity/PolicyFile.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.entity;
 
@@ -1256,6 +1222,7 @@ public class PolicyFile implements Serializable {
     /** 附件编号 */
     @TableId(type = IdType.AUTO)
     private Integer policyfileNum;
+E志愿志愿者服务平台 V1.0                                                      第 25 页
 
     /** 公告编号 */
     private Integer policyannouncementNum;
@@ -1273,7 +1240,6 @@ public class PolicyFile implements Serializable {
     private String policyfileUniquename;
 
     /** 删除标记 */
-E志愿志愿者服务平台 V1.0                                                      第 26 页
     @TableLogic
     private String policyfileIsdeleted;
 
@@ -1282,106 +1248,7 @@ E志愿志愿者服务平台 V1.0                                               
 }
 
 ================================================================================================
-源码文件 19：src/main/java/com/evolunteer/entity/Show.java（Java 源程序）
-================================================================================================
-package com.evolunteer.entity;
-
-import com.baomidou.mybatisplus.annotation.*;
-
-import java.io.Serializable;
-import java.util.Date;
-import lombok.Data;
-
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 志愿秀表 show，保存志愿者分享的志愿服务经历及其浏览、点赞数据。
- */
-@TableName(value ="show")
-@Data
-public class Show implements Serializable {
-    /** 志愿秀编号 */
-    @TableId(type = IdType.AUTO)
-    private Integer showNum;
-
-    /** 志愿秀业务编号 */
-    private String showId;
-
-    /** 志愿秀内容 */
-    private String showDetail;
-
-    /** 分享时间 */
-    private Date showSharetime;
-
-    /** 志愿者编号 */
-    private Integer volunteerNum;
-
-    /** 活动编号 */
-    private Integer activityNum;
-
-    /** 浏览次数 */
-    private Integer showBrowse;
-
-    /** 点赞次数 */
-    private Integer showLike;
-E志愿志愿者服务平台 V1.0                                                      第 27 页
-
-    /** 删除标记 */
-    @TableLogic
-    private Integer showIsdeleted;
-
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
-}
-
-================================================================================================
-源码文件 20：src/main/java/com/evolunteer/entity/ShowPicture.java（Java 源程序）
-================================================================================================
-package com.evolunteer.entity;
-
-import com.baomidou.mybatisplus.annotation.*;
-
-import java.io.Serializable;
-import lombok.Data;
-
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 志愿秀图片表 show_picture，保存志愿秀内容对应的图片文件信息。
- */
-@TableName(value ="show_picture")
-@Data
-public class ShowPicture implements Serializable {
-    /** 图片编号 */
-    @TableId(type = IdType.AUTO)
-    private Integer pictureNum;
-
-    /** 志愿秀编号 */
-    private Integer showNum;
-
-    /** 图片业务编号 */
-    private String pictureId;
-
-    /** 图片名称 */
-    private String pictureName;
-
-    /** 图片存储路径 */
-    private String pictureRoute;
-
-    /** 唯一文件名 */
-    private String pictureUniquename;
-
-    /** 删除标记 */
-    @TableLogic
-    private Integer pictureIsdeleted;
-
-E志愿志愿者服务平台 V1.0                                                      第 28 页
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
-}
-
-================================================================================================
-源码文件 21：src/main/java/com/evolunteer/entity/Training.java（Java 源程序）
+源码文件 18：src/main/java/com/evolunteer/entity/Training.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.entity;
 
@@ -1406,6 +1273,7 @@ public class Training implements Serializable {
     /** 培训业务编号 */
     private String trainingId;
 
+E志愿志愿者服务平台 V1.0                                                      第 26 页
     /** 活动编号 */
     private Integer activityNum;
 
@@ -1426,7 +1294,6 @@ public class Training implements Serializable {
 
     /** 签到方式 */
     private String trainingCheckin;
-E志愿志愿者服务平台 V1.0                                                      第 29 页
 
     /** 删除标记 */
     @TableLogic
@@ -1437,7 +1304,41 @@ E志愿志愿者服务平台 V1.0                                               
 }
 
 ================================================================================================
-源码文件 22：src/main/java/com/evolunteer/entity/Volunteer.java（Java 源程序）
+源码文件 19：src/main/java/com/evolunteer/entity/UserAccount.java（Java 源程序）
+================================================================================================
+package com.evolunteer.entity;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import java.io.Serializable;
+import lombok.Data;
+
+/**
+ * E志愿志愿者服务平台 V1.0
+ * <p>
+ * 统一用户表 e_user，保存志愿者组织与平台管理员的登录账号、密码密文与角色权限。
+ */
+@TableName(value ="e_user")
+@Data
+public class UserAccount implements Serializable {
+    /** 登录账号 */
+E志愿志愿者服务平台 V1.0                                                      第 27 页
+    private String id;
+
+    /** 密码密文 */
+    private String password;
+
+    /** 角色权限 */
+    private String role;
+
+    @TableField(exist = false)
+    private static final long serialVersionUID = 1L;
+}
+
+================================================================================================
+源码文件 20：src/main/java/com/evolunteer/entity/Volunteer.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.entity;
 
@@ -1474,15 +1375,114 @@ public class Volunteer implements Serializable {
     private Date volunteerRegisterdate;
 
     /** 性别 */
+E志愿志愿者服务平台 V1.0                                                      第 28 页
     private String volunteerGender;
 
     /** 出生日期 */
-E志愿志愿者服务平台 V1.0                                                      第 30 页
     private Date volunteerBirth;
 
     /** 联系电话 */
     private String volunteerTel;
 
+
+    @TableField(exist = false)
+    private static final long serialVersionUID = 1L;
+}
+
+================================================================================================
+源码文件 21：src/main/java/com/evolunteer/entity/VolunteerShow.java（Java 源程序）
+================================================================================================
+package com.evolunteer.entity;
+
+import com.baomidou.mybatisplus.annotation.*;
+
+import java.io.Serializable;
+import java.util.Date;
+import lombok.Data;
+
+/**
+ * E志愿志愿者服务平台 V1.0
+ * <p>
+ * 志愿秀表 show，保存志愿者分享的志愿服务经历及其浏览、点赞数据。
+ */
+@TableName(value ="show")
+@Data
+public class VolunteerShow implements Serializable {
+    /** 志愿秀编号 */
+    @TableId(type = IdType.AUTO)
+    private Integer showNum;
+
+    /** 志愿秀业务编号 */
+    private String showId;
+
+    /** 志愿秀内容 */
+    private String showDetail;
+
+    /** 分享时间 */
+    private Date showSharetime;
+
+    /** 志愿者编号 */
+    private Integer volunteerNum;
+
+    /** 活动编号 */
+    private Integer activityNum;
+E志愿志愿者服务平台 V1.0                                                      第 29 页
+
+    /** 浏览次数 */
+    private Integer showBrowse;
+
+    /** 点赞次数 */
+    private Integer showLike;
+
+    /** 删除标记 */
+    @TableLogic
+    private Integer showIsdeleted;
+
+    @TableField(exist = false)
+    private static final long serialVersionUID = 1L;
+}
+
+================================================================================================
+源码文件 22：src/main/java/com/evolunteer/entity/VolunteerShowPicture.java（Java 源程序）
+================================================================================================
+package com.evolunteer.entity;
+
+import com.baomidou.mybatisplus.annotation.*;
+
+import java.io.Serializable;
+import lombok.Data;
+
+/**
+ * E志愿志愿者服务平台 V1.0
+ * <p>
+ * 志愿秀图片表 show_picture，保存志愿秀内容对应的图片文件信息。
+ */
+@TableName(value ="show_picture")
+@Data
+public class VolunteerShowPicture implements Serializable {
+    /** 图片编号 */
+    @TableId(type = IdType.AUTO)
+    private Integer pictureNum;
+
+    /** 志愿秀编号 */
+    private Integer showNum;
+
+    /** 图片业务编号 */
+    private String pictureId;
+
+    /** 图片名称 */
+    private String pictureName;
+
+    /** 图片存储路径 */
+    private String pictureRoute;
+
+    /** 唯一文件名 */
+E志愿志愿者服务平台 V1.0                                                      第 30 页
+    private String pictureUniquename;
+
+    /** 删除标记 */
+    @TableLogic
+    private Integer pictureIsdeleted;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
@@ -1559,12 +1559,12 @@ public enum GenderEnum {
 }
 
 ================================================================================================
-源码文件 25：src/main/java/com/evolunteer/mapper/ActAnnouncementMapper.java（Java 源程序）
+源码文件 25：src/main/java/com/evolunteer/mapper/ActivityAnnouncementMapper.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.evolunteer.entity.ActAnnouncement;
+import com.evolunteer.entity.ActivityAnnouncement;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -1572,10 +1572,10 @@ import org.springframework.stereotype.Repository;
  * <p>
  * 志愿活动公告表 act_announcement 的数据访问接口。
  *
- * @Entity com.evolunteer.entity.ActAnnouncement
+ * @Entity com.evolunteer.entity.ActivityAnnouncement
  */
 @Repository
-public interface ActAnnouncementMapper extends BaseMapper<ActAnnouncement> {
+public interface ActivityAnnouncementMapper extends BaseMapper<ActivityAnnouncement> {
 
 }
 
@@ -1714,11 +1714,11 @@ public interface AdminMapper extends BaseMapper<Admin> {
 }
 
 ================================================================================================
-源码文件 28：src/main/java/com/evolunteer/mapper/CheckinMapper.java（Java 源程序）
+源码文件 28：src/main/java/com/evolunteer/mapper/CheckInMapper.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.mapper;
 
-import com.evolunteer.entity.Checkin;
+import com.evolunteer.entity.CheckIn;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.springframework.stereotype.Repository;
 
@@ -1727,55 +1727,16 @@ import org.springframework.stereotype.Repository;
  * <p>
  * 志愿服务签到表 checkin 的数据访问接口。
  *
- * @Entity com.evolunteer.entity.Checkin
+ * @Entity com.evolunteer.entity.CheckIn
  */
 @Repository
-public interface CheckinMapper extends BaseMapper<Checkin> {
+public interface CheckInMapper extends BaseMapper<CheckIn> {
 
 E志愿志愿者服务平台 V1.0                                                      第 35 页
 }
 
 ================================================================================================
-源码文件 29：src/main/java/com/evolunteer/mapper/EUserMapper.java（Java 源程序）
-================================================================================================
-package com.evolunteer.mapper;
-
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.evolunteer.entity.EUser;
-import org.apache.ibatis.annotations.Param;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 统一用户表 e_user 的数据访问接口，志愿者组织与平台管理员的登录账号、登录密码与角色权限均保存在该表中。
- *
- * @Entity com.evolunteer.entity.EUser
- */
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 统一用户登录认证表 e_user 的数据访问接口。
- *
- * @Entity com.evolunteer.entity.EUser
- */
-@Repository
-public interface EUserMapper extends BaseMapper<EUser> {
-
-    /**
-     * 按登录账号查询用户认证信息
-     *
-     * @param id 登录账号
-     * @return 用户认证信息列表
-     */
-    List<EUser> selectByLoginId(@Param("id") String id);
-
-}
-
-================================================================================================
-源码文件 30：src/main/java/com/evolunteer/mapper/OrganizationMapper.java（Java 源程序）
+源码文件 29：src/main/java/com/evolunteer/mapper/OrganizationMapper.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.mapper;
 import java.util.List;
@@ -1783,7 +1744,6 @@ import org.apache.ibatis.annotations.Param;
 
 import com.evolunteer.entity.Organization;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-E志愿志愿者服务平台 V1.0                                                      第 36 页
 import org.springframework.stereotype.Repository;
 
 /**
@@ -1804,12 +1764,12 @@ public interface OrganizationMapper extends BaseMapper<Organization> {
 }
 
 ================================================================================================
-源码文件 31：src/main/java/com/evolunteer/mapper/ParticipateMapper.java（Java 源程序）
+源码文件 30：src/main/java/com/evolunteer/mapper/ParticipationMapper.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.mapper;
 
 import com.evolunteer.entity.Activity;
-import com.evolunteer.entity.Participate;
+import com.evolunteer.entity.Participation;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.springframework.stereotype.Repository;
 
@@ -1821,12 +1781,13 @@ import java.util.Map;
  * <p>
  * 活动报名表 participate 的数据访问接口。
  *
- * @Entity com.evolunteer.entity.Participate
+ * @Entity com.evolunteer.entity.Participation
  */
+E志愿志愿者服务平台 V1.0                                                      第 36 页
 @Repository
-public interface ParticipateMapper extends BaseMapper<Participate> {
+public interface ParticipationMapper extends BaseMapper<Participation> {
 
-    List<Participate> selectParticipateWithVolunteerByActivityNum(Integer activityNum);
+    List<Participation> selectParticipateWithVolunteerByActivityNum(Integer activityNum);
 
     //调用数据库中的organization_check_volunteer存储过程
     void organization_check_volunteer(Map map);
@@ -1834,8 +1795,7 @@ public interface ParticipateMapper extends BaseMapper<Participate> {
 }
 
 ================================================================================================
-E志愿志愿者服务平台 V1.0                                                      第 37 页
-源码文件 32：src/main/java/com/evolunteer/mapper/PolicyAnnouncementMapper.java（Java 源程序）
+源码文件 31：src/main/java/com/evolunteer/mapper/PolicyAnnouncementMapper.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.mapper;
 
@@ -1856,7 +1816,7 @@ public interface PolicyAnnouncementMapper extends BaseMapper<PolicyAnnouncement>
 }
 
 ================================================================================================
-源码文件 33：src/main/java/com/evolunteer/mapper/PolicyFileMapper.java（Java 源程序）
+源码文件 32：src/main/java/com/evolunteer/mapper/PolicyFileMapper.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.mapper;
 
@@ -1874,53 +1834,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PolicyFileMapper extends BaseMapper<PolicyFile> {
 
+E志愿志愿者服务平台 V1.0                                                      第 37 页
 }
 
 ================================================================================================
-源码文件 34：src/main/java/com/evolunteer/mapper/ShowMapper.java（Java 源程序）
-================================================================================================
-package com.evolunteer.mapper;
-
-import com.evolunteer.entity.Show;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import org.springframework.stereotype.Repository;
-
-E志愿志愿者服务平台 V1.0                                                      第 38 页
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 志愿秀表 show 的数据访问接口。
- *
- * @Entity com.evolunteer.entity.Show
- */
-@Repository
-public interface ShowMapper extends BaseMapper<Show> {
-
-}
-
-================================================================================================
-源码文件 35：src/main/java/com/evolunteer/mapper/ShowPictureMapper.java（Java 源程序）
-================================================================================================
-package com.evolunteer.mapper;
-
-import com.evolunteer.entity.ShowPicture;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import org.springframework.stereotype.Repository;
-
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 志愿秀图片表 show_picture 的数据访问接口。
- *
- * @Entity com.evolunteer.entity.ShowPicture
- */
-@Repository
-public interface ShowPictureMapper extends BaseMapper<ShowPicture> {
-
-}
-
-================================================================================================
-源码文件 36：src/main/java/com/evolunteer/mapper/TrainingMapper.java（Java 源程序）
+源码文件 33：src/main/java/com/evolunteer/mapper/TrainingMapper.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.mapper;
 
@@ -1936,13 +1854,45 @@ import org.springframework.stereotype.Repository;
  * @Entity com.evolunteer.entity.Training
  */
 @Repository
-E志愿志愿者服务平台 V1.0                                                      第 39 页
 public interface TrainingMapper extends BaseMapper<Training> {
 
 }
 
 ================================================================================================
-源码文件 37：src/main/java/com/evolunteer/mapper/VolunteerMapper.java（Java 源程序）
+源码文件 34：src/main/java/com/evolunteer/mapper/UserAccountMapper.java（Java 源程序）
+================================================================================================
+package com.evolunteer.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.evolunteer.entity.UserAccount;
+import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+/**
+ * E志愿志愿者服务平台 V1.0
+ * <p>
+ * 统一用户表 e_user 的数据访问接口，志愿者组织与平台管理员的登录账号、登录密码与角色权限均保存在该表中。
+ *
+ * @Entity com.evolunteer.entity.UserAccount
+ */
+@Repository
+public interface UserAccountMapper extends BaseMapper<UserAccount> {
+
+    /**
+     * 按登录账号查询用户认证信息
+     *
+     * @param id 登录账号
+     * @return 用户认证信息列表
+E志愿志愿者服务平台 V1.0                                                      第 38 页
+     */
+    List<UserAccount> selectByLoginId(@Param("id") String id);
+
+}
+
+================================================================================================
+源码文件 35：src/main/java/com/evolunteer/mapper/VolunteerMapper.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.mapper;
 
@@ -1986,8 +1936,8 @@ public interface VolunteerMapper extends BaseMapper<Volunteer> {
      * @return 志愿者列表
      */
     List<Volunteer> selectByVolunteerId(@Param("volunteerId") String volunteerId);
+E志愿志愿者服务平台 V1.0                                                      第 39 页
 
-E志愿志愿者服务平台 V1.0                                                      第 40 页
     /**
      * 统计使用指定手机号注册的志愿者数量
      *
@@ -2002,6 +1952,49 @@ E志愿志愿者服务平台 V1.0                                               
      * @param map 注册参数，包含志愿者姓名、手机号、密码，以及输出参数 volunteerId
      */
     void volunteer_insert(Map<Object, Object> map);
+
+}
+
+================================================================================================
+源码文件 36：src/main/java/com/evolunteer/mapper/VolunteerShowMapper.java（Java 源程序）
+================================================================================================
+package com.evolunteer.mapper;
+
+import com.evolunteer.entity.VolunteerShow;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.springframework.stereotype.Repository;
+
+/**
+ * E志愿志愿者服务平台 V1.0
+ * <p>
+ * 志愿秀表 show 的数据访问接口。
+ *
+ * @Entity com.evolunteer.entity.VolunteerShow
+ */
+@Repository
+public interface VolunteerShowMapper extends BaseMapper<VolunteerShow> {
+
+}
+
+================================================================================================
+源码文件 37：src/main/java/com/evolunteer/mapper/VolunteerShowPictureMapper.java（Java 源程序）
+================================================================================================
+package com.evolunteer.mapper;
+
+import com.evolunteer.entity.VolunteerShowPicture;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.springframework.stereotype.Repository;
+
+/**
+ * E志愿志愿者服务平台 V1.0
+E志愿志愿者服务平台 V1.0                                                      第 40 页
+ * <p>
+ * 志愿秀图片表 show_picture 的数据访问接口。
+ *
+ * @Entity com.evolunteer.entity.VolunteerShowPicture
+ */
+@Repository
+public interface VolunteerShowPictureMapper extends BaseMapper<VolunteerShowPicture> {
 
 }
 
@@ -2027,25 +2020,7 @@ public interface VolunteerTrainingSituationMapper extends BaseMapper<VolunteerTr
 }
 
 ================================================================================================
-源码文件 39：src/main/java/com/evolunteer/service/ActAnnouncementService.java（Java 源程序）
-================================================================================================
-package com.evolunteer.service;
-
-import com.evolunteer.entity.ActAnnouncement;
-import com.baomidou.mybatisplus.extension.service.IService;
-
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 志愿活动公告业务接口，基于 MyBatis-Plus 提供志愿活动公告数据的通用增删改查能力。
-E志愿志愿者服务平台 V1.0                                                      第 41 页
- */
-public interface ActAnnouncementService extends IService<ActAnnouncement> {
-
-}
-
-================================================================================================
-源码文件 40：src/main/java/com/evolunteer/service/ActivityService.java（Java 源程序）
+源码文件 39：src/main/java/com/evolunteer/service/ActivityService.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.service;
 
@@ -2063,6 +2038,7 @@ import java.util.Map;
  */
 public interface ActivityService extends IService<Activity> {
 
+E志愿志愿者服务平台 V1.0                                                      第 41 页
     /**
      * 按志愿者组织编号与活动状态查询活动列表
      *
@@ -2089,7 +2065,6 @@ public interface ActivityService extends IService<Activity> {
     Boolean deleteAct(Integer num);
 
     /**
-E志愿志愿者服务平台 V1.0                                                      第 42 页
      * 查询指定活动的详情
      *
      * @param activityNum 活动编号
@@ -2114,6 +2089,7 @@ E志愿志愿者服务平台 V1.0                                               
     Object passActByAdminIdWithStatue(Map<Object, Object> map);
 
     /**
+E志愿志愿者服务平台 V1.0                                                      第 42 页
      * 按活动名称精确查询活动
      *
      * @param actName 活动名称
@@ -2123,59 +2099,7 @@ E志愿志愿者服务平台 V1.0                                               
 }
 
 ================================================================================================
-源码文件 41：src/main/java/com/evolunteer/service/AdminService.java（Java 源程序）
-================================================================================================
-package com.evolunteer.service;
-
-import com.evolunteer.entity.Admin;
-import com.baomidou.mybatisplus.extension.service.IService;
-
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 平台管理员业务接口，基于 MyBatis-Plus 提供平台管理员数据的通用增删改查能力。
- */
-public interface AdminService extends IService<Admin> {
-
-}
-
-================================================================================================
-E志愿志愿者服务平台 V1.0                                                      第 43 页
-源码文件 42：src/main/java/com/evolunteer/service/CheckinService.java（Java 源程序）
-================================================================================================
-package com.evolunteer.service;
-
-import com.evolunteer.entity.Checkin;
-import com.baomidou.mybatisplus.extension.service.IService;
-
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 志愿服务签到业务接口，基于 MyBatis-Plus 提供志愿服务签到数据的通用增删改查能力。
- */
-public interface CheckinService extends IService<Checkin> {
-
-}
-
-================================================================================================
-源码文件 43：src/main/java/com/evolunteer/service/EUserService.java（Java 源程序）
-================================================================================================
-package com.evolunteer.service;
-
-import com.evolunteer.entity.EUser;
-import com.baomidou.mybatisplus.extension.service.IService;
-
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 统一用户登录认证业务接口，基于 MyBatis-Plus 提供统一用户登录认证数据的通用增删改查能力。
- */
-public interface EUserService extends IService<EUser> {
-
-}
-
-================================================================================================
-源码文件 44：src/main/java/com/evolunteer/service/OrganizationService.java（Java 源程序）
+源码文件 40：src/main/java/com/evolunteer/service/OrganizationService.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.service;
 
@@ -2191,7 +2115,6 @@ import java.util.Map;
  * 并面向志愿者组织提供志愿活动申报与组织资料维护能力。
  */
 public interface OrganizationService extends IService<Organization> {
-E志愿志愿者服务平台 V1.0                                                      第 44 页
 
     /**
      * 申报志愿活动
@@ -2217,6 +2140,7 @@ E志愿志愿者服务平台 V1.0                                               
      */
     Integer getOrganizationNum(String id);
 
+E志愿志愿者服务平台 V1.0                                                      第 43 页
     /**
      * 修改志愿者组织的名称与简介
      *
@@ -2228,12 +2152,12 @@ E志愿志愿者服务平台 V1.0                                               
 }
 
 ================================================================================================
-源码文件 45：src/main/java/com/evolunteer/service/ParticipateService.java（Java 源程序）
+源码文件 41：src/main/java/com/evolunteer/service/ParticipationService.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.evolunteer.entity.Participate;
+import com.evolunteer.entity.Participation;
 
 import java.util.List;
 import java.util.Map;
@@ -2242,10 +2166,9 @@ import java.util.Map;
  * E志愿志愿者服务平台 V1.0
  * <p>
  * 活动报名业务接口，基于 MyBatis-Plus 提供活动报名数据的通用增删改查能力，
-E志愿志愿者服务平台 V1.0                                                      第 45 页
  * 并面向志愿者组织提供报名志愿者查询与报名申请审核能力。
  */
-public interface ParticipateService extends IService<Participate> {
+public interface ParticipationService extends IService<Participation> {
 
     /**
      * 查询指定活动下已报名的志愿者列表
@@ -2253,7 +2176,7 @@ public interface ParticipateService extends IService<Participate> {
      * @param activityNum 活动编号
      * @return 报名记录列表，已关联志愿者基本信息
      */
-    List<Participate> getVolunteerList(Integer activityNum);
+    List<Participation> getVolunteerList(Integer activityNum);
 
     /**
      * 写入志愿者组织对报名申请的审核结果
@@ -2265,96 +2188,10 @@ public interface ParticipateService extends IService<Participate> {
 }
 
 ================================================================================================
-源码文件 46：src/main/java/com/evolunteer/service/PolicyAnnouncementService.java（Java 源程序）
+源码文件 42：src/main/java/com/evolunteer/service/VolunteerService.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.service;
-
-import com.evolunteer.entity.PolicyAnnouncement;
-import com.baomidou.mybatisplus.extension.service.IService;
-
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 通知公告业务接口，基于 MyBatis-Plus 提供通知公告数据的通用增删改查能力。
- */
-public interface PolicyAnnouncementService extends IService<PolicyAnnouncement> {
-
-}
-
-================================================================================================
-源码文件 47：src/main/java/com/evolunteer/service/PolicyFileService.java（Java 源程序）
-================================================================================================
-package com.evolunteer.service;
-
-import com.evolunteer.entity.PolicyFile;
-import com.baomidou.mybatisplus.extension.service.IService;
-
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 公告附件业务接口，基于 MyBatis-Plus 提供公告附件数据的通用增删改查能力。
-E志愿志愿者服务平台 V1.0                                                      第 46 页
- */
-public interface PolicyFileService extends IService<PolicyFile> {
-
-}
-
-================================================================================================
-源码文件 48：src/main/java/com/evolunteer/service/ShowPictureService.java（Java 源程序）
-================================================================================================
-package com.evolunteer.service;
-
-import com.evolunteer.entity.ShowPicture;
-import com.baomidou.mybatisplus.extension.service.IService;
-
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 志愿秀图片业务接口，基于 MyBatis-Plus 提供志愿秀图片数据的通用增删改查能力。
- */
-public interface ShowPictureService extends IService<ShowPicture> {
-
-}
-
-================================================================================================
-源码文件 49：src/main/java/com/evolunteer/service/ShowService.java（Java 源程序）
-================================================================================================
-package com.evolunteer.service;
-
-import com.evolunteer.entity.Show;
-import com.baomidou.mybatisplus.extension.service.IService;
-
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 志愿秀业务接口，基于 MyBatis-Plus 提供志愿秀数据的通用增删改查能力。
- */
-public interface ShowService extends IService<Show> {
-
-}
-
-================================================================================================
-源码文件 50：src/main/java/com/evolunteer/service/TrainingService.java（Java 源程序）
-================================================================================================
-package com.evolunteer.service;
-
-import com.evolunteer.entity.Training;
-import com.baomidou.mybatisplus.extension.service.IService;
-
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
-E志愿志愿者服务平台 V1.0                                                      第 47 页
- * 志愿培训业务接口，基于 MyBatis-Plus 提供志愿培训数据的通用增删改查能力。
- */
-public interface TrainingService extends IService<Training> {
-
-}
-
-================================================================================================
-源码文件 51：src/main/java/com/evolunteer/service/VolunteerService.java（Java 源程序）
-================================================================================================
-package com.evolunteer.service;
+E志愿志愿者服务平台 V1.0                                                      第 44 页
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.evolunteer.entity.Volunteer;
@@ -2391,25 +2228,7 @@ public interface VolunteerService extends IService<Volunteer> {
 }
 
 ================================================================================================
-源码文件 52：src/main/java/com/evolunteer/service/VolunteerTrainingSituationService.java（Java 源程序）
-================================================================================================
-package com.evolunteer.service;
-
-E志愿志愿者服务平台 V1.0                                                      第 48 页
-import com.evolunteer.entity.VolunteerTrainingSituation;
-import com.baomidou.mybatisplus.extension.service.IService;
-
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 志愿者培训情况业务接口，基于 MyBatis-Plus 提供志愿者培训情况数据的通用增删改查能力。
- */
-public interface VolunteerTrainingSituationService extends IService<VolunteerTrainingSituation> {
-
-}
-
-================================================================================================
-源码文件 53：src/main/java/com/evolunteer/service/impl/ActivityServiceImpl.java（Java 源程序）
+源码文件 43：src/main/java/com/evolunteer/service/impl/ActivityServiceImpl.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.service.impl;
 
@@ -2423,6 +2242,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
+E志愿志愿者服务平台 V1.0                                                      第 45 页
  * E志愿志愿者服务平台 V1.0
  * <p>
  * 志愿活动业务实现类：封装志愿活动的查询、平台审核结果回写以及活动逻辑删除等数据库操作。
@@ -2446,7 +2266,6 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
      * 按活动状态查询平台内全部活动，供平台管理员审核使用
      *
      * @param state 活动状态
-E志愿志愿者服务平台 V1.0                                                      第 49 页
      * @return 活动列表
      */
     @Override
@@ -2474,6 +2293,7 @@ E志愿志愿者服务平台 V1.0                                               
     @Override
     public Boolean searchActivityByName(String name) {
         return baseMapper.selectAllByActivityName(name).isEmpty();
+E志愿志愿者服务平台 V1.0                                                      第 46 页
     }
 
     /**
@@ -2497,7 +2317,6 @@ E志愿志愿者服务平台 V1.0                                               
     @Override
     public Activity selectAct(String actName) {
         List<Activity> activities = baseMapper.selectByActivityName(actName);
-E志愿志愿者服务平台 V1.0                                                      第 50 页
         return activities.isEmpty() ? null : activities.get(0);
     }
 
@@ -2514,7 +2333,7 @@ E志愿志愿者服务平台 V1.0                                               
 }
 
 ================================================================================================
-源码文件 54：src/main/java/com/evolunteer/service/impl/OrganizationServiceImpl.java（Java 源程序）
+源码文件 44：src/main/java/com/evolunteer/service/impl/OrganizationServiceImpl.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.service.impl;
 
@@ -2525,6 +2344,7 @@ import com.evolunteer.mapper.OrganizationMapper;
 import com.evolunteer.service.OrganizationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+E志愿志愿者服务平台 V1.0                                                      第 47 页
 
 import java.util.List;
 import java.util.Map;
@@ -2548,7 +2368,6 @@ public class OrganizationServiceImpl extends ServiceImpl<OrganizationMapper, Org
      */
     @Override
     public Object upAct(Map<Object, Object> map) {
-E志愿志愿者服务平台 V1.0                                                      第 51 页
         activityMapper.organization_insert_activity(map);
         return map.get("msg");
     }
@@ -2576,6 +2395,7 @@ E志愿志愿者服务平台 V1.0                                               
         Organization organization = getOrgInfo(id);
         return organization == null ? null : organization.getOrganizationNum();
     }
+E志愿志愿者服务平台 V1.0                                                      第 48 页
 
     /**
      * 修改志愿者组织的名称与简介
@@ -2592,15 +2412,14 @@ E志愿志愿者服务平台 V1.0                                               
 }
 
 ================================================================================================
-源码文件 55：src/main/java/com/evolunteer/service/impl/ParticipateServiceImpl.java（Java 源程序）
+源码文件 45：src/main/java/com/evolunteer/service/impl/ParticipationServiceImpl.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.evolunteer.entity.Participate;
-import com.evolunteer.mapper.ParticipateMapper;
-E志愿志愿者服务平台 V1.0                                                      第 52 页
-import com.evolunteer.service.ParticipateService;
+import com.evolunteer.entity.Participation;
+import com.evolunteer.mapper.ParticipationMapper;
+import com.evolunteer.service.ParticipationService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -2612,7 +2431,7 @@ import java.util.Map;
  * 活动报名业务实现类：负责志愿者报名信息的查询以及志愿者组织对报名申请的审核。
  */
 @Service
-public class ParticipateServiceImpl extends ServiceImpl<ParticipateMapper, Participate> implements ParticipateService {
+public class ParticipationServiceImpl extends ServiceImpl<ParticipationMapper, Participation> implements ParticipationService {
 
     /**
      * 查询指定活动下已报名的志愿者列表
@@ -2621,12 +2440,13 @@ public class ParticipateServiceImpl extends ServiceImpl<ParticipateMapper, Parti
      * @return 报名记录列表，已关联志愿者基本信息
      */
     @Override
-    public List<Participate> getVolunteerList(Integer activityNum) {
+    public List<Participation> getVolunteerList(Integer activityNum) {
         return baseMapper.selectParticipateWithVolunteerByActivityNum(activityNum);
     }
 
     /**
      * 调用存储过程写入志愿者组织对报名申请的审核结果
+E志愿志愿者服务平台 V1.0                                                      第 49 页
      *
      * @param map 审核参数，包含报名编号与审核结果
      * @return 存储过程返回的处理结果信息
@@ -2639,18 +2459,17 @@ public class ParticipateServiceImpl extends ServiceImpl<ParticipateMapper, Parti
 }
 
 ================================================================================================
-源码文件 56：src/main/java/com/evolunteer/service/impl/UserServiceImpl.java（Java 源程序）
+源码文件 46：src/main/java/com/evolunteer/service/impl/UserDetailsServiceImpl.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.service.impl;
 
-import com.evolunteer.entity.EUser;
-import com.evolunteer.mapper.EUserMapper;
+import com.evolunteer.entity.UserAccount;
+import com.evolunteer.mapper.UserAccountMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-E志愿志愿者服务平台 V1.0                                                      第 53 页
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -2663,10 +2482,10 @@ import java.util.List;
  * 志愿者组织与平台管理员共用同一套认证入口。
  */
 @Service
-public class UserServiceImpl implements UserDetailsService {
+public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Autowired
-    private EUserMapper eUserMapper;
+    private UserAccountMapper userAccountMapper;
 
     /**
      * 按登录账号加载用户认证信息
@@ -2678,19 +2497,20 @@ public class UserServiceImpl implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String input) throws UsernameNotFoundException {
 
-        List<EUser> eUsers = eUserMapper.selectByLoginId(input);
-        if (eUsers.isEmpty()) {
+E志愿志愿者服务平台 V1.0                                                      第 50 页
+        List<UserAccount> userAccounts = userAccountMapper.selectByLoginId(input);
+        if (userAccounts.isEmpty()) {
             throw new UsernameNotFoundException("账号不存在：" + input);
         }
-        EUser eUser = eUsers.get(0);
+        UserAccount userAccount = userAccounts.get(0);
 
-        return new User(eUser.getId(), eUser.getPassword(),
-                AuthorityUtils.commaSeparatedStringToAuthorityList(eUser.getRole()));
+        return new User(userAccount.getId(), userAccount.getPassword(),
+                AuthorityUtils.commaSeparatedStringToAuthorityList(userAccount.getRole()));
     }
 }
 
 ================================================================================================
-源码文件 57：src/main/java/com/evolunteer/service/impl/VolunteerServiceImpl.java（Java 源程序）
+源码文件 47：src/main/java/com/evolunteer/service/impl/VolunteerServiceImpl.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.service.impl;
 
@@ -2701,7 +2521,6 @@ import com.evolunteer.service.VolunteerService;
 import com.evolunteer.utils.MD5Util;
 import org.springframework.stereotype.Service;
 
-E志愿志愿者服务平台 V1.0                                                      第 54 页
 import java.util.HashMap;
 import java.util.Map;
 
@@ -2729,6 +2548,7 @@ public class VolunteerServiceImpl extends ServiceImpl<VolunteerMapper, Volunteer
      *
      * @param signUpName     志愿者姓名
      * @param signUpTel      注册手机号
+E志愿志愿者服务平台 V1.0                                                      第 51 页
      * @param signUpPassword 登录密码
      * @return 新注册志愿者的志愿者编号
      */
@@ -2744,7 +2564,7 @@ public class VolunteerServiceImpl extends ServiceImpl<VolunteerMapper, Volunteer
 }
 
 ================================================================================================
-源码文件 58：src/main/java/com/evolunteer/utils/LoginSuccessHandle.java（Java 源程序）
+源码文件 48：src/main/java/com/evolunteer/utils/LoginSuccessHandler.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.utils;
 
@@ -2752,7 +2572,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
-E志愿志愿者服务平台 V1.0                                                      第 55 页
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -2764,7 +2583,7 @@ import java.util.Set;
  * 登录成功处理器：登录成功后按当前账号的角色跳转到对应的工作台，
  * 志愿者组织进入志愿者组织工作台，平台管理员进入平台管理员工作台。
  */
-public class LoginSuccessHandle implements AuthenticationSuccessHandler {
+public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     /**
      * 登录成功后的跳转处理
@@ -2780,6 +2599,7 @@ public class LoginSuccessHandle implements AuthenticationSuccessHandler {
         Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities());
         String contextPath = request.getContextPath();
 
+E志愿志愿者服务平台 V1.0                                                      第 52 页
         if (roles.contains("ROLE_ORGANIZATION")) {
             response.sendRedirect(contextPath + "/org/index.html");
         } else if (roles.contains("ROLE_ADMIN")) {
@@ -2791,7 +2611,54 @@ public class LoginSuccessHandle implements AuthenticationSuccessHandler {
 }
 
 ================================================================================================
-源码文件 59：src/main/java/com/evolunteer/utils/MD5Util.java（Java 源程序）
+源码文件 49：src/main/java/com/evolunteer/utils/MD5PasswordEncoder.java（Java 源程序）
+================================================================================================
+package com.evolunteer.utils;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+
+/**
+ * E志愿志愿者服务平台 V1.0
+ * <p>
+ * 平台密码编码器：登录认证时按平台约定的 MD5 摘要规则校验密码，志愿者组织与平台管理员共用。
+ */
+public class MD5PasswordEncoder implements PasswordEncoder {
+
+    /**
+     * 校验登录密码与数据库中的密码密文是否一致
+     *
+     * @param rawPassword     用户输入的密码明文
+     * @param encodedPassword 数据库中保存的密码密文
+     * @return 密码一致返回 true
+     */
+    @Override
+    public boolean matches(CharSequence rawPassword, String encodedPassword) {
+        if (rawPassword == null || encodedPassword == null) {
+            return false;
+        }
+        return MessageDigest.isEqual(
+                encodedPassword.getBytes(StandardCharsets.UTF_8),
+                MD5Util.encode(rawPassword.toString()).getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * 对密码进行摘要
+     *
+     * @param rawPassword 密码明文
+     * @return 32 位 MD5 密文
+     */
+E志愿志愿者服务平台 V1.0                                                      第 53 页
+    @Override
+    public String encode(CharSequence rawPassword) {
+        return MD5Util.encode(rawPassword.toString());
+    }
+}
+
+================================================================================================
+源码文件 50：src/main/java/com/evolunteer/utils/MD5Util.java（Java 源程序）
 ================================================================================================
 package com.evolunteer.utils;
 
@@ -2803,7 +2670,6 @@ import java.security.NoSuchAlgorithmException;
 /**
  * E志愿志愿者服务平台 V1.0
  * <p>
-E志愿志愿者服务平台 V1.0                                                      第 56 页
  * 密码摘要工具类：使用 MD5 算法对登录密码进行摘要，注册与登录认证均使用该工具生成密文，
  * 系统中不保存也不打印密码明文。
  */
@@ -2832,64 +2698,18 @@ public class MD5Util {
 }
 
 ================================================================================================
-源码文件 60：src/main/java/com/evolunteer/utils/MyPasswordEncoder.java（Java 源程序）
-================================================================================================
-package com.evolunteer.utils;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 平台密码编码器：登录认证时按平台约定的 MD5 摘要规则校验密码，志愿者组织与平台管理员共用。
- */
-public class MyPasswordEncoder implements PasswordEncoder {
-
-    /**
-     * 校验登录密码与数据库中的密码密文是否一致
-     *
-     * @param rawPassword     用户输入的密码明文
-     * @param encodedPassword 数据库中保存的密码密文
-     * @return 密码一致返回 true
-E志愿志愿者服务平台 V1.0                                                      第 57 页
-     */
-    @Override
-    public boolean matches(CharSequence rawPassword, String encodedPassword) {
-        if (rawPassword == null || encodedPassword == null) {
-            return false;
-        }
-        return MessageDigest.isEqual(
-                encodedPassword.getBytes(StandardCharsets.UTF_8),
-                MD5Util.encode(rawPassword.toString()).getBytes(StandardCharsets.UTF_8));
-    }
-
-    /**
-     * 对密码进行摘要
-     *
-     * @param rawPassword 密码明文
-     * @return 32 位 MD5 密文
-     */
-    @Override
-    public String encode(CharSequence rawPassword) {
-        return MD5Util.encode(rawPassword.toString());
-    }
-}
-
-================================================================================================
-源码文件 61：src/main/resources/mapper/ActAnnouncementMapper.xml（MyBatis 映射文件）
+源码文件 51：src/main/resources/mapper/ActivityAnnouncementMapper.xml（MyBatis 映射文件）
 ================================================================================================
 <?xml version="1.0" encoding="UTF-8"?>
+E志愿志愿者服务平台 V1.0                                                      第 54 页
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.evolunteer.mapper.ActAnnouncementMapper">
+<mapper namespace="com.evolunteer.mapper.ActivityAnnouncementMapper">
     <!-- E志愿志愿者服务平台 V1.0 志愿活动公告表 act_announcement 的映射文件 -->
 
 
-    <resultMap id="BaseResultMap" type="com.evolunteer.entity.ActAnnouncement">
+    <resultMap id="BaseResultMap" type="com.evolunteer.entity.ActivityAnnouncement">
             <id property="actannouncementNum" column="actannouncement_num" jdbcType="INTEGER"/>
             <result property="activityNum" column="activity_num" jdbcType="INTEGER"/>
             <result property="actannouncementId" column="actannouncement_id" jdbcType="VARCHAR"/>
@@ -2905,10 +2725,9 @@ E志愿志愿者服务平台 V1.0                                               
         actannouncement_isdeleted
     </sql>
 </mapper>
-E志愿志愿者服务平台 V1.0                                                      第 58 页
 
 ================================================================================================
-源码文件 62：src/main/resources/mapper/ActivityMapper.xml（MyBatis 映射文件）
+源码文件 52：src/main/resources/mapper/ActivityMapper.xml（MyBatis 映射文件）
 ================================================================================================
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
@@ -2933,6 +2752,7 @@ E志愿志愿者服务平台 V1.0                                               
         <result property="activityState" column="activity_state" jdbcType="VARCHAR"/>
         <result property="adminNum" column="admin_num" jdbcType="INTEGER"/>
         <result property="activityCheckin" column="activity_checkin" jdbcType="VARCHAR"/>
+E志愿志愿者服务平台 V1.0                                                      第 55 页
         <result property="activityLeaderid" column="activity_leaderid" jdbcType="INTEGER"/>
         <result property="activityChecktime" column="activity_checktime" jdbcType="TIMESTAMP"/>
         <result property="activityRemark" column="activity_remark" jdbcType="VARCHAR"/>
@@ -2956,7 +2776,6 @@ E志愿志愿者服务平台 V1.0                                               
                                            #{activityDetail,mode=IN,jdbcType=VARCHAR},
                                            #{activityBegintime,mode=IN,jdbcType=DATE},
                                            #{activityEndtime,mode=IN,jdbcType=DATE},
-E志愿志愿者服务平台 V1.0                                                      第 59 页
                                            #{activityLocation,mode=IN,jdbcType=VARCHAR},
                                            #{activityNeedpeople,mode=IN,jdbcType=INTEGER},
                                            #{activityNotice,mode=IN,jdbcType=VARCHAR},
@@ -2984,6 +2803,7 @@ E志愿志愿者服务平台 V1.0                                               
         organization_num = #{organizationNum,jdbcType=NUMERIC}
         AND activity_state = #{activityState,jdbcType=VARCHAR}
         AND activity_isdeleted = #{activityIsdeleted,jdbcType=NUMERIC}
+E志愿志愿者服务平台 V1.0                                                      第 56 页
     </select>
 
     <!-- 按活动状态查询平台内未删除的活动，供平台管理员审核使用 -->
@@ -3007,7 +2827,6 @@ E志愿志愿者服务平台 V1.0                                               
 
     <!-- 按活动名称精确查询活动 -->
     <select id="selectAllByActivityName" resultMap="BaseResultMap">
-E志愿志愿者服务平台 V1.0                                                      第 60 页
         select
         <include refid="Base_Column_List"/>
         from activity
@@ -3034,7 +2853,8 @@ E志愿志愿者服务平台 V1.0                                               
 </mapper>
 
 ================================================================================================
-源码文件 63：src/main/resources/mapper/AdminMapper.xml（MyBatis 映射文件）
+源码文件 53：src/main/resources/mapper/AdminMapper.xml（MyBatis 映射文件）
+E志愿志愿者服务平台 V1.0                                                      第 57 页
 ================================================================================================
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
@@ -3058,7 +2878,6 @@ E志愿志愿者服务平台 V1.0                                               
     <select id="selectByAdminName" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
-E志愿志愿者服务平台 V1.0                                                      第 61 页
         from admin
         where
         admin_name = #{adminName,jdbcType=VARCHAR}
@@ -3073,19 +2892,20 @@ E志愿志愿者服务平台 V1.0                                               
 </mapper>
 
 ================================================================================================
-源码文件 64：src/main/resources/mapper/CheckinMapper.xml（MyBatis 映射文件）
+源码文件 54：src/main/resources/mapper/CheckInMapper.xml（MyBatis 映射文件）
 ================================================================================================
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.evolunteer.mapper.CheckinMapper">
+<mapper namespace="com.evolunteer.mapper.CheckInMapper">
     <!-- E志愿志愿者服务平台 V1.0 志愿服务签到表 checkin 的映射文件 -->
 
 
-    <resultMap id="BaseResultMap" type="com.evolunteer.entity.Checkin">
+    <resultMap id="BaseResultMap" type="com.evolunteer.entity.CheckIn">
             <id property="checkinNum" column="checkin_num" jdbcType="INTEGER"/>
             <result property="participateNum" column="participate_num" jdbcType="INTEGER"/>
+E志愿志愿者服务平台 V1.0                                                      第 58 页
             <result property="checkinBegintime" column="checkin_begintime" jdbcType="TIMESTAMP"/>
             <result property="checkinEndtime" column="checkin_endtime" jdbcType="TIMESTAMP"/>
             <result property="checkinDuration" column="checkin_duration" jdbcType="FLOAT"/>
@@ -3099,38 +2919,7 @@ E志愿志愿者服务平台 V1.0                                               
 </mapper>
 
 ================================================================================================
-源码文件 65：src/main/resources/mapper/EUserMapper.xml（MyBatis 映射文件）
-================================================================================================
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<!-- E志愿志愿者服务平台 V1.0 统一用户表 e_user 的映射文件 -->
-<mapper namespace="com.evolunteer.mapper.EUserMapper">
-
-    <resultMap id="BaseResultMap" type="com.evolunteer.entity.EUser">
-E志愿志愿者服务平台 V1.0                                                      第 62 页
-        <result property="id" column="id" jdbcType="VARCHAR"/>
-        <result property="password" column="password" jdbcType="VARCHAR"/>
-        <result property="role" column="role" jdbcType="VARCHAR"/>
-    </resultMap>
-
-    <sql id="Base_Column_List">
-        id,password,role
-    </sql>
-
-    <!-- 按登录账号查询用户认证信息 -->
-    <select id="selectByLoginId" resultMap="BaseResultMap">
-        select
-        <include refid="Base_Column_List"/>
-        from e_user
-        where
-        id = #{id,jdbcType=VARCHAR}
-    </select>
-</mapper>
-
-================================================================================================
-源码文件 66：src/main/resources/mapper/OrganizationMapper.xml（MyBatis 映射文件）
+源码文件 55：src/main/resources/mapper/OrganizationMapper.xml（MyBatis 映射文件）
 ================================================================================================
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
@@ -3160,7 +2949,6 @@ E志愿志愿者服务平台 V1.0                                               
         <include refid="Base_Column_List"/>
         from organization
         where
-E志愿志愿者服务平台 V1.0                                                      第 63 页
         organization_name = #{organizationName,jdbcType=VARCHAR}
     </select>
 
@@ -3168,6 +2956,7 @@ E志愿志愿者服务平台 V1.0                                               
         select
         <include refid="Base_Column_List"/>
         from organization
+E志愿志愿者服务平台 V1.0                                                      第 59 页
         where
         organization_id = #{organizationId,jdbcType=VARCHAR}
     </select>
@@ -3181,17 +2970,17 @@ organization_id = #{organizationId,jdbcType=VARCHAR}
 </mapper>
 
 ================================================================================================
-源码文件 67：src/main/resources/mapper/ParticipateMapper.xml（MyBatis 映射文件）
+源码文件 56：src/main/resources/mapper/ParticipationMapper.xml（MyBatis 映射文件）
 ================================================================================================
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.evolunteer.mapper.ParticipateMapper">
+<mapper namespace="com.evolunteer.mapper.ParticipationMapper">
     <!-- E志愿志愿者服务平台 V1.0 活动报名表 participate 的映射文件 -->
 
 
-    <resultMap id="BaseResultMap" type="com.evolunteer.entity.Participate">
+    <resultMap id="BaseResultMap" type="com.evolunteer.entity.Participation">
             <id property="participateNum" column="participate_num" jdbcType="INTEGER"/>
             <result property="volunteerNum" column="volunteer_num" jdbcType="INTEGER"/>
             <result property="activityNum" column="activity_num" jdbcType="INTEGER"/>
@@ -3206,12 +2995,11 @@ organization_id = #{organizationId,jdbcType=VARCHAR}
             <result property="participateIsdeleted" column="participate_isdeleted" jdbcType="INTEGER"/>
     </resultMap>
 
-    <resultMap id="WithVolunteerResultMap" type="com.evolunteer.entity.Participate">
+    <resultMap id="WithVolunteerResultMap" type="com.evolunteer.entity.Participation">
         <id property="participateNum" column="participate_num" jdbcType="INTEGER"/>
         <result property="volunteerNum" column="volunteer_num" jdbcType="INTEGER"/>
         <result property="activityNum" column="activity_num" jdbcType="INTEGER"/>
         <result property="participateApplytime" column="participate_applytime" jdbcType="TIMESTAMP"/>
-E志愿志愿者服务平台 V1.0                                                      第 64 页
         <result property="participateApplystate" column="participate_applystate" jdbcType="VARCHAR"/>
         <result property="participateApplychecktime" column="participate_applychecktime" jdbcType="TIMESTAMP"/>
         <result property="participateTraining" column="participate_training" jdbcType="VARCHAR"/>
@@ -3219,6 +3007,7 @@ E志愿志愿者服务平台 V1.0                                               
         <result property="participateEndtime" column="participate_endtime" jdbcType="TIMESTAMP"/>
         <result property="participateDuration" column="participate_duration" jdbcType="FLOAT"/>
         <result property="participateTimecheck" column="participate_timecheck" jdbcType="VARCHAR"/>
+E志愿志愿者服务平台 V1.0                                                      第 60 页
         <result property="participateIsdeleted" column="participate_isdeleted" jdbcType="INTEGER"/>
         <association property="volunteer" javaType="com.evolunteer.entity.Volunteer">
             <id property="volunteerNum" column="volunteer_num" jdbcType="INTEGER"/>
@@ -3238,7 +3027,7 @@ E志愿志愿者服务平台 V1.0                                               
         participate_training,participate_begintime,participate_endtime,
         participate_duration,participate_timecheck,participate_isdeleted
     </sql>
-    <sql id="ParticipateWithVolunteer_Column_List">
+    <sql id="ParticipationWithVolunteer_Column_List">
         participate.participate_num,
         participate.volunteer_num,
         participate.participate_applytime,
@@ -3254,7 +3043,7 @@ E志愿志愿者服务平台 V1.0                                               
 
     <select id="selectParticipateWithVolunteerByActivityNum" resultMap="WithVolunteerResultMap">
         select
-        <include refid="ParticipateWithVolunteer_Column_List"/>
+        <include refid="ParticipationWithVolunteer_Column_List"/>
         from participate, volunteer
         where participate.activity_num=#{activityNum,jdbcType=NUMERIC}
         and participate.volunteer_num=volunteer.volunteer_num
@@ -3262,7 +3051,6 @@ E志愿志愿者服务平台 V1.0                                               
 
     <insert id="organization_check_volunteer" statementType="CALLABLE">
         {call organization_check_volunteer(#{participateNum,mode=IN,jdbcType=NUMERIC},
-E志愿志愿者服务平台 V1.0                                                      第 65 页
                                            #{isPass,mode=IN,jdbcType=NUMERIC},
                                            #{msg,mode=OUT,jdbcType=VARCHAR})
             }
@@ -3270,10 +3058,11 @@ E志愿志愿者服务平台 V1.0                                               
 
 
 
+E志愿志愿者服务平台 V1.0                                                      第 61 页
 </mapper>
 
 ================================================================================================
-源码文件 68：src/main/resources/mapper/PolicyAnnouncementMapper.xml（MyBatis 映射文件）
+源码文件 57：src/main/resources/mapper/PolicyAnnouncementMapper.xml（MyBatis 映射文件）
 ================================================================================================
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
@@ -3301,7 +3090,7 @@ E志愿志愿者服务平台 V1.0                                               
 </mapper>
 
 ================================================================================================
-源码文件 69：src/main/resources/mapper/PolicyFileMapper.xml（MyBatis 映射文件）
+源码文件 58：src/main/resources/mapper/PolicyFileMapper.xml（MyBatis 映射文件）
 ================================================================================================
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
@@ -3313,7 +3102,6 @@ E志愿志愿者服务平台 V1.0                                               
 
     <resultMap id="BaseResultMap" type="com.evolunteer.entity.PolicyFile">
             <id property="policyfileNum" column="policyfile_num" jdbcType="INTEGER"/>
-E志愿志愿者服务平台 V1.0                                                      第 66 页
             <result property="policyannouncementNum" column="policyannouncement_num" jdbcType="INTEGER"/>
             <result property="policyfileId" column="policyfile_id" jdbcType="VARCHAR"/>
             <result property="policyfileName" column="policyfile_name" jdbcType="VARCHAR"/>
@@ -3321,6 +3109,7 @@ E志愿志愿者服务平台 V1.0                                               
             <result property="policyfileUniquename" column="policyfile_uniquename" jdbcType="VARCHAR"/>
             <result property="policyfileIsdeleted" column="policyfile_isdeleted" jdbcType="VARCHAR"/>
     </resultMap>
+E志愿志愿者服务平台 V1.0                                                      第 62 页
 
     <sql id="Base_Column_List">
         policyfile_num,policyannouncement_num,policyfile_id,
@@ -3330,66 +3119,7 @@ E志愿志愿者服务平台 V1.0                                               
 </mapper>
 
 ================================================================================================
-源码文件 70：src/main/resources/mapper/ShowMapper.xml（MyBatis 映射文件）
-================================================================================================
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.evolunteer.mapper.ShowMapper">
-    <!-- E志愿志愿者服务平台 V1.0 志愿秀表 show 的映射文件 -->
-
-
-    <resultMap id="BaseResultMap" type="com.evolunteer.entity.Show">
-            <id property="showNum" column="show_num" jdbcType="INTEGER"/>
-            <result property="showId" column="show_id" jdbcType="VARCHAR"/>
-            <result property="showDetail" column="show_detail" jdbcType="VARCHAR"/>
-            <result property="showSharetime" column="show_sharetime" jdbcType="TIMESTAMP"/>
-            <result property="volunteerNum" column="volunteer_num" jdbcType="INTEGER"/>
-            <result property="activityNum" column="activity_num" jdbcType="INTEGER"/>
-            <result property="showBrowse" column="show_browse" jdbcType="INTEGER"/>
-            <result property="showLike" column="show_like" jdbcType="INTEGER"/>
-            <result property="showIsdeleted" column="show_isdeleted" jdbcType="INTEGER"/>
-    </resultMap>
-
-    <sql id="Base_Column_List">
-        show_num,show_id,show_detail,
-        show_sharetime,volunteer_num,activity_num,
-        show_browse,show_like,show_isdeleted
-    </sql>
-</mapper>
-
-================================================================================================
-源码文件 71：src/main/resources/mapper/ShowPictureMapper.xml（MyBatis 映射文件）
-================================================================================================
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper
-E志愿志愿者服务平台 V1.0                                                      第 67 页
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.evolunteer.mapper.ShowPictureMapper">
-    <!-- E志愿志愿者服务平台 V1.0 志愿秀图片表 show_picture 的映射文件 -->
-
-
-    <resultMap id="BaseResultMap" type="com.evolunteer.entity.ShowPicture">
-            <id property="pictureNum" column="picture_num" jdbcType="INTEGER"/>
-            <result property="showNum" column="show_num" jdbcType="INTEGER"/>
-            <result property="pictureId" column="picture_id" jdbcType="VARCHAR"/>
-            <result property="pictureName" column="picture_name" jdbcType="VARCHAR"/>
-            <result property="pictureRoute" column="picture_route" jdbcType="VARCHAR"/>
-            <result property="pictureUniquename" column="picture_uniquename" jdbcType="VARCHAR"/>
-            <result property="pictureIsdeleted" column="picture_isdeleted" jdbcType="INTEGER"/>
-    </resultMap>
-
-    <sql id="Base_Column_List">
-        picture_num,show_num,picture_id,
-        picture_name,picture_route,picture_uniquename,
-        picture_isdeleted
-    </sql>
-</mapper>
-
-================================================================================================
-源码文件 72：src/main/resources/mapper/TrainingMapper.xml（MyBatis 映射文件）
+源码文件 59：src/main/resources/mapper/TrainingMapper.xml（MyBatis 映射文件）
 ================================================================================================
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
@@ -3415,14 +3145,44 @@ E志愿志愿者服务平台 V1.0                                               
     <sql id="Base_Column_List">
         training_num,training_id,activity_num,
         training_name,training_detail,training_begintime,
-E志愿志愿者服务平台 V1.0                                                      第 68 页
         training_endtime,training_location,training_checkin,
         training_isdeleted
     </sql>
 </mapper>
 
 ================================================================================================
-源码文件 73：src/main/resources/mapper/VolunteerMapper.xml（MyBatis 映射文件）
+源码文件 60：src/main/resources/mapper/UserAccountMapper.xml（MyBatis 映射文件）
+================================================================================================
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- E志愿志愿者服务平台 V1.0 统一用户表 e_user 的映射文件 -->
+<mapper namespace="com.evolunteer.mapper.UserAccountMapper">
+
+E志愿志愿者服务平台 V1.0                                                      第 63 页
+    <resultMap id="BaseResultMap" type="com.evolunteer.entity.UserAccount">
+        <result property="id" column="id" jdbcType="VARCHAR"/>
+        <result property="password" column="password" jdbcType="VARCHAR"/>
+        <result property="role" column="role" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,password,role
+    </sql>
+
+    <!-- 按登录账号查询用户认证信息 -->
+    <select id="selectByLoginId" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from e_user
+        where
+        id = #{id,jdbcType=VARCHAR}
+    </select>
+</mapper>
+
+================================================================================================
+源码文件 61：src/main/resources/mapper/VolunteerMapper.xml（MyBatis 映射文件）
 ================================================================================================
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
@@ -3451,6 +3211,7 @@ E志愿志愿者服务平台 V1.0                                               
     <!-- 按志愿者姓名查询志愿者 -->
     <select id="selectByVolunteerName" resultMap="BaseResultMap">
         select
+E志愿志愿者服务平台 V1.0                                                      第 64 页
         <include refid="Base_Column_List"/>
         from volunteer
         where
@@ -3466,7 +3227,6 @@ E志愿志愿者服务平台 V1.0                                               
         volunteer_id = #{volunteerId,jdbcType=VARCHAR}
     </select>
 
-E志愿志愿者服务平台 V1.0                                                      第 69 页
     <!-- 统计使用指定手机号注册的志愿者数量，用于注册手机号查重 -->
     <select id="countByVolunteerTel" resultType="int">
         select count(*)
@@ -3486,7 +3246,66 @@ E志愿志愿者服务平台 V1.0                                               
 </mapper>
 
 ================================================================================================
-源码文件 74：src/main/resources/mapper/VolunteerTrainingSituationMapper.xml（MyBatis 映射文件）
+源码文件 62：src/main/resources/mapper/VolunteerShowMapper.xml（MyBatis 映射文件）
+================================================================================================
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.evolunteer.mapper.VolunteerShowMapper">
+    <!-- E志愿志愿者服务平台 V1.0 志愿秀表 show 的映射文件 -->
+
+
+    <resultMap id="BaseResultMap" type="com.evolunteer.entity.VolunteerShow">
+            <id property="showNum" column="show_num" jdbcType="INTEGER"/>
+            <result property="showId" column="show_id" jdbcType="VARCHAR"/>
+            <result property="showDetail" column="show_detail" jdbcType="VARCHAR"/>
+            <result property="showSharetime" column="show_sharetime" jdbcType="TIMESTAMP"/>
+            <result property="volunteerNum" column="volunteer_num" jdbcType="INTEGER"/>
+E志愿志愿者服务平台 V1.0                                                      第 65 页
+            <result property="activityNum" column="activity_num" jdbcType="INTEGER"/>
+            <result property="showBrowse" column="show_browse" jdbcType="INTEGER"/>
+            <result property="showLike" column="show_like" jdbcType="INTEGER"/>
+            <result property="showIsdeleted" column="show_isdeleted" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        show_num,show_id,show_detail,
+        show_sharetime,volunteer_num,activity_num,
+        show_browse,show_like,show_isdeleted
+    </sql>
+</mapper>
+
+================================================================================================
+源码文件 63：src/main/resources/mapper/VolunteerShowPictureMapper.xml（MyBatis 映射文件）
+================================================================================================
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.evolunteer.mapper.VolunteerShowPictureMapper">
+    <!-- E志愿志愿者服务平台 V1.0 志愿秀图片表 show_picture 的映射文件 -->
+
+
+    <resultMap id="BaseResultMap" type="com.evolunteer.entity.VolunteerShowPicture">
+            <id property="pictureNum" column="picture_num" jdbcType="INTEGER"/>
+            <result property="showNum" column="show_num" jdbcType="INTEGER"/>
+            <result property="pictureId" column="picture_id" jdbcType="VARCHAR"/>
+            <result property="pictureName" column="picture_name" jdbcType="VARCHAR"/>
+            <result property="pictureRoute" column="picture_route" jdbcType="VARCHAR"/>
+            <result property="pictureUniquename" column="picture_uniquename" jdbcType="VARCHAR"/>
+            <result property="pictureIsdeleted" column="picture_isdeleted" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        picture_num,show_num,picture_id,
+        picture_name,picture_route,picture_uniquename,
+        picture_isdeleted
+    </sql>
+</mapper>
+
+================================================================================================
+源码文件 64：src/main/resources/mapper/VolunteerTrainingSituationMapper.xml（MyBatis 映射文件）
 ================================================================================================
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
@@ -3494,6 +3313,7 @@ E志愿志愿者服务平台 V1.0                                               
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.evolunteer.mapper.VolunteerTrainingSituationMapper">
     <!-- E志愿志愿者服务平台 V1.0 志愿者培训情况表 volunteer_training_situation 的映射文件 -->
+E志愿志愿者服务平台 V1.0                                                      第 66 页
 
 
     <resultMap id="BaseResultMap" type="com.evolunteer.entity.VolunteerTrainingSituation">
@@ -3514,10 +3334,9 @@ E志愿志愿者服务平台 V1.0                                               
 </mapper>
 
 ================================================================================================
-源码文件 75：src/main/resources/application.properties（系统配置）
+源码文件 65：src/main/resources/application.properties（系统配置）
 ================================================================================================
 # =============================================================================
-E志愿志愿者服务平台 V1.0                                                      第 70 页
 # E志愿志愿者服务平台 V1.0 系统配置
 # =============================================================================
 
@@ -3545,6 +3364,7 @@ mybatis-plus.type-enums-package=com.evolunteer.enums
 
 # ------------------------------- 静态资源 -----------------------------------
 # 前端页面位于 templates 目录，按公众门户（portal）、平台管理员（admin）、志愿者组织（org）分目录存放
+E志愿志愿者服务平台 V1.0                                                      第 67 页
 spring.web.resources.static-locations=classpath:/static/,classpath:/templates/,classpath:/templates/portal/
 
 # ------------------------------- 日期序列化 ---------------------------------
@@ -3559,7 +3379,7 @@ server.port=8111
 logging.level.com.evolunteer=info
 
 ================================================================================================
-源码文件 76：src/main/resources/db/e_volunteer_platform.sql（数据库脚本）
+源码文件 66：src/main/resources/db/e_volunteer_platform.sql（数据库脚本）
 ================================================================================================
 -- =============================================================================
 -- E志愿志愿者服务平台 V1.0 数据库脚本
@@ -3568,7 +3388,6 @@ logging.level.com.evolunteer=info
 -- 执行方式：mysql -uroot -p < e_volunteer_platform.sql
 -- =============================================================================
 
-E志愿志愿者服务平台 V1.0                                                      第 71 页
 -- 连接字符集与库、表的字符集保持一致，避免存储过程参数与字段比较时出现字符集冲突
 SET NAMES utf8mb4 COLLATE utf8mb4_general_ci;
 
@@ -3596,6 +3415,7 @@ CREATE TABLE volunteer
     KEY idx_volunteer_id (volunteer_id),
     KEY idx_volunteer_name (volunteer_name)
 ) ENGINE = InnoDB
+E志愿志愿者服务平台 V1.0                                                      第 68 页
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='志愿者表';
 
 -- -----------------------------------------------------------------------------
@@ -3619,7 +3439,6 @@ CREATE TABLE organization
 -- -----------------------------------------------------------------------------
 -- 3. 平台管理员表：保存平台管理员的账号、密码与姓名
 -- -----------------------------------------------------------------------------
-E志愿志愿者服务平台 V1.0                                                      第 72 页
 DROP TABLE IF EXISTS admin;
 CREATE TABLE admin
 (
@@ -3647,6 +3466,7 @@ CREATE TABLE e_user
 
 -- -----------------------------------------------------------------------------
 -- 5. 志愿活动表：保存志愿者组织申报的志愿活动及其审核、开展状态
+E志愿志愿者服务平台 V1.0                                                      第 69 页
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS activity;
 CREATE TABLE activity
@@ -3670,7 +3490,6 @@ CREATE TABLE activity
     activity_checktime   DATETIME     DEFAULT NULL COMMENT '审核时间',
     activity_remark      VARCHAR(500) DEFAULT NULL COMMENT '审核意见',
     activity_isdeleted   INT          DEFAULT 0 COMMENT '删除标记，0 未删除、1 已删除',
-E志愿志愿者服务平台 V1.0                                                      第 73 页
     PRIMARY KEY (activity_num),
     KEY idx_activity_org_state (organization_num, activity_state, activity_isdeleted),
     KEY idx_activity_state (activity_state, activity_isdeleted),
@@ -3698,6 +3517,7 @@ CREATE TABLE participate
     participate_isdeleted      INT         DEFAULT 0 COMMENT '删除标记，0 未删除、1 已删除',
     PRIMARY KEY (participate_num),
     KEY idx_participate_activity (activity_num),
+E志愿志愿者服务平台 V1.0                                                      第 70 页
     KEY idx_participate_volunteer (volunteer_num)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='活动报名表';
@@ -3721,7 +3541,6 @@ CREATE TABLE checkin
 
 -- -----------------------------------------------------------------------------
 -- 8. 志愿培训表：保存志愿活动对应的培训安排
-E志愿志愿者服务平台 V1.0                                                      第 74 页
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS training;
 CREATE TABLE training
@@ -3749,6 +3568,7 @@ CREATE TABLE volunteer_training_situation
 (
     vtsituation_num       INT AUTO_INCREMENT COMMENT '培训情况编号，主键自增',
     training_num          INT         DEFAULT NULL COMMENT '培训编号',
+E志愿志愿者服务平台 V1.0                                                      第 71 页
     volunteer_num         INT         DEFAULT NULL COMMENT '志愿者编号',
     vtsituation_id        VARCHAR(32) DEFAULT NULL COMMENT '记录业务编号',
     vtsituation_begintime DATETIME    DEFAULT NULL COMMENT '培训开始时间',
@@ -3772,7 +3592,6 @@ CREATE TABLE act_announcement
     actannouncement_name      VARCHAR(100) DEFAULT NULL COMMENT '公告标题',
     actannouncement_detail    TEXT COMMENT '公告内容',
     organization_num          INT          DEFAULT NULL COMMENT '发布公告的志愿者组织编号',
-E志愿志愿者服务平台 V1.0                                                      第 75 页
     actannouncement_isdeleted INT          DEFAULT 0 COMMENT '删除标记，0 未删除、1 已删除',
     PRIMARY KEY (actannouncement_num),
     KEY idx_actannouncement_activity (activity_num)
@@ -3800,6 +3619,7 @@ CREATE TABLE policy_announcement
 -- 12. 公告附件表：保存通知公告对应的附件文件信息
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS policy_file;
+E志愿志愿者服务平台 V1.0                                                      第 72 页
 CREATE TABLE policy_file
 (
     policyfile_num           INT AUTO_INCREMENT COMMENT '附件编号，主键自增',
@@ -3823,7 +3643,6 @@ CREATE TABLE `show`
     show_num       INT AUTO_INCREMENT COMMENT '志愿秀编号，主键自增',
     show_id        VARCHAR(32) DEFAULT NULL COMMENT '志愿秀业务编号',
     show_detail    TEXT COMMENT '志愿秀内容',
-E志愿志愿者服务平台 V1.0                                                      第 76 页
     show_sharetime DATETIME    DEFAULT NULL COMMENT '分享时间',
     volunteer_num  INT         DEFAULT NULL COMMENT '分享志愿者编号',
     activity_num   INT         DEFAULT NULL COMMENT '关联活动编号',
@@ -3851,6 +3670,7 @@ CREATE TABLE show_picture
     PRIMARY KEY (picture_num),
     KEY idx_picture_show (show_num)
 ) ENGINE = InnoDB
+E志愿志愿者服务平台 V1.0                                                      第 73 页
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='志愿秀图片表';
 
 -- =============================================================================
@@ -3874,7 +3694,6 @@ BEGIN
 
     IF duplicateCount > 0 THEN
         SET volunteerId = NULL;
-E志愿志愿者服务平台 V1.0                                                      第 77 页
     ELSE
         INSERT INTO volunteer(volunteer_id, volunteer_password, volunteer_name,
                               volunteer_registerdate, volunteer_tel)
@@ -3902,6 +3721,7 @@ CREATE PROCEDURE organization_insert_activity(IN loginId VARCHAR(32),
 BEGIN
     DECLARE orgNum INT DEFAULT NULL;
     DECLARE newNum INT DEFAULT 0;
+E志愿志愿者服务平台 V1.0                                                      第 74 页
 
     SELECT organization_num INTO orgNum FROM organization WHERE organization_id = loginId LIMIT 1;
 
@@ -3925,7 +3745,6 @@ END $$
 -- -----------------------------------------------------------------------------
 -- 志愿活动审核：平台管理员审核志愿活动并写入审核结果
 -- -----------------------------------------------------------------------------
-E志愿志愿者服务平台 V1.0                                                      第 78 页
 DROP PROCEDURE IF EXISTS admin_check_activity $$
 CREATE PROCEDURE admin_check_activity(IN loginId VARCHAR(32),
                                       IN activityNum INT,
@@ -3953,6 +3772,7 @@ BEGIN
         SET msg = '审核未通过';
     ELSE
         SET msg = '审核失败，未找到对应的志愿活动';
+E志愿志愿者服务平台 V1.0                                                      第 75 页
     END IF;
 END $$
 
@@ -3976,7 +3796,6 @@ BEGIN
     IF affectedRows > 0 AND isPass = 1 THEN
         SET msg = '报名申请已通过';
     ELSEIF affectedRows > 0 THEN
-E志愿志愿者服务平台 V1.0                                                      第 79 页
         SET msg = '报名申请未通过';
     ELSE
         SET msg = '操作失败，未找到对应的报名记录';
@@ -4004,6 +3823,7 @@ VALUES ('org_001', 'e10adc3949ba59abbe56e057f20f883e', '阳光青年志愿者协
 INSERT INTO e_user(id, password, role)
 VALUES ('admin_001', 'e10adc3949ba59abbe56e057f20f883e', 'ROLE_ADMIN'),
        ('org_001', 'e10adc3949ba59abbe56e057f20f883e', 'ROLE_ORGANIZATION'),
+E志愿志愿者服务平台 V1.0                                                      第 76 页
        ('org_002', 'e10adc3949ba59abbe56e057f20f883e', 'ROLE_ORGANIZATION');
 
 INSERT INTO volunteer(volunteer_id, volunteer_password, volunteer_name, volunteer_registerdate,
@@ -4027,7 +3847,6 @@ VALUES (1, 'act_00001', '社区爱心助学志愿活动',
         '2023-09-16 14:00:00', '2023-09-16 17:00:00', '幸福敬老院', 8,
         '注意与老人沟通的语气，服从现场负责人安排。', '2023-08-12 09:00:00', '2023-09-12 18:00:00', '0',
         NULL, '现场签到', NULL, NULL, 0),
-E志愿志愿者服务平台 V1.0                                                      第 80 页
        (1, 'act_00003', '城市环保徒步宣传',
         '沿城市公园步道开展垃圾分类宣传与沿途垃圾清理。',
         '2023-10-14 08:30:00', '2023-10-14 11:30:00', '城市中心公园南门', 20,
@@ -4055,6 +3874,7 @@ INSERT INTO participate(volunteer_num, activity_num, participate_applytime, part
 VALUES (1, 3, '2023-08-25 09:10:00', '1', '2023-08-26 10:00:00', '已完成岗前培训',
         '2023-10-14 08:30:00', '2023-10-14 11:30:00', 3.0, '1', 0),
        (2, 3, '2023-08-26 14:20:00', '1', '2023-08-27 09:30:00', '已完成岗前培训',
+E志愿志愿者服务平台 V1.0                                                      第 77 页
         '2023-10-14 08:30:00', '2023-10-14 11:30:00', 3.0, '1', 0),
        (3, 3, '2023-08-28 19:05:00', '0', NULL, NULL, NULL, NULL, NULL, NULL, 0),
        (4, 4, '2023-07-25 10:00:00', '1', '2023-07-26 11:00:00', '已完成岗前培训',
@@ -4078,7 +3898,6 @@ INSERT INTO act_announcement(activity_num, actannouncement_id, actannouncement_n
                              actannouncement_detail, organization_num, actannouncement_isdeleted)
 VALUES (3, 'ann_00001', '城市环保徒步宣传活动集合通知',
         '请报名志愿者于10月14日8:30在城市中心公园南门集合，统一领取志愿服与工具。', 1, 0);
-E志愿志愿者服务平台 V1.0                                                      第 81 页
 
 INSERT INTO policy_announcement(policyannouncement_id, policyannouncement_name, policyannouncement_detail,
                                 policyannouncement_file, admin_num, policyannouncement_isdeleted)
@@ -4095,7 +3914,7 @@ INSERT INTO show_picture(show_num, picture_id, picture_name, picture_route, pict
 VALUES (1, 'pic_00001', '环保徒步宣传现场', '/upload/show/2023/10/15/001.jpg', '20231015001.jpg', 0);
 
 ================================================================================================
-源码文件 77：src/main/resources/templates/admin/act_not_audit.html（前端页面）
+源码文件 67：src/main/resources/templates/admin/act_not_audit.html（前端页面）
 ================================================================================================
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -4106,6 +3925,7 @@ VALUES (1, 'pic_00001', '环保徒步宣传现场', '/upload/show/2023/10/15/001
     <link rel="icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <link rel="shortcut icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <title>志愿活动审核 - E志愿志愿者服务平台 V1.0</title>
+E志愿志愿者服务平台 V1.0                                                      第 78 页
     <!-- Google font-->
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap"
@@ -4129,7 +3949,6 @@ VALUES (1, 'pic_00001', '环保徒步宣传现场', '/upload/show/2023/10/15/001
     <!-- Bootstrap css-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/bootstrap.css">
     <!-- App css-->
-E志愿志愿者服务平台 V1.0                                                      第 82 页
     <link rel="stylesheet" type="text/css" href="/console/assets/css/style.css">
     <!-- Responsive css-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/responsive.css">
@@ -4157,6 +3976,7 @@ E志愿志愿者服务平台 V1.0                                               
                 <div class="toggle-sidebar"><i class="status_toggle middle" data-feather="sidebar"
                                                id="sidebar-toggle"></i></div>
             </div>
+E志愿志愿者服务平台 V1.0                                                      第 79 页
 
             <div class="nav-right col pull-right right-menu p-0">
                 <ul class="nav-menus">
@@ -4180,7 +4000,6 @@ E志愿志愿者服务平台 V1.0                                               
     <!-- Page Body Start-->
     <div class="page-body-wrapper horizontal-menu">
         <!-- Page Sidebar Start-->
-E志愿志愿者服务平台 V1.0                                                      第 83 页
         <header class="main-nav">
 
                         <div class="sidebar-user text-center">
@@ -4208,6 +4027,7 @@ E志愿志愿者服务平台 V1.0                                               
                                 <div><h6>志愿活动管理</h6></div>
                             </li>
                             <li class="dropdown"><a class="nav-link menu-title active" href="act_not_audit.html"><i
+E志愿志愿者服务平台 V1.0                                                      第 80 页
                                     data-feather="box"></i><span>志愿活动审核</span></a>
                             </li>
                         </ul>
@@ -4231,7 +4051,6 @@ E志愿志愿者服务平台 V1.0                                               
                                     <table class="table table-hover table-bordered " id="auditActivity_table">
                                         <thead>
                                         </thead>
-E志愿志愿者服务平台 V1.0                                                      第 84 页
                                         <tbody>
                                         </tbody>
                                     </table>
@@ -4259,6 +4078,7 @@ E志愿志愿者服务平台 V1.0                                               
                     </div>
                     <div class="modal-footer">
 <!--                        <button class="btn btn-danger" type="button" data-bs-dismiss="modal">不通过</button>-->
+E志愿志愿者服务平台 V1.0                                                      第 81 页
                         <button class="btn btn-primary" type="button" id="btn_pass">通过</button>
                         <button class="btn btn-danger" type="button" id="btn_not_pass">不通过</button>
                     </div>
@@ -4282,7 +4102,6 @@ E志愿志愿者服务平台 V1.0                                               
 <script src="/console/assets/js/bootstrap/bootstrap.min.js"></script>
 <!-- Datepicker js-->
 <script src="/console/assets/js/datepicker/date-picker/datepicker.js"></script>
-E志愿志愿者服务平台 V1.0                                                      第 85 页
 <script src="/console/assets/js/datepicker/date-picker/datepicker.en.js"></script>
 <script src="/console/assets/js/datepicker/date-picker/datepicker.custom.js"></script>
 <!-- Theme js-->
@@ -4310,6 +4129,7 @@ E志愿志愿者服务平台 V1.0                                               
 
         var auditActivity = result.extend.auditActivity;
 
+E志愿志愿者服务平台 V1.0                                                      第 82 页
         var activityNameTd = $("<td></td>").addClass("text-center").append("活动名称");
         var activityBegintimeTd = $("<td></td>").addClass("text-center").append("活动开始时间");
         var activityEndtimeTd = $("<td></td>").addClass("text-center").append("活动结束时间");
@@ -4333,7 +4153,6 @@ E志愿志愿者服务平台 V1.0                                               
                             <td class="text-center">${item.activityLocation}</td>
                             <td class="text-center">${item.activityNeedpeople}</td>
                             <td class="text-center">
-E志愿志愿者服务平台 V1.0                                                      第 86 页
                             <button class="btn btn-pill btn-outline-primary btn-sm" type="button" onclick="activityInfo(${item.activityNum})" data-bs-toggle="modal" data-bs-target="#myModal" data-bs-original-title title>查看详情</button>
                             </td>
                           </tr>
@@ -4361,6 +4180,7 @@ E志愿志愿者服务平台 V1.0                                               
                                     <div class="col-sm-9">
                                         <div class="input-group">
                                             <input class="form-control" id="actvity_name" type="text" disabled="disabled">
+E志愿志愿者服务平台 V1.0                                                      第 83 页
                                         </div>
                                     </div>
                                 </div>
@@ -4384,7 +4204,6 @@ E志愿志愿者服务平台 V1.0                                               
                                     </div>
                                 </div>
 
-E志愿志愿者服务平台 V1.0                                                      第 87 页
                                 <div class="form-group row">
                                     <label class="col-sm-3 col-form-label text-end">活动结束时间</label>
                                     <div class="col-sm-9">
@@ -4412,6 +4231,7 @@ E志愿志愿者服务平台 V1.0                                               
                                         </div>
                                     </div>
                                 </div>
+E志愿志愿者服务平台 V1.0                                                      第 84 页
 
                                 <div class="form-group row">
                                     <label class="col-sm-3 col-form-label text-end">注意事项</label>
@@ -4435,7 +4255,6 @@ E志愿志愿者服务平台 V1.0                                               
                 $("#activityInformation").html(modalValue);
                 let actInfo = result.extend.activityInfo[0];
                 $("#actvity_name").val(actInfo.activityName);
-E志愿志愿者服务平台 V1.0                                                      第 88 页
                 $("#actvity_detail").val(actInfo.activityDetail);
                 $("#actvity_begintime").val(actInfo.activityBegintime);
                 $("#actvity_endtime").val(actInfo.activityEndtime);
@@ -4463,6 +4282,7 @@ E志愿志愿者服务平台 V1.0                                               
                 if (result) {
                     console.log(result);
                     alert("修改成功");
+E志愿志愿者服务平台 V1.0                                                      第 85 页
                     build_activity_table(result);
                 } else {
                     alert("修改失败");
@@ -4486,7 +4306,6 @@ E志愿志愿者服务平台 V1.0                                               
             success: function (result) {
                 alert(result);
                 window.location.href = "act_not_audit.html";
-E志愿志愿者服务平台 V1.0                                                      第 89 页
                 console.log(result);
             }
         });
@@ -4514,6 +4333,7 @@ E志愿志愿者服务平台 V1.0                                               
     //一进网页就加载freshPage()
     $(document).ready(function () {
         $.ajax({
+E志愿志愿者服务平台 V1.0                                                      第 86 页
             url: "/admin/findAuditActivityByState",
             type: "GET",
             data: {},
@@ -4533,11 +4353,10 @@ E志愿志愿者服务平台 V1.0                                               
 </html>
 
 ================================================================================================
-源码文件 78：src/main/resources/templates/admin/index.html（前端页面）
+源码文件 68：src/main/resources/templates/admin/index.html（前端页面）
 ================================================================================================
 <!DOCTYPE html>
 <html lang="zh-CN">
-E志愿志愿者服务平台 V1.0                                                      第 90 页
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -4565,6 +4384,7 @@ E志愿志愿者服务平台 V1.0                                               
 <body>
 <!-- Loader starts-->
 <div class="loader-wrapper">
+E志愿志愿者服务平台 V1.0                                                      第 87 页
     <div class="theme-loader">
         <div class="loader-p"></div>
     </div>
@@ -4588,7 +4408,6 @@ E志愿志愿者服务平台 V1.0                                               
             <div class="left-menu-header col">
                 <h6 class="f-w-600 mb-0">平台管理员工作台</h6>
             </div>
-E志愿志愿者服务平台 V1.0                                                      第 91 页
             <div class="nav-right col pull-right right-menu p-0">
                 <ul class="nav-menus">
                     <li><a class="text-dark" href="#!" onclick="javascript:toggleFullScreen()"><i
@@ -4616,6 +4435,7 @@ E志愿志愿者服务平台 V1.0                                               
             <nav>
                 <div class="main-navbar">
                     <div class="left-arrow" id="left-arrow"><i data-feather="rewind"></i></div>
+E志愿志愿者服务平台 V1.0                                                      第 88 页
                     <div id="mainnav">
                         <ul class="nav-menu custom-scrollbar">
                             <li class="back-btn">
@@ -4639,7 +4459,6 @@ E志愿志愿者服务平台 V1.0                                               
                     <div class="right-arrow" id="right-arrow"><i data-feather="play"></i></div>
                 </div>
             </nav>
-E志愿志愿者服务平台 V1.0                                                      第 92 页
         </header>
         <!-- Page Sidebar Ends-->
         <div class="page-body">
@@ -4667,6 +4486,7 @@ E志愿志愿者服务平台 V1.0                                               
                                     <div class="media-body">
                                         <h6 class="mb-0">待审核活动数量</h6>
                                         <h4 class="mb-0"><span id="count_total">0</span> 个</h4>
+E志愿志愿者服务平台 V1.0                                                      第 89 页
                                         <p class="mb-0 text-muted small">工作台列表中展示的待审核活动数量</p>
                                     </div>
                                     <i class="fa fa-list-ol font-secondary"></i>
@@ -4690,7 +4510,6 @@ E志愿志愿者服务平台 V1.0                                               
                     </div>
                 </div>
                 <div class="row">
-E志愿志愿者服务平台 V1.0                                                      第 93 页
                     <div class="col-xl-12">
                         <div class="card">
                             <div class="card-header">
@@ -4718,6 +4537,7 @@ E志愿志愿者服务平台 V1.0                                               
                                     </table>
                                 </div>
                             </div>
+E志愿志愿者服务平台 V1.0                                                      第 90 页
                         </div>
                     </div>
                 </div>
@@ -4741,7 +4561,6 @@ E志愿志愿者服务平台 V1.0                                               
 <script src="/console/assets/js/script.js"></script>
 
 <script type="text/javascript">
-E志愿志愿者服务平台 V1.0                                                      第 94 页
     /**
      * 将后端返回的时间格式化为 yyyy-MM-dd HH:mm
      */
@@ -4769,6 +4588,7 @@ E志愿志愿者服务平台 V1.0                                               
                 + "<td>" + formatTime(activity.activityEndtime) + "</td>"
                 + "<td>" + formatTime(activity.activitySignddl) + "</td>"
                 + "<td>" + (activity.activityNeedpeople || 0) + "</td>"
+E志愿志愿者服务平台 V1.0                                                      第 91 页
                 + '<td><a class="btn btn-primary btn-xs" href="act_not_audit.html">审核</a></td>'
                 + "</tr>";
             $body.append(row);
@@ -4792,11 +4612,10 @@ E志愿志愿者服务平台 V1.0                                               
     });
 </script>
 </body>
-E志愿志愿者服务平台 V1.0                                                      第 95 页
 </html>
 
 ================================================================================================
-源码文件 79：src/main/resources/templates/admin/login.html（前端页面）
+源码文件 69：src/main/resources/templates/admin/login.html（前端页面）
 ================================================================================================
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -4820,6 +4639,7 @@ E志愿志愿者服务平台 V1.0                                               
     <link rel="stylesheet" type="text/css" href="/console/assets/css/themify.css">
     <!-- Flag icon-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/flag-icon.css">
+E志愿志愿者服务平台 V1.0                                                      第 92 页
     <!-- Feather icon-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/feather-icon.css">
     <!-- Plugins css start-->
@@ -4843,7 +4663,6 @@ E志愿志愿者服务平台 V1.0                                               
     <section>         
       <div class="container-fluid p-0">
         <div class="row">
-E志愿志愿者服务平台 V1.0                                                      第 96 页
           <div class="col-12">
             <div class="login-card">
               <form class="theme-form login-form" action="/login" method="post">
@@ -4871,6 +4690,7 @@ E志愿志愿者服务平台 V1.0                                               
                     <input id="status2" type="radio" name="status" value="organization">
                     <label for="status2">志愿者组织</label>&ensp;&ensp;
                     <input id="status3" type="radio" name="status" value="admin">
+E志愿志愿者服务平台 V1.0                                                      第 93 页
                     <label for="status3">管理部门</label>
                   </div>
                 </div>
@@ -4894,7 +4714,6 @@ E志愿志愿者服务平台 V1.0                                               
                     <li><a href="https://www.linkedin.com/login" target="_blank"><i data-feather="twitter"></i></a></li>
                     <li><a href="https://www.linkedin.com/login" target="_blank"><i data-feather="facebook"></i></a></li>
                     <li><a href="https://www.instagram.com/login" target="_blank"><i data-feather="instagram">                  </i></a></li>
-E志愿志愿者服务平台 V1.0                                                      第 97 页
                   </ul>
                 </div>
                 <p>没有账号？<a class="ms-2" href="sign-up.html">注册账号</a></p>
@@ -4922,7 +4741,8 @@ E志愿志愿者服务平台 V1.0                                               
 </html>
 
 ================================================================================================
-源码文件 80：src/main/resources/templates/admin/sign-up.html（前端页面）
+E志愿志愿者服务平台 V1.0                                                      第 94 页
+源码文件 70：src/main/resources/templates/admin/sign-up.html（前端页面）
 ================================================================================================
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -4945,7 +4765,6 @@ E志愿志愿者服务平台 V1.0                                               
         <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&amp;display=swap"
               rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap"
-E志愿志愿者服务平台 V1.0                                                      第 98 页
               rel="stylesheet">
 
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap"
@@ -4973,6 +4792,7 @@ E志愿志愿者服务平台 V1.0                                               
         <!-- App css-->
         <link rel="stylesheet" type="text/css" href="/console/assets/css/style.css">
         <!-- Responsive css-->
+E志愿志愿者服务平台 V1.0                                                      第 95 页
         <link rel="stylesheet" type="text/css" href="/console/assets/css/responsive.css">
 
     </head>
@@ -4996,7 +4816,6 @@ E志愿志愿者服务平台 V1.0                                               
                         <div class="form-group">
                             <label>用户名</label><span id="name_isnull">    </span>
                             <div class="small-group">
-E志愿志愿者服务平台 V1.0                                                      第 99 页
                                 <div class="input-group"><span class="input-group-text"><i class="icon-user"></i></span>
                                     <input class="form-control" type="text" required="" placeholder="请输入姓名"
                                            id="signUp_name">
@@ -5024,6 +4843,7 @@ E志愿志愿者服务平台 V1.0                                               
                         <div class="form-group">
                             <div class="checkbox">
                                 <input id="checkbox1" type="checkbox">
+E志愿志愿者服务平台 V1.0                                                      第 96 页
                                 <label class="text-muted" for="checkbox1">同意
                                     <span>隐私政策                   </span></label>
                             </div>
@@ -5047,7 +4867,6 @@ E志愿志愿者服务平台 V1.0                                               
                             </ul>
                         </div>
                     </form>
-E志愿志愿者服务平台 V1.0                                                      第 100 页
                 </div>
             </div>
         </div>
@@ -5075,6 +4894,7 @@ E志愿志愿者服务平台 V1.0                                               
         var signUpTel = $("#signUp_tel").val();
         console.log(signUpTel);
         // getStuName(signupTel);不一样的
+E志愿志愿者服务平台 V1.0                                                      第 97 页
         $.ajax({
             url: "/loginRegisterController/checkSignUpTel",
             type: "GET",
@@ -5098,7 +4918,6 @@ E志愿志愿者服务平台 V1.0                                               
     $("#signUp").click(function () {
         var signUpName = $("#signUp_name").val();
         var signUpTel = $("#signUp_tel").val();
-E志愿志愿者服务平台 V1.0                                                      第 101 页
         var signUpPassword = $("#signUp_password").val();
 
         if (!!signUpName) {
@@ -5126,8 +4945,9 @@ E志愿志愿者服务平台 V1.0                                               
 </body>
 </html>
 
+E志愿志愿者服务平台 V1.0                                                      第 98 页
 ================================================================================================
-源码文件 81：src/main/resources/templates/org/act_audit.html（前端页面）
+源码文件 71：src/main/resources/templates/org/act_audit.html（前端页面）
 ================================================================================================
 <!DOCTYPE html>
 <html lang="en" id="html_main">
@@ -5149,7 +4969,6 @@ E志愿志愿者服务平台 V1.0                                               
     <!-- Font Awesome-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/fontawesome.css">
     <!-- ico-font-->
-E志愿志愿者服务平台 V1.0                                                      第 102 页
     <link rel="stylesheet" type="text/css" href="/console/assets/css/icofont.css">
     <!-- Themify icon-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/themify.css">
@@ -5177,6 +4996,7 @@ E志愿志愿者服务平台 V1.0                                               
         <div class="loader-p"></div>
     </div>
 </div>
+E志愿志愿者服务平台 V1.0                                                      第 99 页
 <!-- Loader ends-->
 <!-- page-wrapper Start-->
 <div class="page-wrapper" id="pageWrapper">
@@ -5200,7 +5020,6 @@ E志愿志愿者服务平台 V1.0                                               
                             data-feather="maximize"></i></a></li>
 
                     <li>
-E志愿志愿者服务平台 V1.0                                                      第 103 页
                         <div class="mode"><i class="fa fa-moon-o"></i></div>
                     </li>
 
@@ -5228,6 +5047,7 @@ E志愿志愿者服务平台 V1.0                                               
             <nav>
                 <div class="main-navbar">
                     <div class="left-arrow" id="left-arrow"><i data-feather="rewind"></i></div>
+E志愿志愿者服务平台 V1.0                                                      第 100 页
                     <div id="mainnav">
                                                 <ul class="nav-menu custom-scrollbar">
                             <li class="back-btn">
@@ -5251,7 +5071,6 @@ E志愿志愿者服务平台 V1.0                                               
                             </li>
                             <li class="dropdown"><a class="nav-link menu-title" href="act_not_audit.html"><i
                                     data-feather="octagon"></i><span>审核未通过的活动</span></a>
-E志愿志愿者服务平台 V1.0                                                      第 104 页
                             </li>
                             <li class="dropdown"><a class="nav-link menu-title" href="act_not_start.html"><i
                                     data-feather="clock"></i><span>未开始的活动</span></a>
@@ -5279,6 +5098,7 @@ E志愿志愿者服务平台 V1.0                                               
         <div class="page-body">
             <div class="container-fluid">
                 <div class="row">
+E志愿志愿者服务平台 V1.0                                                      第 101 页
                     <div class="col-sm-12">
                         <div class="card">
                             <div class="card-header pb-0">
@@ -5302,7 +5122,6 @@ E志愿志愿者服务平台 V1.0                                               
 
         <!-- 模态框（Modal） start-->
         <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenter" aria-hidden="true">
-E志愿志愿者服务平台 V1.0                                                      第 105 页
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -5330,6 +5149,7 @@ E志愿志愿者服务平台 V1.0                                               
 <!-- Sidebar jquery-->
 <script src="/console/assets/js/sidebar-menu.js"></script>
 <script src="/console/assets/js/config.js"></script>
+E志愿志愿者服务平台 V1.0                                                      第 102 页
 <!-- Bootstrap js-->
 <script src="/console/assets/js/bootstrap/popper.min.js"></script>
 <script src="/console/assets/js/bootstrap/bootstrap.min.js"></script>
@@ -5353,7 +5173,6 @@ E志愿志愿者服务平台 V1.0                                               
         return String(value).replace("T", " ").substring(0, 16);
     }
 </script>
-E志愿志愿者服务平台 V1.0                                                      第 106 页
 
 <script type="text/javascript">
     function build_activity_table(result) {
@@ -5381,6 +5200,7 @@ E志愿志愿者服务平台 V1.0                                               
         $.each(auditActivity, function (index, item) {
             tabValue += `<tr>
                             <td class="text-center">${item.activityName}</td>
+E志愿志愿者服务平台 V1.0                                                      第 103 页
                             <td class="text-center">${formatTime(item.activityBegintime)}</td>
                             <td class="text-center">${formatTime(item.activityEndtime)}</td>
                             <td class="text-center">${item.activityLocation}</td>
@@ -5404,7 +5224,6 @@ E志愿志愿者服务平台 V1.0                                               
             url: "/activity/activityInfo",
             type: "GET",
             data: {
-E志愿志愿者服务平台 V1.0                                                      第 107 页
                 "activityNum": activityNum,
             },
             success: function (result) {
@@ -5432,6 +5251,7 @@ E志愿志愿者服务平台 V1.0                                               
 
                                 <div class="form-group row">
                                     <label class="col-sm-3 col-form-label text-end">活动开始时间</label>
+E志愿志愿者服务平台 V1.0                                                      第 104 页
                                     <div class="col-sm-9">
                                         <div class="input-group">
                                             <input class="datepicker-here form-control digits" type="text" data-language="en"
@@ -5455,7 +5275,6 @@ E志愿志愿者服务平台 V1.0                                               
                                     <div class="col-sm-9">
                                         <div class="input-group">
                                             <input class="form-control" id="actvity_location" type="text" disabled="disabled">
-E志愿志愿者服务平台 V1.0                                                      第 108 页
                                         </div>
                                     </div>
                                 </div>
@@ -5483,6 +5302,7 @@ E志愿志愿者服务平台 V1.0                                               
                                         <div class="input-group">
                                             <input class="datepicker-here form-control digits" type="text" data-language="en"
                                                       id="actvity_signddl" disabled="disabled">
+E志愿志愿者服务平台 V1.0                                                      第 105 页
                                         </div>
                                     </div>
                                 </div>
@@ -5506,7 +5326,6 @@ E志愿志愿者服务平台 V1.0                                               
     }
 
     //删除该待审核的活动
-E志愿志愿者服务平台 V1.0                                                      第 109 页
     function auditActivityDelete(activityNum) {
         console.log("删除");
         $.ajax({
@@ -5534,6 +5353,7 @@ E志愿志愿者服务平台 V1.0                                               
     $(document).ready(function () {
         $.ajax({
             url: "/activity/findAuditActivityByNumAndState",
+E志愿志愿者服务平台 V1.0                                                      第 106 页
             type: "GET",
             data: {},
             success: function (result) {
@@ -5552,12 +5372,11 @@ E志愿志愿者服务平台 V1.0                                               
 </html>
 
 ================================================================================================
-源码文件 82：src/main/resources/templates/org/act_carry.html（前端页面）
+源码文件 72：src/main/resources/templates/org/act_carry.html（前端页面）
 ================================================================================================
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-E志愿志愿者服务平台 V1.0                                                      第 110 页
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -5585,6 +5404,7 @@ E志愿志愿者服务平台 V1.0                                               
     <link rel="stylesheet" type="text/css" href="/console/assets/css/bootstrap.css">
     <!-- App css-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/style.css">
+E志愿志愿者服务平台 V1.0                                                      第 107 页
     <!-- Responsive css-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/responsive.css">
 </head>
@@ -5608,7 +5428,6 @@ E志愿志愿者服务平台 V1.0                                               
             </div>
 
             <div class="nav-right col pull-right right-menu p-0">
-E志愿志愿者服务平台 V1.0                                                      第 111 页
                 <ul class="nav-menus">
                     <li><a class="text-dark" href="#!" onclick="javascript:toggleFullScreen()"><i data-feather="maximize"></i></a></li>
 
@@ -5636,6 +5455,7 @@ E志愿志愿者服务平台 V1.0                                               
                 <img class="img-90 rounded-circle" src="/console/assets/images/dashboard/1.png" alt="">
                 <a href="org_info.html"><h6 class="mt-3 f-14 f-w-600">志愿者组织</h6></a>
                 <p class="mb-0 font-roboto">志愿活动申报与报名管理</p>
+E志愿志愿者服务平台 V1.0                                                      第 108 页
             </div>
             <nav>
                 <div class="main-navbar">
@@ -5659,7 +5479,6 @@ E志愿志愿者服务平台 V1.0                                               
                                     data-feather="plus"></i><span>申报志愿活动</span></a>
                             </li>
                             <li class="dropdown"><a class="nav-link menu-title" href="act_audit.html"><i
-E志愿志愿者服务平台 V1.0                                                      第 112 页
                                     data-feather="airplay"></i><span>审核中的活动</span></a>
                             </li>
                             <li class="dropdown"><a class="nav-link menu-title" href="act_not_audit.html"><i
@@ -5687,6 +5506,7 @@ E志愿志愿者服务平台 V1.0                                               
                 </div>
             </nav>
         </header>
+E志愿志愿者服务平台 V1.0                                                      第 109 页
         <!-- Page Sidebar Ends-->
         <div class="page-body">
             <div class="container-fluid">
@@ -5710,7 +5530,6 @@ E志愿志愿者服务平台 V1.0                                               
                     </div>
                 </div>
             </div>
-E志愿志愿者服务平台 V1.0                                                      第 113 页
         </div>
     </div>
 </div>
@@ -5738,6 +5557,7 @@ E志愿志愿者服务平台 V1.0                                               
         if (!value) {
             return "—";
         }
+E志愿志愿者服务平台 V1.0                                                      第 110 页
         return String(value).replace("T", " ").substring(0, 16);
     }
 </script>
@@ -5761,7 +5581,6 @@ E志愿志愿者服务平台 V1.0                                               
             .append(activityBegintimeTd)
             .append(activityEndtimeTd)
             .append(activityLocationTd)
-E志愿志愿者服务平台 V1.0                                                      第 114 页
             .append(activityNeedpeopleTd)
             .append(controlTd)
             .addClass("active")
@@ -5789,6 +5608,7 @@ E志愿志愿者服务平台 V1.0                                               
             type: "GET",
             data: {},
             success: function (result) {
+E志愿志愿者服务平台 V1.0                                                      第 111 页
                 console.log(result);
                 build_activity_table(result);//画表格
             },
@@ -5804,7 +5624,7 @@ E志愿志愿者服务平台 V1.0                                               
 </html>
 
 ================================================================================================
-源码文件 83：src/main/resources/templates/org/act_end.html（前端页面）
+源码文件 73：src/main/resources/templates/org/act_end.html（前端页面）
 ================================================================================================
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -5812,7 +5632,6 @@ E志愿志愿者服务平台 V1.0                                               
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-E志愿志愿者服务平台 V1.0                                                      第 115 页
     <link rel="icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <link rel="shortcut icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <title>已结束的活动 - E志愿志愿者服务平台 V1.0</title>
@@ -5840,6 +5659,7 @@ E志愿志愿者服务平台 V1.0                                               
     <!-- Plugins css Ends-->
     <!-- Bootstrap css-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/bootstrap.css">
+E志愿志愿者服务平台 V1.0                                                      第 112 页
     <!-- App css-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/style.css">
     <!-- Responsive css-->
@@ -5863,7 +5683,6 @@ E志愿志愿者服务平台 V1.0                                               
                                                                     src="/console/assets/images/logo/app-logo.svg" alt=""></a>
                 </div>
                 <div class="dark-logo-wrapper"><a href="index.html"><img class="img-fluid"
-E志愿志愿者服务平台 V1.0                                                      第 116 页
                                                                          src="/console/assets/images/logo/app-logo-dark.svg"
                                                                          alt=""></a></div>
                 <div class="toggle-sidebar"><i class="status_toggle middle" data-feather="sidebar"
@@ -5891,6 +5710,7 @@ E志愿志愿者服务平台 V1.0                                               
     <!-- Page Header Ends                              -->
     <!-- Page Body Start-->
     <div class="page-body-wrapper sidebar-icon">
+E志愿志愿者服务平台 V1.0                                                      第 113 页
         <!-- Page Sidebar Start-->
         <header class="main-nav">
 
@@ -5914,7 +5734,6 @@ E志愿志愿者服务平台 V1.0                                               
                             </li>
                             <li class="dropdown"><a class="nav-link menu-title" href="index.html"><i
                                     data-feather="home"></i><span>组织工作台</span></a>
-E志愿志愿者服务平台 V1.0                                                      第 117 页
                             </li>
                             <li class="sidebar-main-title">
                                 <div><h6>志愿活动管理</h6></div>
@@ -5942,6 +5761,7 @@ E志愿志愿者服务平台 V1.0                                               
                             </li>
                             <li class="dropdown"><a class="nav-link menu-title" href="org_info.html"><i
                                     data-feather="sliders"></i><span>组织资料</span></a>
+E志愿志愿者服务平台 V1.0                                                      第 114 页
                             </li>
                         </ul>
 
@@ -5965,7 +5785,6 @@ E志愿志愿者服务平台 V1.0                                               
                                     <table class="table table-hover table-bordered " id="endActivity_table">
                                         <thead>
                                         </thead>
-E志愿志愿者服务平台 V1.0                                                      第 118 页
                                         <tbody>
                                         </tbody>
                                     </table>
@@ -5993,6 +5812,7 @@ E志愿志愿者服务平台 V1.0                                               
 <script src="/console/assets/js/bootstrap/bootstrap.min.js"></script>
 <!-- Theme js-->
 <script src="/console/assets/js/script.js"></script>
+E志愿志愿者服务平台 V1.0                                                      第 115 页
 <!-- login js-->
 <!-- Plugin used-->
 
@@ -6016,7 +5836,6 @@ E志愿志愿者服务平台 V1.0                                               
         $("#endActivity_table tbody").empty();
 
         var endActivity = result.extend.endActivity;
-E志愿志愿者服务平台 V1.0                                                      第 119 页
 
         var activityNameTd = $("<td></td>").addClass("text-center").append("活动名称");
         var activityBegintimeTd = $("<td></td>").addClass("text-center").append("活动开始时间");
@@ -6044,6 +5863,7 @@ E志愿志愿者服务平台 V1.0                                               
                                 <button class="btn btn-pill btn-outline-primary btn-sm" type="button" onclick="activityCheckTime(${item.activityNum})" data-bs-toggle="modal" data-bs-target=".bd-example-modal-lg">工时审核</button>
                             </td>
                           </tr>
+E志愿志愿者服务平台 V1.0                                                      第 116 页
                 `;
             $("#endActivity_table tbody").html(tabValue);
         });
@@ -6067,7 +5887,6 @@ E志愿志愿者服务平台 V1.0                                               
                 console.log(result);
             }
         });
-E志愿志愿者服务平台 V1.0                                                      第 120 页
 
     });
 </script>
@@ -6076,7 +5895,7 @@ E志愿志愿者服务平台 V1.0                                               
 </html>
 
 ================================================================================================
-源码文件 84：src/main/resources/templates/org/act_not_audit.html（前端页面）
+源码文件 74：src/main/resources/templates/org/act_not_audit.html（前端页面）
 ================================================================================================
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -6095,6 +5914,7 @@ E志愿志愿者服务平台 V1.0                                               
           rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap"
           rel="stylesheet">
+E志愿志愿者服务平台 V1.0                                                      第 117 页
     <!-- Font Awesome-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/fontawesome.css">
     <!-- ico-font-->
@@ -6118,7 +5938,6 @@ E志愿志愿者服务平台 V1.0                                               
 </head>
 <body>
 <!-- Loader starts-->
-E志愿志愿者服务平台 V1.0                                                      第 121 页
 <div class="loader-wrapper">
     <div class="theme-loader">
         <div class="loader-p"></div>
@@ -6146,6 +5965,7 @@ E志愿志愿者服务平台 V1.0                                               
                     <li><a class="text-dark" href="#!" onclick="javascript:toggleFullScreen()"><i
                             data-feather="maximize"></i></a></li>
 
+E志愿志愿者服务平台 V1.0                                                      第 118 页
                     <li>
                         <div class="mode"><i class="fa fa-moon-o"></i></div>
                     </li>
@@ -6169,7 +5989,6 @@ E志愿志愿者服务平台 V1.0                                               
                 <a class="setting-primary" href="org_info.html"><i data-feather="settings"></i></a>
                 <img class="img-90 rounded-circle" src="/console/assets/images/dashboard/1.png" alt="">
                 <a href="org_info.html"><h6 class="mt-3 f-14 f-w-600">志愿者组织</h6></a>
-E志愿志愿者服务平台 V1.0                                                      第 122 页
                 <p class="mb-0 font-roboto">志愿活动申报与报名管理</p>
             </div>
             <nav>
@@ -6197,6 +6016,7 @@ E志愿志愿者服务平台 V1.0                                               
                                     data-feather="airplay"></i><span>审核中的活动</span></a>
                             </li>
                             <li class="dropdown"><a class="nav-link menu-title active" href="act_not_audit.html"><i
+E志愿志愿者服务平台 V1.0                                                      第 119 页
                                     data-feather="octagon"></i><span>审核未通过的活动</span></a>
                             </li>
                             <li class="dropdown"><a class="nav-link menu-title" href="act_not_start.html"><i
@@ -6220,7 +6040,6 @@ E志愿志愿者服务平台 V1.0                                               
                     <div class="right-arrow" id="right-arrow"><i data-feather="play"></i></div>
                 </div>
             </nav>
-E志愿志愿者服务平台 V1.0                                                      第 123 页
         </header>
         <!-- Page Sidebar Ends-->
         <div class="page-body">
@@ -6248,6 +6067,7 @@ E志愿志愿者服务平台 V1.0                                               
         </div>
 
         <!-- 模态框（Modal） start-->
+E志愿志愿者服务平台 V1.0                                                      第 120 页
         <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenter" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
@@ -6271,7 +6091,6 @@ E志愿志愿者服务平台 V1.0                                               
 <!-- latest jquery-->
 <script src="/console/assets/js/jquery-3.5.1.min.js"></script>
 <!-- feather icon js-->
-E志愿志愿者服务平台 V1.0                                                      第 124 页
 <script src="/console/assets/js/icons/feather-icon/feather.min.js"></script>
 <script src="/console/assets/js/icons/feather-icon/feather-icon.js"></script>
 <!-- Sidebar jquery-->
@@ -6299,6 +6118,7 @@ E志愿志愿者服务平台 V1.0                                               
         }
         return String(value).replace("T", " ").substring(0, 16);
     }
+E志愿志愿者服务平台 V1.0                                                      第 121 页
 </script>
 
 <script type="text/javascript">
@@ -6322,7 +6142,6 @@ E志愿志愿者服务平台 V1.0                                               
                                     <div class="col-sm-9">
                                         <div class="input-group">
                                             <input class="form-control" id="actvity_name" type="text" >
-E志愿志愿者服务平台 V1.0                                                      第 125 页
                                         </div>
                                     </div>
                                 </div>
@@ -6350,6 +6169,7 @@ E志愿志愿者服务平台 V1.0                                               
                                     <label class="col-sm-3 col-form-label text-end">活动结束时间</label>
                                     <div class="col-sm-9">
                                         <div class="input-group">
+E志愿志愿者服务平台 V1.0                                                      第 122 页
                                             <input class="datepicker-here form-control digits" type="text" data-language="en"
                                                    id="actvity_endtime" >
                                         </div>
@@ -6373,7 +6193,6 @@ E志愿志愿者服务平台 V1.0                                               
                                         </div>
                                     </div>
                                 </div>
-E志愿志愿者服务平台 V1.0                                                      第 126 页
 
                                 <div class="form-group row">
                                     <label class="col-sm-3 col-form-label text-end">注意事项</label>
@@ -6401,6 +6220,7 @@ E志愿志愿者服务平台 V1.0                                               
                 $("#actvity_begintime").val(actInfo.activityBegintime);
                 $("#actvity_endtime").val(actInfo.activityEndtime);
                 $("#actvity_location").val(actInfo.activityLocation);
+E志愿志愿者服务平台 V1.0                                                      第 123 页
                 $("#actvity_needpeople").val(actInfo.activityNeedpeople);
                 $("#actvity_notice").val(actInfo.activityNotice);
                 $("#actvity_signddl").val(actInfo.activitySignddl);
@@ -6424,7 +6244,6 @@ E志愿志愿者服务平台 V1.0                                               
         var activityLocationTd = $("<td></td>").addClass("text-center").append("活动地点");
         var activityNeedpeopleTd = $("<td></td>").addClass("text-center").append("需求人数");
         var controlTd = $("<td></td>").addClass("text-center").append("操作");
-E志愿志愿者服务平台 V1.0                                                      第 127 页
         $("<tr></tr>").append(activityNameTd)
             .append(activityBegintimeTd)
             .append(activityEndtimeTd)
@@ -6452,6 +6271,7 @@ E志愿志愿者服务平台 V1.0                                               
             $("#notAuditActivity_table tbody").html(tabValue);
         });
     }
+E志愿志愿者服务平台 V1.0                                                      第 124 页
 
     //删除该待审核的活动
     function notAuditActivityDelete(activityNum) {
@@ -6475,7 +6295,6 @@ E志愿志愿者服务平台 V1.0                                               
                 console.log(result);
             }
         });
-E志愿志愿者服务平台 V1.0                                                      第 128 页
     }
 
     //一进网页就加载freshPage()
@@ -6501,8 +6320,9 @@ E志愿志愿者服务平台 V1.0                                               
 </html>
 
 ================================================================================================
-源码文件 85：src/main/resources/templates/org/act_not_start.html（前端页面）
+源码文件 75：src/main/resources/templates/org/act_not_start.html（前端页面）
 ================================================================================================
+E志愿志愿者服务平台 V1.0                                                      第 125 页
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -6526,7 +6346,6 @@ E志愿志愿者服务平台 V1.0                                               
     <link rel="stylesheet" type="text/css" href="/console/assets/css/icofont.css">
     <!-- Themify icon-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/themify.css">
-E志愿志愿者服务平台 V1.0                                                      第 129 页
     <!-- Flag icon-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/flag-icon.css">
     <!-- Feather icon-->
@@ -6554,6 +6373,7 @@ E志愿志愿者服务平台 V1.0                                               
 <div class="page-wrapper compact-wrapper" id="pageWrapper">
     <!-- Page Header Start-->
     <div class="page-main-header">
+E志愿志愿者服务平台 V1.0                                                      第 126 页
         <div class="main-header-right row m-0">
             <div class="main-header-left">
                 <div class="logo-wrapper"><a href="index.html"><img class="img-fluid"
@@ -6577,7 +6397,6 @@ E志愿志愿者服务平台 V1.0                                               
 
                                         <li class="p-0">
                         <button class="btn btn-primary-light" type="button"><a href="/logout"><i
-E志愿志愿者服务平台 V1.0                                                      第 130 页
                                 data-feather="power"></i>退出登录</a></button>
                     </li>
                 </ul>
@@ -6605,6 +6424,7 @@ E志愿志愿者服务平台 V1.0                                               
                             <li class="back-btn">
                                 <div class="mobile-back text-end"><span>返回</span><i class="fa fa-angle-right ps-2"
                                                                                    aria-hidden="true"></i></div>
+E志愿志愿者服务平台 V1.0                                                      第 127 页
                             </li>
                             <li class="sidebar-main-title">
                                 <div><h6>工作台</h6></div>
@@ -6628,7 +6448,6 @@ E志愿志愿者服务平台 V1.0                                               
                                     data-feather="clock"></i><span>未开始的活动</span></a>
                             </li>
                             <li class="dropdown"><a class="nav-link menu-title" href="act_carry.html"><i
-E志愿志愿者服务平台 V1.0                                                      第 131 页
                                     data-feather="play"></i><span>进行中的活动</span></a>
                             </li>
                             <li class="dropdown"><a class="nav-link menu-title" href="act_end.html"><i
@@ -6656,6 +6475,7 @@ E志愿志愿者服务平台 V1.0                                               
                             <div class="card-header pb-0">
                                 <h5>志愿活动--未开始</h5>
                             </div>
+E志愿志愿者服务平台 V1.0                                                      第 128 页
                             <div class="card-body">
                                 <div id="basicScenario">
                                     <table class="table table-hover table-bordered " id="notStartActivity_table">
@@ -6679,7 +6499,6 @@ E志愿志愿者服务平台 V1.0                                               
                     <div class="modal-header">
                         <h5 class="modal-title">志愿者招募</h5>
                         <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
-E志愿志愿者服务平台 V1.0                                                      第 132 页
                     </div>
                     <div class="modal-body">
                         <table class="table table-hover table-bordered" id="volRecruitList_table">
@@ -6707,6 +6526,7 @@ E志愿志愿者服务平台 V1.0                                               
 <!-- Sidebar jquery-->
 <script src="/console/assets/js/sidebar-menu.js"></script>
 <script src="/console/assets/js/config.js"></script>
+E志愿志愿者服务平台 V1.0                                                      第 129 页
 <!-- Bootstrap js-->
 <script src="/console/assets/js/bootstrap/popper.min.js"></script>
 <script src="/console/assets/js/bootstrap/bootstrap.min.js"></script>
@@ -6730,7 +6550,6 @@ E志愿志愿者服务平台 V1.0                                               
 <script type="text/javascript">
 
     function parseDate(str) {
-E志愿志愿者服务平台 V1.0                                                      第 133 页
         if (str.match(/^\d{4}[\-\/\s+]\d{1,2}[\-\/\s+]\d{1,2}$/)) {
             return new Date(str.replace(/[\-\/\s+]/i, '/'));
         } else if (str.match(/^\d{8}$/)) {
@@ -6758,6 +6577,7 @@ E志愿志愿者服务平台 V1.0                                               
             .append(activityEndtimeTd)
             .append(activityLocationTd)
             .append(activityNeedpeopleTd)
+E志愿志愿者服务平台 V1.0                                                      第 130 页
             .append(controlTd)
             .addClass("active")
             .appendTo("#notStartActivity_table thead");
@@ -6781,7 +6601,6 @@ E志愿志愿者服务平台 V1.0                                               
     }
 
     function volRecruit(activityNum) {
-E志愿志愿者服务平台 V1.0                                                      第 134 页
         console.log("志愿者招募/报名人列表");
         $.ajax({
             url: "/activity/volRecruit",
@@ -6809,6 +6628,7 @@ E志愿志愿者服务平台 V1.0                                               
                 var modalValueTbody = ``;
                 $.each(recruitVolList, function (index, item) {
                     console.log(typeof item.participateApplytime);
+E志愿志愿者服务平台 V1.0                                                      第 131 页
                     // var today = new Date();
                     // var todayYear= today.getFullYear();
                     // var birth=parseDate(item.volunteer.volunteerBirth);
@@ -6832,7 +6652,6 @@ E志愿志愿者服务平台 V1.0                                               
                                                 <div class="btn-group btn-group-pill" role="group" aria-label="Basic example">
                                                     <button class="btn btn-outline-primary" type="button" onclick="volPassRecruit(${item.activityNum},${item.participateNum})">√</button>
                                                     <button class="btn btn-outline-danger" type="button" onclick="volUnPassRecruit(${item.activityNum},${item.participateNum})">×</button>
-E志愿志愿者服务平台 V1.0                                                      第 135 页
                                                 </div>
                                             </td>
                                           </tr>`;
@@ -6860,6 +6679,7 @@ E志愿志愿者服务平台 V1.0                                               
             data: {
                 "participateNum": participateNum
             },
+E志愿志愿者服务平台 V1.0                                                      第 132 页
             success: function (result) {
                 console.log(result);
                 if (result == "success") {
@@ -6883,7 +6703,6 @@ E志愿志愿者服务平台 V1.0                                               
                 "participateNum":participateNum
             },
             success: function (result) {
-E志愿志愿者服务平台 V1.0                                                      第 136 页
                 console.log(result);
                 if(result=="success"){
                     var name="#"+participateNum;
@@ -6911,6 +6730,7 @@ E志愿志愿者服务平台 V1.0                                               
                 build_activity_table(result);//画表格
             },
             error: function (result) {
+E志愿志愿者服务平台 V1.0                                                      第 133 页
                 console.log(result);
             }
         });
@@ -6923,7 +6743,7 @@ E志愿志愿者服务平台 V1.0                                               
 </html>
 
 ================================================================================================
-源码文件 86：src/main/resources/templates/org/index.html（前端页面）
+源码文件 76：src/main/resources/templates/org/index.html（前端页面）
 ================================================================================================
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -6934,7 +6754,6 @@ E志愿志愿者服务平台 V1.0                                               
     <link rel="icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <link rel="shortcut icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <title>志愿者组织工作台 - E志愿志愿者服务平台 V1.0</title>
-E志愿志愿者服务平台 V1.0                                                      第 137 页
     <!-- Font Awesome-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/fontawesome.css">
     <!-- ico-font-->
@@ -6962,6 +6781,7 @@ E志愿志愿者服务平台 V1.0                                               
 <!-- Loader ends-->
 <!-- page-wrapper Start-->
 <div class="page-wrapper compact-wrapper" id="pageWrapper">
+E志愿志愿者服务平台 V1.0                                                      第 134 页
     <!-- Page Header Start-->
     <div class="page-main-header">
         <div class="main-header-right row m-0">
@@ -6985,7 +6805,6 @@ E志愿志愿者服务平台 V1.0                                               
                     <li class="p-0">
                         <button class="btn btn-primary-light" type="button"><a href="/logout"><i
                                 data-feather="power"></i>退出登录</a></button>
-E志愿志愿者服务平台 V1.0                                                      第 138 页
                     </li>
                 </ul>
             </div>
@@ -7013,6 +6832,7 @@ E志愿志愿者服务平台 V1.0                                               
                                                                                    aria-hidden="true"></i></div>
                             </li>
                             <li class="sidebar-main-title">
+E志愿志愿者服务平台 V1.0                                                      第 135 页
                                 <div><h6>工作台</h6></div>
                             </li>
                             <li class="dropdown"><a class="nav-link menu-title active" href="index.html"><i
@@ -7036,7 +6856,6 @@ E志愿志愿者服务平台 V1.0                                               
                             <li class="dropdown"><a class="nav-link menu-title" href="act_carry.html"><i
                                     data-feather="play"></i><span>进行中的活动</span></a>
                             </li>
-E志愿志愿者服务平台 V1.0                                                      第 139 页
                             <li class="dropdown"><a class="nav-link menu-title" href="act_end.html"><i
                                     data-feather="check"></i><span>已结束的活动</span></a>
                             </li>
@@ -7064,6 +6883,7 @@ E志愿志愿者服务平台 V1.0                                               
                                     <div class="media-body">
                                         <h6 class="mb-0">审核中的活动</h6>
                                         <h4 class="mb-0"><span id="count_audit">0</span> 个</h4>
+E志愿志愿者服务平台 V1.0                                                      第 136 页
                                         <p class="mb-0 text-muted small">已提交、等待平台管理员审核</p>
                                     </div>
                                     <i class="fa fa-hourglass-half font-primary"></i>
@@ -7087,7 +6907,6 @@ E志愿志愿者服务平台 V1.0                                               
                     </div>
                     <div class="col-sm-6 col-xl-3">
                         <div class="card o-hidden">
-E志愿志愿者服务平台 V1.0                                                      第 140 页
                             <div class="card-body">
                                 <div class="media static-top-widget">
                                     <div class="media-body">
@@ -7115,6 +6934,7 @@ E志愿志愿者服务平台 V1.0                                               
                         </div>
                     </div>
                 </div>
+E志愿志愿者服务平台 V1.0                                                      第 137 页
                 <div class="row">
                     <div class="col-xl-12">
                         <div class="card">
@@ -7138,7 +6958,6 @@ E志愿志愿者服务平台 V1.0                                               
                                         <tbody id="activity_table">
                                         <tr>
                                             <td colspan="7" class="text-center text-muted">数据加载中……</td>
-E志愿志愿者服务平台 V1.0                                                      第 141 页
                                         </tr>
                                         </tbody>
                                     </table>
@@ -7166,6 +6985,7 @@ E志愿志愿者服务平台 V1.0                                               
                                     <div class="col-md-4">
                                         <p class="mb-1 text-muted">成立日期</p>
                                         <h6 id="organization_date">—</h6>
+E志愿志愿者服务平台 V1.0                                                      第 138 页
                                     </div>
                                     <div class="col-md-12 mt-3">
                                         <p class="mb-1 text-muted">组织简介</p>
@@ -7189,7 +7009,6 @@ E志愿志愿者服务平台 V1.0                                               
 <!-- Sidebar jquery-->
 <script src="/console/assets/js/sidebar-menu.js"></script>
 <script src="/console/assets/js/config.js"></script>
-E志愿志愿者服务平台 V1.0                                                      第 142 页
 <!-- Bootstrap js-->
 <script src="/console/assets/js/bootstrap/popper.min.js"></script>
 <script src="/console/assets/js/bootstrap/bootstrap.min.js"></script>
@@ -7217,6 +7036,7 @@ E志愿志愿者服务平台 V1.0                                               
             success: function (result) {
                 var list = (result && result.extend) ? result.extend[holderName] : null;
                 if (onSuccess) {
+E志愿志愿者服务平台 V1.0                                                      第 139 页
                     onSuccess(list || []);
                 }
             },
@@ -7240,7 +7060,6 @@ E志愿志愿者服务平台 V1.0                                               
                 + "<td>" + activity.activityName + "</td>"
                 + "<td>" + (activity.activityLocation || "—") + "</td>"
                 + "<td>" + formatTime(activity.activityBegintime) + "</td>"
-E志愿志愿者服务平台 V1.0                                                      第 143 页
                 + "<td>" + formatTime(activity.activityEndtime) + "</td>"
                 + "<td>" + formatTime(activity.activitySignddl) + "</td>"
                 + "<td>" + (activity.activityNeedpeople || 0) + "</td>"
@@ -7268,6 +7087,7 @@ E志愿志愿者服务平台 V1.0                                               
                 $("#organization_date").text(formatTime(org.organizationEstablishdate).substring(0, 10));
                 $("#organization_introduction").text(org.organizationIntroduction || "—");
             },
+E志愿志愿者服务平台 V1.0                                                      第 140 页
             error: function (result) {
                 console.log(result);
             }
@@ -7291,12 +7111,11 @@ E志愿志愿者服务平台 V1.0                                               
         loadOrganization();
     });
 </script>
-E志愿志愿者服务平台 V1.0                                                      第 144 页
 </body>
 </html>
 
 ================================================================================================
-源码文件 87：src/main/resources/templates/org/org_info.html（前端页面）
+源码文件 77：src/main/resources/templates/org/org_info.html（前端页面）
 ================================================================================================
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -7319,6 +7138,7 @@ E志愿志愿者服务平台 V1.0                                               
     <link rel="stylesheet" type="text/css" href="/console/assets/css/fontawesome.css">
     <!-- ico-font-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/icofont.css">
+E志愿志愿者服务平台 V1.0                                                      第 141 页
     <!-- Themify icon-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/themify.css">
     <!-- Flag icon-->
@@ -7342,7 +7162,6 @@ E志愿志愿者服务平台 V1.0                                               
     <div class="theme-loader">
         <div class="loader-p"></div>
     </div>
-E志愿志愿者服务平台 V1.0                                                      第 145 页
 </div>
 <!-- Loader ends-->
 <!-- page-wrapper Start       -->
@@ -7370,6 +7189,7 @@ E志愿志愿者服务平台 V1.0                                               
                         <div class="mode"><i class="fa fa-moon-o"></i></div>
                     </li>
 
+E志愿志愿者服务平台 V1.0                                                      第 142 页
                                         <li class="p-0">
                         <button class="btn btn-primary-light" type="button"><a href="/logout"><i
                                 data-feather="power"></i>退出登录</a></button>
@@ -7393,7 +7213,6 @@ E志愿志愿者服务平台 V1.0                                               
             </div>
             <nav>
                 <div class="main-navbar">
-E志愿志愿者服务平台 V1.0                                                      第 146 页
                     <div class="left-arrow" id="left-arrow"><i data-feather="rewind"></i></div>
                     <div id="mainnav">
                                                 <ul class="nav-menu custom-scrollbar">
@@ -7421,6 +7240,7 @@ E志愿志愿者服务平台 V1.0                                               
                             </li>
                             <li class="dropdown"><a class="nav-link menu-title" href="act_not_start.html"><i
                                     data-feather="clock"></i><span>未开始的活动</span></a>
+E志愿志愿者服务平台 V1.0                                                      第 143 页
                             </li>
                             <li class="dropdown"><a class="nav-link menu-title" href="act_carry.html"><i
                                     data-feather="play"></i><span>进行中的活动</span></a>
@@ -7444,7 +7264,6 @@ E志愿志愿者服务平台 V1.0                                               
         <!-- Page Sidebar Ends-->
         <div class="page-body">
             <!-- Container-fluid starts-->
-E志愿志愿者服务平台 V1.0                                                      第 147 页
             <div class="container-fluid dashboard-default-sec">
                 <div class="card">
                     <div class="card-header pb-0">
@@ -7472,6 +7291,7 @@ E志愿志愿者服务平台 V1.0                                               
                         <div class="form-group row">
                             <label class="col-sm-3 col-form-label text-end">组织简介</label>
                             <div class="col-xl-5 col-sm-9">
+E志愿志愿者服务平台 V1.0                                                      第 144 页
                                 <div class="input-group">
                                     <textarea class="form-control" id="org_introduction" rows="3"></textarea>
                                 </div>
@@ -7495,7 +7315,6 @@ E志愿志愿者服务平台 V1.0                                               
                                     <button class="btn btn-primary" type="submit" id="info_change">修改</button>
                                 </div>
                             </div>
-E志愿志愿者服务平台 V1.0                                                      第 148 页
                         </div>
 
                         <!-- Container-fluid Ends-->
@@ -7523,6 +7342,7 @@ E志愿志愿者服务平台 V1.0                                               
 <script src="/console/assets/js/datepicker/date-picker/datepicker.js"></script>
 <script src="/console/assets/js/datepicker/date-picker/datepicker.en.js"></script>
 <script src="/console/assets/js/datepicker/date-picker/datepicker.custom.js"></script>
+E志愿志愿者服务平台 V1.0                                                      第 145 页
 <!-- Theme js-->
 <script src="/console/assets/js/script.js"></script>
 <!-- login js-->
@@ -7546,7 +7366,6 @@ E志愿志愿者服务平台 V1.0                                               
             },
             error: function (result) {
                 console.log(result);
-E志愿志愿者服务平台 V1.0                                                      第 149 页
             }
         });
     });
@@ -7574,6 +7393,7 @@ E志愿志愿者服务平台 V1.0                                               
                 console.log(result);
             }
         })
+E志愿志愿者服务平台 V1.0                                                      第 146 页
     })
 </script>
 
@@ -7584,7 +7404,7 @@ E志愿志愿者服务平台 V1.0                                               
 </html>
 
 ================================================================================================
-源码文件 88：src/main/resources/templates/org/up_activity.html（前端页面）
+源码文件 78：src/main/resources/templates/org/up_activity.html（前端页面）
 ================================================================================================
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -7597,7 +7417,6 @@ E志愿志愿者服务平台 V1.0                                               
     <title>申报志愿活动 - E志愿志愿者服务平台 V1.0</title>
     <!-- Google font-->
     <link rel="preconnect" href="https://fonts.gstatic.com">
-E志愿志愿者服务平台 V1.0                                                      第 150 页
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap"
           rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&amp;display=swap"
@@ -7625,6 +7444,7 @@ E志愿志愿者服务平台 V1.0                                               
     <!-- Responsive css-->
     <link rel="stylesheet" type="text/css" href="/console/assets/css/responsive.css">
 </head>
+E志愿志愿者服务平台 V1.0                                                      第 147 页
 <body>
 <!-- Loader starts-->
 <div class="loader-wrapper">
@@ -7648,7 +7468,6 @@ E志愿志愿者服务平台 V1.0                                               
                 <div class="toggle-sidebar"><i class="status_toggle middle" data-feather="sidebar"
                                                id="sidebar-toggle"></i></div>
             </div>
-E志愿志愿者服务平台 V1.0                                                      第 151 页
 
             <div class="nav-right col pull-right right-menu p-0">
                 <ul class="nav-menus">
@@ -7676,6 +7495,7 @@ E志愿志愿者服务平台 V1.0                                               
 
                         <div class="sidebar-user text-center">
                 <a class="setting-primary" href="org_info.html"><i data-feather="settings"></i></a>
+E志愿志愿者服务平台 V1.0                                                      第 148 页
                 <img class="img-90 rounded-circle" src="/console/assets/images/dashboard/1.png" alt="">
                 <a href="org_info.html"><h6 class="mt-3 f-14 f-w-600">志愿者组织</h6></a>
                 <p class="mb-0 font-roboto">志愿活动申报与报名管理</p>
@@ -7699,7 +7519,6 @@ E志愿志愿者服务平台 V1.0                                               
                                 <div><h6>志愿活动管理</h6></div>
                             </li>
                             <li class="dropdown"><a class="nav-link menu-title active" href="up_activity.html"><i
-E志愿志愿者服务平台 V1.0                                                      第 152 页
                                     data-feather="plus"></i><span>申报志愿活动</span></a>
                             </li>
                             <li class="dropdown"><a class="nav-link menu-title" href="act_audit.html"><i
@@ -7727,6 +7546,7 @@ E志愿志愿者服务平台 V1.0                                               
 
                     </div>
                     <div class="right-arrow" id="right-arrow"><i data-feather="play"></i></div>
+E志愿志愿者服务平台 V1.0                                                      第 149 页
                 </div>
             </nav>
         </header>
@@ -7750,7 +7570,6 @@ E志愿志愿者服务平台 V1.0                                               
                                 </div>
                                 <span id="sp">    </span>
                             </div>
-E志愿志愿者服务平台 V1.0                                                      第 153 页
                         </div>
 
                         <div class="form-group row">
@@ -7778,6 +7597,7 @@ E志愿志愿者服务平台 V1.0                                               
                                 <div class="input-group">
                                     <input class="datepicker-here form-control digits" type="text" data-language="en"
                                            id="end_time">
+E志愿志愿者服务平台 V1.0                                                      第 150 页
                                 </div>
                             </div>
                         </div>
@@ -7801,7 +7621,6 @@ E志愿志愿者服务平台 V1.0                                               
                         </div>
 
                         <div class="form-group row">
-E志愿志愿者服务平台 V1.0                                                      第 154 页
                             <label class="col-sm-3 col-form-label text-end">注意事项</label>
                             <div class="col-xl-5 col-sm-9">
                                 <div class="input-group">
@@ -7829,6 +7648,7 @@ E志愿志愿者服务平台 V1.0                                               
                             </div>
                         </div>
 
+E志愿志愿者服务平台 V1.0                                                      第 151 页
                         <div class="container-fluid">
                         </div>
                         <!-- Container-fluid Ends-->
@@ -7852,7 +7672,6 @@ E志愿志愿者服务平台 V1.0                                               
 <script src="/console/assets/js/bootstrap/bootstrap.min.js"></script>
 <!-- Datepicker js-->
 <script src="/console/assets/js/datepicker/date-picker/datepicker.js"></script>
-E志愿志愿者服务平台 V1.0                                                      第 155 页
 <script src="/console/assets/js/datepicker/date-picker/datepicker.en.js"></script>
 <script src="/console/assets/js/datepicker/date-picker/datepicker.custom.js"></script>
 <!-- Theme js-->
@@ -7880,6 +7699,7 @@ E志愿志愿者服务平台 V1.0                                               
                 }
             }
         })
+E志愿志愿者服务平台 V1.0                                                      第 152 页
     });
 
     $("#upactivity_submit").click(function () {
@@ -7903,7 +7723,6 @@ E志愿志愿者服务平台 V1.0                                               
                 "location": location,
                 "affair": affair,
                 "need": need,
-E志愿志愿者服务平台 V1.0                                                      第 156 页
                 "sign_ddl": sign_ddl
             },
             success: function (result) {
@@ -7924,13 +7743,14 @@ E志愿志愿者服务平台 V1.0                                               
 </html>
 
 ================================================================================================
-源码文件 89：src/main/resources/templates/portal/index.html（前端页面）
+源码文件 79：src/main/resources/templates/portal/index.html（前端页面）
 ================================================================================================
 <!DOCTYPE html>
 <html class="wide wow-animation" lang="zh-CN">
 <head>
     <title>首页 - E志愿志愿者服务平台 V1.0</title>
     <meta charset="utf-8">
+E志愿志愿者服务平台 V1.0                                                      第 153 页
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
@@ -7954,7 +7774,6 @@ E志愿志愿者服务平台 V1.0                                               
                  data-md-layout="rd-navbar-fixed" data-lg-layout="rd-navbar-static" data-xl-layout="rd-navbar-static"
                  data-xxl-layout="rd-navbar-static" data-md-device-layout="rd-navbar-fixed"
                  data-lg-device-layout="rd-navbar-static" data-xl-device-layout="rd-navbar-static"
-E志愿志愿者服务平台 V1.0                                                      第 157 页
                  data-xxl-device-layout="rd-navbar-static" data-lg-stick-up-offset="46px" data-xl-stick-up-offset="46px"
                  data-xxl-stick-up-offset="46px" data-lg-stick-up="true" data-xl-stick-up="true"
                  data-xxl-stick-up="true">
@@ -7982,6 +7801,7 @@ E志愿志愿者服务平台 V1.0                                               
                             <div class="rd-navbar-nav-wrap">
                                 <ul class="rd-navbar-nav">
                                     <li class="rd-nav-item active"><a class="rd-nav-link" href="index.html">主页</a>
+E志愿志愿者服务平台 V1.0                                                      第 154 页
                                     </li>
                                     <li class="rd-nav-item"><a class="rd-nav-link" href="#organizations">志愿者组织</a>
                                     </li>
@@ -8005,7 +7825,6 @@ E志愿志愿者服务平台 V1.0                                               
                 <div class="col-md-6">
                     <div class="layout layout-1"><img class="layout-item wow fadeInRight"
                                                       src="/portal/images/element-01-300x286.png" alt="" width="300"
-E志愿志愿者服务平台 V1.0                                                      第 158 页
                                                       height="286" loading="lazy"/><img
                             src="/portal/images/home-01-610x492.jpg" alt="" width="610" height="492" loading="lazy"/>
                     </div>
@@ -8033,6 +7852,7 @@ E志愿志愿者服务平台 V1.0                                               
                 <a class="image-link" href="#"><img src="/portal/images/org1.png" alt="" width="164"
                                                     height="37" loading="lazy"/></a><a class="image-link" href="#"><img
                     src="/portal/images/org2.png" alt="" width="164" height="41" loading="lazy"/></a><a
+E志愿志愿者服务平台 V1.0                                                      第 155 页
                     class="image-link mt-sm-2" href="#"><img src="/portal/images/org3.png" alt="" width="195"
                                                              height="30" loading="lazy"/></a><a class="image-link"
                                                                                                 href="#"><img
@@ -8056,7 +7876,6 @@ E志愿志愿者服务平台 V1.0                                               
     <!--                    </div>-->
     <!--                </div>-->
     <!--                <div class="blurb-number blurb-number-boxed blurb-number-secondary wow fadeInUp">-->
-E志愿志愿者服务平台 V1.0                                                      第 159 页
     <!--                    <div class="blurb-number-value">02</div>-->
     <!--                    <h3 class="blurb-number-title">Our Vision</h3>-->
     <!--                    <div class="blurb-number-text">We aim to grant wishes that will give hope to people in need in-->
@@ -8084,6 +7903,7 @@ E志愿志愿者服务平台 V1.0                                               
                 <!--                </div>-->
             </div>
             <div class="owl-carousel owl-carousel-2" data-items="1" data-sm-items="2" data-lg-items="3"
+E志愿志愿者服务平台 V1.0                                                      第 156 页
                  data-xxl-margin="50" data-loop="false" data-autoplay="false" data-owl="{&quot;dots&quot;:true}">
                 <div class="post-classic wow fadeInUp"><a class="post-classic-media" href="../admin/login.html"><img
                         class="post-classic-img" src="/portal/images/events-01-390x300.jpg" alt="" width="390"
@@ -8107,7 +7927,6 @@ E志愿志愿者服务平台 V1.0                                               
                     <button class="post-classic-btn btn btn-secondary">
                         查看活动详情
                     </button>
-E志愿志愿者服务平台 V1.0                                                      第 160 页
                 </div>
                 <div class="post-classic wow fadeInUp" data-wow-delay=".3s"><a class="post-classic-media"
                                                                                href="../admin/login.html"><img
@@ -8135,6 +7954,7 @@ E志愿志愿者服务平台 V1.0                                               
                                                       height="368" loading="lazy"/><img
                             src="/portal/images/back1.jpg" alt="" width="610" height="492" loading="lazy"/>
                     </div>
+E志愿志愿者服务平台 V1.0                                                      第 157 页
                 </div>
                 <div class="col-md-6">
                     <div class="ps-xl-5">
@@ -8158,7 +7978,6 @@ E志愿志愿者服务平台 V1.0                                               
                         <h2 class="wow fadeIn">注册志愿者</h2>
                         <div class="big wow fadeIn" data-wow-delay=".1s">注册成为志愿者，报名参与身边的志愿服务活动
                         </div>
-E志愿志愿者服务平台 V1.0                                                      第 161 页
                         <!--                        </button>-->
                     </div>
                 </div>
@@ -8186,6 +8005,7 @@ E志愿志愿者服务平台 V1.0                                               
 </div>
 
 <div class="snackbars" id="form-output-global"></div>
+E志愿志愿者服务平台 V1.0                                                      第 158 页
 <script src="/portal/js/core.min.js"></script>
 <script src="/portal/js/script.js"></script>
 
@@ -8198,7 +8018,7 @@ E志愿志愿者服务平台 V1.0                                               
 </html>
 
 ================================================================================================
-源码文件 90：src/test/java/com/evolunteer/EVolunteerApplicationTests.java（单元测试）
+源码文件 80：src/test/java/com/evolunteer/EVolunteerApplicationTests.java（单元测试）
 ================================================================================================
 package com.evolunteer;
 
@@ -8209,7 +8029,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 /**
  * E志愿志愿者服务平台 V1.0
  * <p>
-E志愿志愿者服务平台 V1.0                                                      第 162 页
  * 平台启动测试：校验 Spring 容器与各项配置可以正常加载。
  */
 @SpringBootTest
@@ -8222,7 +8041,7 @@ class EVolunteerApplicationTests {
 }
 
 ================================================================================================
-源码文件 91：src/test/java/com/evolunteer/entity/MsgTest.java（单元测试）
+源码文件 81：src/test/java/com/evolunteer/entity/ApiResponseTest.java（单元测试）
 ================================================================================================
 package com.evolunteer.entity;
 
@@ -8237,45 +8056,94 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * E志愿志愿者服务平台 V1.0
+E志愿志愿者服务平台 V1.0                                                      第 159 页
  * <p>
  * 统一响应结果类单元测试：校验成功/失败状态码、提示信息与业务数据装载。
  */
-class MsgTest {
+class ApiResponseTest {
 
     @Test
     @DisplayName("成功结果的状态码与提示信息正确")
     void successShouldCarrySuccessCode() {
-        Msg msg = Msg.success();
+        ApiResponse response = ApiResponse.success();
 
-        assertEquals(100, msg.getCode());
-        assertEquals("处理成功！", msg.getMsg());
-        assertTrue(msg.getExtend().isEmpty());
+        assertEquals(100, response.getCode());
+        assertEquals("处理成功！", response.getMsg());
+        assertTrue(response.getExtend().isEmpty());
     }
 
     @Test
     @DisplayName("失败结果的状态码与提示信息正确")
     void failShouldCarryFailCode() {
-        Msg msg = Msg.fail();
+        ApiResponse response = ApiResponse.fail();
 
-        assertEquals(200, msg.getCode());
-        assertEquals("处理失败！", msg.getMsg());
+        assertEquals(200, response.getCode());
+        assertEquals("处理失败！", response.getMsg());
     }
-E志愿志愿者服务平台 V1.0                                                      第 163 页
 
     @Test
     @DisplayName("添加业务数据后可被读取且支持连续追加")
     void addShouldStoreBusinessData() {
         List<String> activities = List.of("社区爱心助学志愿活动", "敬老院陪伴志愿服务");
 
-        Msg msg = Msg.success().add("auditActivity", activities).add("total", activities.size());
+        ApiResponse response = ApiResponse.success().add("auditActivity", activities).add("total", activities.size());
 
-        assertSame(activities, msg.getExtend().get("auditActivity"));
-        assertEquals(2, msg.getExtend().get("total"));
+        assertSame(activities, response.getExtend().get("auditActivity"));
+        assertEquals(2, response.getExtend().get("total"));
     }
 }
 
 ================================================================================================
-源码文件 92：src/test/java/com/evolunteer/utils/MD5UtilTest.java（单元测试）
+源码文件 82：src/test/java/com/evolunteer/utils/MD5PasswordEncoderTest.java（单元测试）
+================================================================================================
+package com.evolunteer.utils;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * E志愿志愿者服务平台 V1.0
+E志愿志愿者服务平台 V1.0                                                      第 160 页
+ * <p>
+ * 平台密码编码器单元测试：校验密码加密与登录密码比对规则。
+ */
+class MD5PasswordEncoderTest {
+
+    private final MD5PasswordEncoder encoder = new MD5PasswordEncoder();
+
+    @Test
+    @DisplayName("密码加密结果与平台约定的 MD5 摘要一致")
+    void encodeShouldUsePlatformMd5Rule() {
+        assertEquals("e10adc3949ba59abbe56e057f20f883e", encoder.encode("123456"));
+    }
+
+    @Test
+    @DisplayName("密码正确时校验通过")
+    void matchesShouldAcceptCorrectPassword() {
+        assertTrue(encoder.matches("123456", "e10adc3949ba59abbe56e057f20f883e"));
+    }
+
+    @Test
+    @DisplayName("密码错误时校验不通过")
+    void matchesShouldRejectWrongPassword() {
+        assertFalse(encoder.matches("1234567", "e10adc3949ba59abbe56e057f20f883e"));
+        assertFalse(encoder.matches("", "e10adc3949ba59abbe56e057f20f883e"));
+    }
+
+    @Test
+    @DisplayName("密码为空时校验不通过而不抛出异常")
+    void matchesShouldRejectEmptyInput() {
+        assertFalse(encoder.matches(null, "e10adc3949ba59abbe56e057f20f883e"));
+        assertFalse(encoder.matches("123456", null));
+    }
+}
+
+================================================================================================
+源码文件 83：src/test/java/com/evolunteer/utils/MD5UtilTest.java（单元测试）
 ================================================================================================
 package com.evolunteer.utils;
 
@@ -8290,6 +8158,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * E志愿志愿者服务平台 V1.0
  * <p>
+E志愿志愿者服务平台 V1.0                                                      第 161 页
  * 密码摘要工具类单元测试：校验摘要结果、固定长度与空值处理。
  */
 class MD5UtilTest {
@@ -8311,7 +8180,6 @@ class MD5UtilTest {
         assertNotEquals(MD5Util.encode("123456"), MD5Util.encode("1234567"));
         assertNotEquals(MD5Util.encode("abc"), MD5Util.encode("中国志愿者"));
     }
-E志愿志愿者服务平台 V1.0                                                      第 164 页
 
     @Test
     @DisplayName("中文密码的摘要结果与字符集无关且长度固定")
@@ -8326,55 +8194,6 @@ E志愿志愿者服务平台 V1.0                                               
     @DisplayName("空明文在计算摘要前由调用方校验")
     void encodeShouldRejectNullPassword() {
         assertThrows(NullPointerException.class, () -> MD5Util.encode(null));
-    }
-}
-
-================================================================================================
-源码文件 93：src/test/java/com/evolunteer/utils/MyPasswordEncoderTest.java（单元测试）
-================================================================================================
-package com.evolunteer.utils;
-
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 平台密码编码器单元测试：校验密码加密与登录密码比对规则。
- */
-class MyPasswordEncoderTest {
-
-    private final MyPasswordEncoder encoder = new MyPasswordEncoder();
-
-    @Test
-    @DisplayName("密码加密结果与平台约定的 MD5 摘要一致")
-    void encodeShouldUsePlatformMd5Rule() {
-        assertEquals("e10adc3949ba59abbe56e057f20f883e", encoder.encode("123456"));
-    }
-
-    @Test
-    @DisplayName("密码正确时校验通过")
-    void matchesShouldAcceptCorrectPassword() {
-        assertTrue(encoder.matches("123456", "e10adc3949ba59abbe56e057f20f883e"));
-    }
-
-E志愿志愿者服务平台 V1.0                                                      第 165 页
-    @Test
-    @DisplayName("密码错误时校验不通过")
-    void matchesShouldRejectWrongPassword() {
-        assertFalse(encoder.matches("1234567", "e10adc3949ba59abbe56e057f20f883e"));
-        assertFalse(encoder.matches("", "e10adc3949ba59abbe56e057f20f883e"));
-    }
-
-    @Test
-    @DisplayName("密码为空时校验不通过而不抛出异常")
-    void matchesShouldRejectEmptyInput() {
-        assertFalse(encoder.matches(null, "e10adc3949ba59abbe56e057f20f883e"));
-        assertFalse(encoder.matches("123456", null));
     }
 }
 

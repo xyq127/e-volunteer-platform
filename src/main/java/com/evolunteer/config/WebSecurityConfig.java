@@ -1,8 +1,8 @@
 package com.evolunteer.config;
 
-import com.evolunteer.service.impl.UserServiceImpl;
-import com.evolunteer.utils.LoginSuccessHandle;
-import com.evolunteer.utils.MyPasswordEncoder;
+import com.evolunteer.service.impl.UserDetailsServiceImpl;
+import com.evolunteer.utils.LoginSuccessHandler;
+import com.evolunteer.utils.MD5PasswordEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,7 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
-    UserServiceImpl user;
+    UserDetailsServiceImpl userDetailsService;
 
     /**
      * 配置登录认证使用的用户信息来源与密码校验规则
@@ -29,7 +29,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
      */
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(user).passwordEncoder(passwordEncoder());
+        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
     }
 
     /**
@@ -46,7 +46,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .loginProcessingUrl("/login")
                 .usernameParameter("username")
                 .passwordParameter("password")
-                .successHandler(new LoginSuccessHandle());
+                .successHandler(new LoginSuccessHandler());
 
         http
                 .logout()
@@ -84,6 +84,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new MyPasswordEncoder();
+        return new MD5PasswordEncoder();
     }
 }

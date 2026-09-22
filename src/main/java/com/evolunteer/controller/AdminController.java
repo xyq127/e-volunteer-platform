@@ -1,7 +1,7 @@
 package com.evolunteer.controller;
 
 import com.evolunteer.entity.Activity;
-import com.evolunteer.entity.Msg;
+import com.evolunteer.entity.ApiResponse;
 import com.evolunteer.service.ActivityService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,9 +37,9 @@ public class AdminController {
      */
     @RequestMapping(value = "/findAuditActivityByState", method = RequestMethod.GET)
     @ResponseBody
-    public Msg findAuditActivityByState() {
+    public ApiResponse findAuditActivityByState() {
         List<Activity> auditActivity = activityService.getActivityByState("0");
-        return Msg.success().add("auditActivity", auditActivity);
+        return ApiResponse.success().add("auditActivity", auditActivity);
     }
 
     /**

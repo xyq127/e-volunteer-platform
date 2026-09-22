@@ -1,11 +1,11 @@
 package com.evolunteer.controller;
 
 import com.evolunteer.entity.Activity;
-import com.evolunteer.entity.Msg;
-import com.evolunteer.entity.Participate;
+import com.evolunteer.entity.ApiResponse;
+import com.evolunteer.entity.Participation;
 import com.evolunteer.service.ActivityService;
 import com.evolunteer.service.OrganizationService;
-import com.evolunteer.service.ParticipateService;
+import com.evolunteer.service.ParticipationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -35,7 +35,7 @@ public class ActivityController {
     OrganizationService organizationService;
 
     @Autowired
-    ParticipateService participateService;
+    ParticipationService participationService;
 
     /**
      * 查询当前登录组织审核中的志愿活动
@@ -45,10 +45,10 @@ public class ActivityController {
      */
     @RequestMapping(value = "/findAuditActivityByNumAndState", method = RequestMethod.GET)
     @ResponseBody
-    public Msg findAuditActivityByNumAndState(Authentication authentication) {
+    public ApiResponse findAuditActivityByNumAndState(Authentication authentication) {
         Integer num = currentOrganizationNum(authentication);
         List<Activity> auditActivity = activityService.getActivityByNumAndState(num, "0");
-        return Msg.success().add("auditActivity", auditActivity);
+        return ApiResponse.success().add("auditActivity", auditActivity);
     }
 
     /**
@@ -59,9 +59,9 @@ public class ActivityController {
      */
     @RequestMapping(value = "/activityInfo", method = RequestMethod.GET)
     @ResponseBody
-    public Msg activityInfo(@RequestParam(value = "activityNum") Integer activityNum) {
+    public ApiResponse activityInfo(@RequestParam(value = "activityNum") Integer activityNum) {
         List<Activity> activityInfo = activityService.activityInfo(activityNum);
-        return Msg.success().add("activityInfo", activityInfo);
+        return ApiResponse.success().add("activityInfo", activityInfo);
     }
 
     /**
@@ -73,7 +73,7 @@ public class ActivityController {
      */
     @RequestMapping(value = "/auditActivityDelete", method = RequestMethod.POST)
     @ResponseBody
-    public Msg auditActivityDelete(@RequestParam(value = "activityNum") Integer activityNum,
+    public ApiResponse auditActivityDelete(@RequestParam(value = "activityNum") Integer activityNum,
                                    Authentication authentication) {
         activityService.deleteAct(activityNum);
         log.info("志愿者组织删除审核中的活动，活动编号：{}", activityNum);
@@ -89,7 +89,7 @@ public class ActivityController {
      */
     @RequestMapping(value = "/notAuditActivityDelete", method = RequestMethod.POST)
     @ResponseBody
-    public Msg notAuditActivityDelete(@RequestParam(value = "activityNum") Integer activityNum,
+    public ApiResponse notAuditActivityDelete(@RequestParam(value = "activityNum") Integer activityNum,
                                       Authentication authentication) {
         activityService.deleteAct(activityNum);
         log.info("志愿者组织删除审核未通过的活动，活动编号：{}", activityNum);
@@ -104,10 +104,10 @@ public class ActivityController {
      */
     @RequestMapping(value = "/findNotStartActivityByNumAndState", method = RequestMethod.GET)
     @ResponseBody
-    public Msg findNotStartActivityByNumAndState(Authentication authentication) {
+    public ApiResponse findNotStartActivityByNumAndState(Authentication authentication) {
         Integer num = currentOrganizationNum(authentication);
         List<Activity> notStartActivity = activityService.getActivityByNumAndState(num, "1");
-        return Msg.success().add("auditActivity", notStartActivity);
+        return ApiResponse.success().add("auditActivity", notStartActivity);
     }
 
     /**
@@ -118,9 +118,9 @@ public class ActivityController {
      */
     @RequestMapping(value = "/volRecruit", method = RequestMethod.GET)
     @ResponseBody
-    public Msg volRecruit(@RequestParam(value = "activityNum") Integer activityNum) {
-        List<Participate> volunteerList = participateService.getVolunteerList(activityNum);
-        return Msg.success().add("volunteerList", volunteerList);
+    public ApiResponse volRecruit(@RequestParam(value = "activityNum") Integer activityNum) {
+        List<Participation> volunteerList = participationService.getVolunteerList(activityNum);
+        return ApiResponse.success().add("volunteerList", volunteerList);
     }
 
     /**
@@ -131,10 +131,10 @@ public class ActivityController {
      */
     @RequestMapping(value = "/findCarryActivityByNumAndState", method = RequestMethod.GET)
     @ResponseBody
-    public Msg findCarryActivityByNumAndState(Authentication authentication) {
+    public ApiResponse findCarryActivityByNumAndState(Authentication authentication) {
         Integer num = currentOrganizationNum(authentication);
         List<Activity> carryActivity = activityService.getActivityByNumAndState(num, "2");
-        return Msg.success().add("carryActivity", carryActivity);
+        return ApiResponse.success().add("carryActivity", carryActivity);
     }
 
     /**
@@ -145,10 +145,10 @@ public class ActivityController {
      */
     @RequestMapping(value = "/findEndActivityByNumAndState", method = RequestMethod.GET)
     @ResponseBody
-    public Msg findEndActivityByNumAndState(Authentication authentication) {
+    public ApiResponse findEndActivityByNumAndState(Authentication authentication) {
         Integer num = currentOrganizationNum(authentication);
         List<Activity> endActivity = activityService.getActivityByNumAndState(num, "3");
-        return Msg.success().add("endActivity", endActivity);
+        return ApiResponse.success().add("endActivity", endActivity);
     }
 
     /**
@@ -159,10 +159,10 @@ public class ActivityController {
      */
     @RequestMapping(value = "/findNotAuditActivityByNumAndState", method = RequestMethod.GET)
     @ResponseBody
-    public Msg findNotAuditActivityByNumAndState(Authentication authentication) {
+    public ApiResponse findNotAuditActivityByNumAndState(Authentication authentication) {
         Integer num = currentOrganizationNum(authentication);
         List<Activity> notAuditActivity = activityService.getActivityByNumAndState(num, "4");
-        return Msg.success().add("notAuditActivity", notAuditActivity);
+        return ApiResponse.success().add("notAuditActivity", notAuditActivity);
     }
 
     /**

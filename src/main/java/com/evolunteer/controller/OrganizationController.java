@@ -1,6 +1,6 @@
 package com.evolunteer.controller;
 
-import com.evolunteer.entity.Msg;
+import com.evolunteer.entity.ApiResponse;
 import com.evolunteer.entity.Organization;
 import com.evolunteer.service.ActivityService;
 import com.evolunteer.service.OrganizationService;
@@ -126,10 +126,10 @@ public class OrganizationController {
      */
     @RequestMapping(value = "/info", method = RequestMethod.GET)
     @ResponseBody
-    public Msg getInfo(Authentication authentication) {
+    public ApiResponse getInfo(Authentication authentication) {
         User user = (User) authentication.getPrincipal();
         Organization organization = organizationService.getOrgInfo(user.getUsername());
-        return Msg.success().add("organization", organization);
+        return ApiResponse.success().add("organization", organization);
     }
 
     /**
@@ -142,7 +142,7 @@ public class OrganizationController {
      */
     @RequestMapping(value = "/infoChange", method = RequestMethod.POST)
     @ResponseBody
-    public Msg infoChange(@RequestParam(value = "name") String name,
+    public ApiResponse infoChange(@RequestParam(value = "name") String name,
                           @RequestParam(value = "introduction") String introduction,
                           Authentication authentication) {
         User user = (User) authentication.getPrincipal();
@@ -153,8 +153,8 @@ public class OrganizationController {
 
         if (organizationService.changeInfo(user.getUsername(), organization)) {
             log.info("志愿者组织修改组织资料，组织账号：{}", user.getUsername());
-            return Msg.success();
+            return ApiResponse.success();
         }
-        return Msg.fail();
+        return ApiResponse.fail();
     }
 }
