@@ -15,6 +15,10 @@ logs/
 ### 文件上传目录 ###
 upload/
 
+### Python 工具脚本缓存 ###
+__pycache__/
+*.pyc
+
 ### 操作系统文件 ###
 .DS_Store
 Thumbs.db
