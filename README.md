@@ -78,7 +78,7 @@ e-volunteer-platform
     │   │   └── utils                          密码摘要、密码编码器、登录成功处理器
     │   └── resources
     │       ├── application.properties         系统配置
-    │       ├── db/e_volunteer.sql             数据库脚本（建库、建表、存储过程、初始化数据）
+    │       ├── db/e_volunteer_platform.sql             数据库脚本（建库、建表、存储过程、初始化数据）
     │       ├── mapper                          MyBatis 映射文件
     │       ├── static                          前端静态资源
     │       └── templates                       前端页面（公众门户、志愿者组织、平台管理员）
@@ -90,18 +90,18 @@ e-volunteer-platform
 ### 1. 准备数据库
 
 ```bash
-mysql -uroot -p < src/main/resources/db/e_volunteer.sql
+mysql -uroot -p < src/main/resources/db/e_volunteer_platform.sql
 ```
 
 脚本会自动完成建库、建表、创建存储过程并写入初始化数据。
 
 ### 2. 修改数据库连接（可选）
 
-默认连接 `localhost:3306/e_volunteer`，账号 `root`，密码 `801`。如与实际环境不一致，
+默认连接 `localhost:3306/e_volunteer_platform`，账号 `root`，密码 `801`。如与实际环境不一致，
 可修改 `src/main/resources/application.properties`，或使用环境变量覆盖：
 
 ```bash
-export EVOLUNTEER_DB_URL="jdbc:mysql://localhost:3306/e_volunteer?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai"
+export EVOLUNTEER_DB_URL="jdbc:mysql://localhost:3306/e_volunteer_platform?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai"
 export EVOLUNTEER_DB_USERNAME=root
 export EVOLUNTEER_DB_PASSWORD=你的密码
 ```

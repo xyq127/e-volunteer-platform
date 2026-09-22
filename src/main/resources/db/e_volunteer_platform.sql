@@ -2,15 +2,15 @@
 -- E志愿志愿者服务平台 V1.0 数据库脚本
 -- 数据库：MySQL 8.0
 -- 内容：数据库创建、业务表创建、存储过程创建、初始化数据
--- 执行方式：mysql -uroot -p < e_volunteer.sql
+-- 执行方式：mysql -uroot -p < e_volunteer_platform.sql
 -- =============================================================================
 
 -- 连接字符集与库、表的字符集保持一致，避免存储过程参数与字段比较时出现字符集冲突
 SET NAMES utf8mb4 COLLATE utf8mb4_general_ci;
 
-DROP DATABASE IF EXISTS e_volunteer;
-CREATE DATABASE e_volunteer DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE e_volunteer;
+DROP DATABASE IF EXISTS e_volunteer_platform;
+CREATE DATABASE e_volunteer_platform DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE e_volunteer_platform;
 
 
 -- -----------------------------------------------------------------------------
