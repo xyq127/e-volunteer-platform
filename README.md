@@ -56,7 +56,7 @@ E志愿志愿者服务平台面向志愿者、志愿者组织与平台管理员�
 ## 四、目录结构
 
 ```
-e-zhiyuan-platform
+e-volunteer-platform
 ├── pom.xml                                    Maven 构建配置
 ├── README.md                                  软件说明
 ├── docs                                       软件著作权申请材料
@@ -110,7 +110,7 @@ export EVOLUNTEER_DB_PASSWORD=你的密码
 
 ```bash
 mvn clean package -DskipTests
-java -jar target/e-zhiyuan-platform-1.0.0.jar
+java -jar target/e-volunteer-platform-1.0.0.jar
 ```
 
 ### 4. 访问系统

@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.evolunteer</groupId>
-	<artifactId>e-zhiyuan-platform</artifactId>
+	<artifactId>e-volunteer-platform</artifactId>
 	<version>1.0.0</version>
 	<name>E志愿志愿者服务平台</name>
 	<description>E志愿志愿者服务平台，面向志愿者、志愿者组织与平台管理员，提供志愿活动申报、审核、报名、培训与志愿服务数据统计等功能</description>
