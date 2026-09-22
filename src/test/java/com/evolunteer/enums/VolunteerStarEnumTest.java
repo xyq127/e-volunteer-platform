@@ -6,11 +6,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 志愿者星级枚举单元测试：校验星级认定阈值、成长进度与最高星级的边界。
- */
 class VolunteerStarEnumTest {
 
     @Test

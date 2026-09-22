@@ -8,11 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 平台密码编码器单元测试：校验加盐摘要、相同密码密文不同，以及历史 MD5 密文的兼容校验与升级判定。
- */
 class SecurePasswordEncoderTest {
 
     private final SecurePasswordEncoder passwordEncoder = new SecurePasswordEncoder();

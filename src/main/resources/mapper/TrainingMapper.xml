@@ -3,8 +3,6 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.evolunteer.mapper.TrainingMapper">
-    <!-- E志愿志愿者服务平台 V1.0 志愿培训表 training 的映射文件 -->
-
 
     <resultMap id="BaseResultMap" type="com.evolunteer.entity.Training">
             <id property="trainingNum" column="training_num" jdbcType="INTEGER"/>
@@ -19,7 +17,6 @@
             <result property="trainingIsdeleted" column="training_isdeleted" jdbcType="INTEGER"/>
     </resultMap>
 
-    <!-- 培训安排关联活动名称与已登记培训情况人数的查询结果 -->
     <resultMap id="TrainingViewResultMap" type="com.evolunteer.entity.TrainingView">
         <id property="trainingNum" column="training_num" jdbcType="INTEGER"/>
         <result property="trainingId" column="training_id" jdbcType="VARCHAR"/>
@@ -58,7 +55,6 @@
         and volunteer_training_situation.vtsituation_isdeleted = 0) as situation_count
     </sql>
 
-    <!-- 志愿者组织分页查询本组织申报活动的培训安排，关联活动名称与已登记培训情况人数 -->
     <select id="selectPageByOrganization" resultMap="TrainingViewResultMap">
         select
         <include refid="TrainingView_Column_List"/>
@@ -73,7 +69,6 @@
         order by training.training_begintime desc, training.training_num desc
     </select>
 
-    <!-- 志愿者分页查询本人已通过报名活动对应的培训安排 -->
     <select id="selectPageForVolunteer" resultMap="TrainingViewResultMap">
         select
         <include refid="TrainingView_Column_List"/>
@@ -90,7 +85,6 @@
         order by training.training_begintime desc, training.training_num desc
     </select>
 
-    <!-- 生成下一个培训业务编号的自增序号，业务编号格式为 tra_ + 5 位数字 -->
     <select id="selectNextTrainingSeq" resultType="int">
         select coalesce(max(cast(substring(training_id, 5) as unsigned)), 0) + 1
         from training

@@ -3,8 +3,6 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.evolunteer.mapper.VolunteerShowMapper">
-    <!-- E志愿志愿者服务平台 V1.0 志愿秀表 show 的映射文件 -->
-
 
     <resultMap id="BaseResultMap" type="com.evolunteer.entity.VolunteerShow">
             <id property="showNum" column="show_num" jdbcType="INTEGER"/>
@@ -18,7 +16,6 @@
             <result property="showIsdeleted" column="show_isdeleted" jdbcType="INTEGER"/>
     </resultMap>
 
-    <!-- 志愿者本人志愿秀列表的查询结果，附加未删除图片数量 -->
     <resultMap id="VolunteerShowViewResultMap" type="com.evolunteer.entity.PortalShowView">
         <id property="showNum" column="show_num" jdbcType="INTEGER"/>
         <result property="showId" column="show_id" jdbcType="VARCHAR"/>
@@ -37,7 +34,6 @@
         show_browse,show_like,show_isdeleted
     </sql>
 
-    <!-- 按志愿者分页查询本人发布的志愿秀，并统计未删除图片数量 -->
     <select id="selectPageByVolunteer" resultMap="VolunteerShowViewResultMap">
         select
         <include refid="Base_Column_List"/>,
@@ -50,7 +46,6 @@
         order by show_sharetime desc, show_num desc
     </select>
 
-    <!-- 按志愿秀编号查询未删除的志愿秀 -->
     <select id="selectShowByNum" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
@@ -59,7 +54,6 @@
         and show_isdeleted = 0
     </select>
 
-    <!-- 逻辑删除志愿秀 -->
     <update id="logicDeleteByShowNum">
         update `show`
         set show_isdeleted = 1
@@ -67,7 +61,6 @@
         and show_isdeleted = 0
     </update>
 
-    <!-- 调用数据库存储过程 volunteer_publish_show 发布志愿秀 -->
     <insert id="volunteer_publish_show" statementType="CALLABLE">
         {call volunteer_publish_show(#{volunteerNum,mode=IN,jdbcType=INTEGER},
                                      #{activityNum,mode=IN,jdbcType=INTEGER},
@@ -78,7 +71,6 @@
         }
     </insert>
 
-    <!-- 志愿秀被查看时累加浏览次数 -->
     <update id="increaseBrowse">
         update `show`
         set show_browse = ifnull(show_browse, 0) + 1
@@ -86,7 +78,6 @@
         and show_isdeleted = 0
     </update>
 
-    <!-- 志愿者点赞时累加点赞次数 -->
     <update id="increaseLike">
         update `show`
         set show_like = ifnull(show_like, 0) + 1
@@ -94,7 +85,6 @@
         and show_isdeleted = 0
     </update>
 
-    <!-- 志愿者取消点赞时递减点赞次数，点赞次数已为 0 时不再递减，避免出现负数 -->
     <update id="decreaseLike">
         update `show`
         set show_like = show_like - 1
@@ -103,7 +93,6 @@
         and show_like > 0
     </update>
 
-    <!-- 按点赞记录重新核算点赞次数，使点赞次数始终等于点赞记录行数且不小于 0 -->
     <update id="refreshLikeCount">
         update `show`
         set show_like = (select count(*) from show_like_record

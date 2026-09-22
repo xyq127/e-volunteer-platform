@@ -10,11 +10,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * CSV 导出工具类单元测试：校验字节序标记、字段转义与行分隔。
- */
 class CsvExporterTest {
 
     @Test

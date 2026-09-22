@@ -17,24 +17,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 志愿活动公告业务实现类：志愿者组织只能针对本组织申报的志愿活动发布公告，
- * 公告发布成功后向该活动已通过报名的志愿者发送站内通知，志愿者只能看到本人已报名活动的公告。
- */
 @Slf4j
 @Service
 public class ActivityAnnouncementServiceImpl implements ActivityAnnouncementService {
 
-    /**
-     * 公告业务编号格式，前缀 ann_ 加 5 位自增序号
-     */
     private static final String ANNOUNCEMENT_ID_FORMAT = "ann_%05d";
 
-    /**
-     * 站内通知的接收角色：志愿者
-     */
     private static final String RECEIVER_ROLE_VOLUNTEER = "ROLE_VOLUNTEER";
 
     @Autowired
@@ -52,15 +40,6 @@ public class ActivityAnnouncementServiceImpl implements ActivityAnnouncementServ
     @Autowired
     private NotificationService notificationService;
 
-    /**
-     * 按本组织的志愿活动分页查询活动公告
-     *
-     * @param loginId     志愿者组织登录账号
-     * @param activityNum 活动编号，为 null 时查询本组织的全部活动公告
-     * @param page        页码
-     * @param size        每页条数
-     * @return 活动公告分页结果，已关联活动名称
-     */
     @Override
     public IPage<ActivityAnnouncementView> pageByOrganization(String loginId, Integer activityNum,
                                                               Integer page, Integer size) {
@@ -73,14 +52,6 @@ public class ActivityAnnouncementServiceImpl implements ActivityAnnouncementServ
                 PageSupport.of(page, size), organizationNum, activityNum);
     }
 
-    /**
-     * 志愿者端分页查询本人已报名（待审核、已通过、候补）活动的公告
-     *
-     * @param volunteerNum 志愿者编号
-     * @param page         页码
-     * @param size         每页条数
-     * @return 活动公告分页结果，已关联活动名称
-     */
     @Override
     public IPage<ActivityAnnouncementView> pageForVolunteer(Integer volunteerNum, Integer page, Integer size) {
         if (volunteerNum == null) {
@@ -89,14 +60,6 @@ public class ActivityAnnouncementServiceImpl implements ActivityAnnouncementServ
         return activityAnnouncementMapper.selectPageForVolunteer(PageSupport.of(page, size), volunteerNum);
     }
 
-    /**
-     * 保存活动公告：公告编号为空时新增并生成公告业务编号，同时向该活动已通过报名的志愿者发送站内通知，
-     * 否则修改已有活动公告
-     *
-     * @param loginId      志愿者组织登录账号
-     * @param announcement 活动公告，包含所属活动编号、公告标题与公告内容
-     * @return 返回给用户的中文提示
-     */
     @Override
     public String saveAnnouncement(String loginId, ActivityAnnouncement announcement) {
 
@@ -125,7 +88,7 @@ public class ActivityAnnouncementServiceImpl implements ActivityAnnouncementServ
             announcement.setOrganizationNum(organizationNum);
             announcement.setActannouncementIsdeleted(0);
             activityAnnouncementMapper.insert(announcement);
-            // 公告发布成功后向该活动已通过报名的志愿者发送站内通知
+
             List<String> receiverIds =
                     participationService.approvedVolunteerAccounts(announcement.getActivityNum());
             notificationService.send(receiverIds, RECEIVER_ROLE_VOLUNTEER,
@@ -144,7 +107,7 @@ public class ActivityAnnouncementServiceImpl implements ActivityAnnouncementServ
         if (!belongsToOrganization(organizationNum, exists.getActivityNum())) {
             return "只能修改本组织发布的活动公告";
         }
-        // 修改活动公告时不改动删除标记、业务编号与发布组织
+
         announcement.setActannouncementIsdeleted(null);
         announcement.setActannouncementId(null);
         announcement.setOrganizationNum(organizationNum);
@@ -153,13 +116,6 @@ public class ActivityAnnouncementServiceImpl implements ActivityAnnouncementServ
         return MESSAGE_SAVE_SUCCESS;
     }
 
-    /**
-     * 逻辑删除活动公告，只能删除本组织发布的活动公告
-     *
-     * @param loginId         志愿者组织登录账号
-     * @param announcementNum 公告编号
-     * @return 返回给用户的中文提示
-     */
     @Override
     public String deleteAnnouncement(String loginId, Integer announcementNum) {
 
@@ -182,9 +138,6 @@ public class ActivityAnnouncementServiceImpl implements ActivityAnnouncementServ
         return MESSAGE_DELETE_SUCCESS;
     }
 
-    /**
-     * 判断活动是否属于指定志愿者组织
-     */
     private boolean belongsToOrganization(Integer organizationNum, Integer activityNum) {
         if (activityNum == null) {
             return false;

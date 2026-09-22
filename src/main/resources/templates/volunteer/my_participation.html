@@ -7,34 +7,33 @@
     <link rel="icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <link rel="shortcut icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <title>我的报名 - E志愿志愿者服务平台 V1.0</title>
-    <!-- Font Awesome-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/fontawesome.css">
-    <!-- ico-font-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/icofont.css">
-    <!-- Themify icon-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/themify.css">
-    <!-- Flag icon-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/flag-icon.css">
-    <!-- Feather icon-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/feather-icon.css">
-    <!-- Bootstrap css-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/bootstrap.css">
-    <!-- App css-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/style.css">
-    <!-- Responsive css-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/responsive.css">
 </head>
 <body>
-<!-- Loader starts-->
+
 <div class="loader-wrapper">
     <div class="theme-loader">
         <div class="loader-p"></div>
     </div>
 </div>
-<!-- Loader ends-->
-<!-- page-wrapper Start-->
+
 <div class="page-wrapper compact-wrapper" id="pageWrapper">
-    <!-- Page Header Start-->
+
     <div class="page-main-header">
         <div class="main-header-right row m-0">
             <div class="main-header-left">
@@ -63,10 +62,9 @@
             <div class="d-lg-none mobile-toggle pull-right w-auto"><i data-feather="menu"></i></div>
         </div>
     </div>
-    <!-- Page Header Ends-->
-    <!-- Page Body Start-->
+
     <div class="page-body-wrapper sidebar-icon">
-        <!-- Page Sidebar Start-->
+
         <header class="main-nav">
             <div class="sidebar-user text-center">
                 <a class="setting-primary" href="profile.html"><i data-feather="settings"></i></a>
@@ -119,9 +117,9 @@
                 </div>
             </nav>
         </header>
-        <!-- Page Sidebar Ends-->
+
         <div class="page-body">
-            <!-- Container-fluid starts-->
+
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-xl-12">
@@ -176,10 +174,10 @@
                     </div>
                 </div>
             </div>
-            <!-- Container-fluid Ends-->
+
         </div>
     </div>
-    <!-- 模态框（Modal） start-->
+
     <div class="modal fade" id="checkinModal" tabindex="-1" role="dialog" aria-labelledby="checkinModalLabel"
          aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
@@ -219,26 +217,24 @@
             </div>
         </div>
     </div>
-    <!-- 模态框（Modal） end-->
+
 </div>
-<!-- latest jquery-->
+
 <script src="/console/assets/js/jquery-3.5.1.min.js"></script>
-<!-- feather icon js-->
+
 <script src="/console/assets/js/icons/feather-icon/feather.min.js"></script>
 <script src="/console/assets/js/icons/feather-icon/feather-icon.js"></script>
-<!-- Sidebar jquery-->
+
 <script src="/console/assets/js/sidebar-menu.js"></script>
 <script src="/console/assets/js/config.js"></script>
-<!-- Bootstrap js-->
+
 <script src="/console/assets/js/bootstrap/popper.min.js"></script>
 <script src="/console/assets/js/bootstrap/bootstrap.min.js"></script>
-<!-- Theme js-->
+
 <script src="/console/assets/js/script.js"></script>
 
 <script type="text/javascript">
-    /**
-     * 将后端返回的时间格式化为 yyyy-MM-dd HH:mm
-     */
+
     function formatTime(value) {
         if (!value) {
             return "—";
@@ -246,9 +242,6 @@
         return String(value).replace("T", " ").substring(0, 16);
     }
 
-    /**
-     * 将数值格式化为一位小数，非法数值按 0.0 处理
-     */
     function formatHours(value) {
         var num = Number(value);
         if (isNaN(num)) {
@@ -257,9 +250,6 @@
         return num.toFixed(1);
     }
 
-    /**
-     * 拼接活动的服务时间区间
-     */
     function formatActivityTime(item) {
         var begin = formatTime(item.activityBegintime);
         var end = formatTime(item.activityEndtime);
@@ -269,9 +259,6 @@
         return begin + " ~ " + end;
     }
 
-    /**
-     * 查询当前登录志愿者资料，并刷新侧边栏身份信息
-     */
     function loadProfile() {
         $.ajax({
             url: "/volunteer/profile",
@@ -293,9 +280,6 @@
         });
     }
 
-    /**
-     * 报名状态对应的文字颜色
-     */
     function applyStateHtml(item) {
         var stateClass = "text-muted";
         if (item.participateApplystate === "1") {
@@ -308,9 +292,6 @@
         return '<span class="' + stateClass + '">' + (item.participateApplystateText || "—") + '</span>';
     }
 
-    /**
-     * 服务时长复核状态（null 待复核、1 已确认、2 已驳回）
-     */
     function timecheckHtml(value) {
         if (value !== null && value !== undefined && value !== "" && String(value) === "1") {
             return '<span class="badge badge-success">已确认</span>';
@@ -321,9 +302,6 @@
         return '<span class="badge badge-secondary">待复核</span>';
     }
 
-    /**
-     * 服务记录来源文案：1 平台签到、2 组织补录
-     */
     function sourceHtml(item) {
         if (item.checkinSource === null || item.checkinSource === undefined || item.checkinSource === "") {
             return '<span class="text-muted">—</span>';
@@ -338,9 +316,6 @@
         return '<span class="badge badge-secondary">' + source + '</span>';
     }
 
-    /**
-     * 参加确认状态：空 待确认、1 已确认、2 已放弃
-     */
     function confirmStateHtml(item) {
         var text = item.participateConfirmstateText || "待确认";
         if (item.participateConfirmstate === "1") {
@@ -352,16 +327,10 @@
         return '<span class="text-warning">' + text + '</span>';
     }
 
-    /**
-     * 我的报名分页条件
-     */
     var partPage = 1;
     var partSize = 10;
     var partTotal = 0;
 
-    /**
-     * 渲染分页控件：条数、页码信息与上一页/下一页可用状态
-     */
     function renderPager(total, current, pageSize) {
         partTotal = Number(total);
         if (isNaN(partTotal) || partTotal < 0) {
@@ -382,9 +351,6 @@
         $("#part_next").toggleClass("disabled", partTotal === 0 || currentPage >= totalPages);
     }
 
-    /**
-     * 翻页：step 为 1 下一页、-1 上一页
-     */
     function changePartPage(step) {
         var nextPage = partPage + step;
         var totalPages = partTotal > 0 ? Math.ceil(partTotal / partSize) : 1;
@@ -395,9 +361,6 @@
         loadParticipations();
     }
 
-    /**
-     * 操作列按钮：确认参加、放弃参加（待确认时）、签到、签退、撤回报名与公告入口
-     */
     function actionHtml(item) {
         var buttons = "";
         if (item.canConfirm) {
@@ -422,9 +385,6 @@
         return buttons;
     }
 
-    /**
-     * 渲染我的报名列表
-     */
     function renderParticipations(participations) {
         var html = "";
         if (!participations || participations.length === 0) {
@@ -449,9 +409,6 @@
         $("#participation_table").html(html);
     }
 
-    /**
-     * 加载我的报名列表
-     */
     function loadParticipations() {
         $.ajax({
             url: "/volunteer/myParticipations",
@@ -473,9 +430,6 @@
         });
     }
 
-    /**
-     * 获取浏览器当前定位，取不到时返回空经纬度
-     */
     function getPosition(callback) {
         if (!navigator.geolocation) {
             callback("", "");
@@ -488,9 +442,6 @@
         }, {enableHighAccuracy: true, timeout: 10000, maximumAge: 0});
     }
 
-    /**
-     * 打开签到弹窗前的准备：记录活动编号并清空上次填写内容
-     */
     function prepareCheckin(activityNum) {
         $("#checkin_activity_num").val(activityNum);
         $("#checkin_code").val("");
@@ -498,9 +449,6 @@
         $("#checkin_longitude").val("");
     }
 
-    /**
-     * 将浏览器定位结果填充到签到弹窗的经纬度输入框
-     */
     function fillCheckinLocation() {
         getPosition(function (latitude, longitude) {
             if (latitude === "" || longitude === "") {
@@ -512,9 +460,6 @@
         });
     }
 
-    /**
-     * 关闭签到弹窗
-     */
     function hideCheckinModal() {
         var modalElement = document.getElementById("checkinModal");
         if (window.bootstrap && bootstrap.Modal && modalElement) {
@@ -525,9 +470,6 @@
         }
     }
 
-    /**
-     * 提交签到（活动编号 + 现场签到码 + 定位）
-     */
     function submitCheckin() {
         var code = $.trim($("#checkin_code").val());
         if (!code) {
@@ -557,9 +499,6 @@
         });
     }
 
-    /**
-     * 签退：先获取定位，再提交签退
-     */
     function checkoutActivity(activityNum) {
         getPosition(function (latitude, longitude) {
             $.ajax({
@@ -579,9 +518,6 @@
         });
     }
 
-    /**
-     * 撤回报名
-     */
     function cancelParticipation(participateNum) {
         if (!confirm("确认撤回该志愿活动的报名？")) {
             return;
@@ -602,9 +538,6 @@
         });
     }
 
-    /**
-     * 确认参加或放弃参加已通过审核的报名（confirmState：1 确认参加、2 放弃参加）
-     */
     function confirmParticipation(participateNum, confirmState) {
         var tip = confirmState === 1
             ? "确认参加该志愿活动？"

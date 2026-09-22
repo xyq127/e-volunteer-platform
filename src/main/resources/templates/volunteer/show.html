@@ -7,34 +7,33 @@
     <link rel="icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <link rel="shortcut icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <title>志愿秀 - E志愿志愿者服务平台 V1.0</title>
-    <!-- Font Awesome-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/fontawesome.css">
-    <!-- ico-font-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/icofont.css">
-    <!-- Themify icon-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/themify.css">
-    <!-- Flag icon-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/flag-icon.css">
-    <!-- Feather icon-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/feather-icon.css">
-    <!-- Bootstrap css-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/bootstrap.css">
-    <!-- App css-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/style.css">
-    <!-- Responsive css-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/responsive.css">
 </head>
 <body>
-<!-- Loader starts-->
+
 <div class="loader-wrapper">
     <div class="theme-loader">
         <div class="loader-p"></div>
     </div>
 </div>
-<!-- Loader ends-->
-<!-- page-wrapper Start-->
+
 <div class="page-wrapper compact-wrapper" id="pageWrapper">
-    <!-- Page Header Start-->
+
     <div class="page-main-header">
         <div class="main-header-right row m-0">
             <div class="main-header-left">
@@ -63,10 +62,9 @@
             <div class="d-lg-none mobile-toggle pull-right w-auto"><i data-feather="menu"></i></div>
         </div>
     </div>
-    <!-- Page Header Ends-->
-    <!-- Page Body Start-->
+
     <div class="page-body-wrapper sidebar-icon">
-        <!-- Page Sidebar Start-->
+
         <header class="main-nav">
             <div class="sidebar-user text-center">
                 <a class="setting-primary" href="profile.html"><i data-feather="settings"></i></a>
@@ -119,9 +117,9 @@
                 </div>
             </nav>
         </header>
-        <!-- Page Sidebar Ends-->
+
         <div class="page-body">
-            <!-- Container-fluid starts-->
+
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-xl-12">
@@ -209,28 +207,26 @@
                     </div>
                 </div>
             </div>
-            <!-- Container-fluid Ends-->
+
         </div>
     </div>
 </div>
-<!-- latest jquery-->
+
 <script src="/console/assets/js/jquery-3.5.1.min.js"></script>
-<!-- feather icon js-->
+
 <script src="/console/assets/js/icons/feather-icon/feather.min.js"></script>
 <script src="/console/assets/js/icons/feather-icon/feather-icon.js"></script>
-<!-- Sidebar jquery-->
+
 <script src="/console/assets/js/sidebar-menu.js"></script>
 <script src="/console/assets/js/config.js"></script>
-<!-- Bootstrap js-->
+
 <script src="/console/assets/js/bootstrap/popper.min.js"></script>
 <script src="/console/assets/js/bootstrap/bootstrap.min.js"></script>
-<!-- Theme js-->
+
 <script src="/console/assets/js/script.js"></script>
 
 <script type="text/javascript">
-    /**
-     * 将后端返回的时间格式化为 yyyy-MM-dd HH:mm
-     */
+
     function formatTime(value) {
         if (!value) {
             return "—";
@@ -238,16 +234,10 @@
         return String(value).replace("T", " ").substring(0, 16);
     }
 
-    /**
-     * 志愿秀分页条件
-     */
     var showPage = 1;
     var showSize = 10;
     var showTotal = 0;
 
-    /**
-     * 查询当前登录志愿者资料，并刷新侧边栏身份信息
-     */
     function loadProfile() {
         $.ajax({
             url: "/volunteer/profile",
@@ -269,9 +259,6 @@
         });
     }
 
-    /**
-     * 加载可关联的活动下拉项：仅本人已通过报名的活动
-     */
     function loadActivityOptions() {
         $.ajax({
             url: "/volunteer/myParticipations",
@@ -300,9 +287,6 @@
         });
     }
 
-    /**
-     * 渲染本人志愿秀列表
-     */
     function renderShows(shows) {
         var html = "";
         if (!shows || shows.length === 0) {
@@ -331,9 +315,6 @@
         $("#show_table").html(html);
     }
 
-    /**
-     * 渲染分页控件：条数、页码信息与上一页/下一页可用状态
-     */
     function renderPager(total, current, pageSize) {
         showTotal = Number(total);
         if (isNaN(showTotal) || showTotal < 0) {
@@ -354,9 +335,6 @@
         $("#show_next").toggleClass("disabled", showTotal === 0 || currentPage >= totalPages);
     }
 
-    /**
-     * 加载本人发布的志愿秀
-     */
     function loadShows() {
         $.ajax({
             url: "/volunteer/content/shows",
@@ -378,9 +356,6 @@
         });
     }
 
-    /**
-     * 志愿秀翻页：step 为 1 下一页、-1 上一页
-     */
     function changeShowPage(step) {
         var nextPage = showPage + step;
         var totalPages = showTotal > 0 ? Math.ceil(showTotal / showSize) : 1;
@@ -391,18 +366,12 @@
         loadShows();
     }
 
-    /**
-     * 清空发布表单
-     */
     function resetShowForm() {
         $("#show_detail").val("");
         $("#show_activity").val("");
         $("#show_pictures").val("");
     }
 
-    /**
-     * 发布志愿秀：先创建志愿秀拿到编号，再逐张上传现场图片
-     */
     function publishShow() {
         var detail = $.trim($("#show_detail").val());
         if (!detail) {
@@ -438,9 +407,6 @@
         });
     }
 
-    /**
-     * 逐张上传志愿秀图片，全部处理完成后统一提示并刷新列表
-     */
     function uploadPicture(showNum, files, index, publishMsg) {
         if (index >= files.length) {
             finishPublish(publishMsg);
@@ -470,9 +436,6 @@
         });
     }
 
-    /**
-     * 结束发布流程：恢复按钮、提示结果并刷新本人志愿秀列表
-     */
     function finishPublish(msg) {
         $("#btn_publish_show").prop("disabled", false);
         alert(msg);

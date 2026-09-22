@@ -2,11 +2,6 @@ package com.evolunteer.enums;
 
 import lombok.Getter;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 操作审计类型枚举：统一关键操作的编码与中文名称，供审计日志记录与查询页面展示使用。
- */
 @Getter
 public enum AuditActionEnum {
 
@@ -30,14 +25,8 @@ public enum AuditActionEnum {
     ANNOUNCEMENT_DELETE("ANNOUNCEMENT_DELETE", "删除通知公告"),
     SHOW_DELETE("SHOW_DELETE", "删除志愿秀");
 
-    /**
-     * 操作类型编码
-     */
     private final String actionCode;
 
-    /**
-     * 操作类型名称
-     */
     private final String actionName;
 
     AuditActionEnum(String actionCode, String actionName) {
@@ -45,12 +34,6 @@ public enum AuditActionEnum {
         this.actionName = actionName;
     }
 
-    /**
-     * 按编码查询操作类型名称
-     *
-     * @param actionCode 操作类型编码
-     * @return 操作类型名称，编码为空或不合法时返回原编码
-     */
     public static String nameOf(String actionCode) {
         for (AuditActionEnum action : values()) {
             if (action.actionCode.equals(actionCode)) {

@@ -24,35 +24,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 活动报名业务实现类：志愿者报名、撤回报名与参加确认，志愿者组织审核与移除报名，
- * 以及参加确认到期自动释放名额，均通过数据库存储过程完成，保证名额校验、候补递补与信用分约束在同一事务内生效；
- * 关键结果同时写入站内通知，便于志愿者与志愿者组织及时获知。
- */
 @Slf4j
 @Service
 public class ParticipationServiceImpl extends ServiceImpl<ParticipationMapper, Participation> implements ParticipationService {
 
-    /**
-     * 报名审核状态：待审核
-     */
     private static final String APPLY_STATE_PENDING = "0";
 
-    /**
-     * 报名审核状态：已通过
-     */
     private static final String APPLY_STATE_APPROVED = "1";
 
-    /**
-     * 报名审核状态：未通过
-     */
     private static final String APPLY_STATE_REJECTED = "2";
 
-    /**
-     * 报名审核状态：候补
-     */
     private static final String APPLY_STATE_WAITING = "3";
 
     @Autowired
@@ -67,26 +48,11 @@ public class ParticipationServiceImpl extends ServiceImpl<ParticipationMapper, P
     @Autowired
     private NotificationService notificationService;
 
-    /**
-     * 查询指定活动下已报名的志愿者列表
-     *
-     * @param activityNum 活动编号
-     * @return 报名记录列表，已关联志愿者基本信息
-     */
     @Override
     public List<Participation> getVolunteerList(Integer activityNum) {
         return baseMapper.selectParticipateWithVolunteerByActivityNum(activityNum);
     }
 
-    /**
-     * 按活动分页查询报名志愿者名单
-     *
-     * @param activityNum 活动编号
-     * @param keyword     志愿者编号、姓名或手机号关键字，可为空
-     * @param pageNum     页码
-     * @param pageSize    每页条数
-     * @return 报名记录分页结果
-     */
     @Override
     public IPage<Participation> pageVolunteerList(Integer activityNum, String keyword,
                                                   Integer pageNum, Integer pageSize) {
@@ -99,25 +65,11 @@ public class ParticipationServiceImpl extends ServiceImpl<ParticipationMapper, P
         return result;
     }
 
-    /**
-     * 查询指定活动已通过报名的志愿者登录账号
-     *
-     * @param activityNum 活动编号
-     * @return 志愿者登录账号列表
-     */
     @Override
     public List<String> approvedVolunteerAccounts(Integer activityNum) {
         return baseMapper.selectApprovedVolunteerAccounts(activityNum);
     }
 
-    /**
-     * 查询志愿者的报名记录，并按当前状态标记可签到、可签退、可撤回与可确认
-     *
-     * @param volunteerNum 志愿者编号
-     * @param pageNum      页码
-     * @param pageSize     每页条数
-     * @return 报名记录视图分页结果
-     */
     @Override
     public IPage<VolunteerParticipationView> pageVolunteerParticipations(Integer volunteerNum,
                                                                         Integer pageNum, Integer pageSize) {
@@ -130,13 +82,6 @@ public class ParticipationServiceImpl extends ServiceImpl<ParticipationMapper, P
         return result;
     }
 
-    /**
-     * 志愿者报名志愿活动：校验信用分、报名截止时间与名额，名额已满时进入候补队列
-     *
-     * @param volunteerNum 志愿者编号
-     * @param activityNum  活动编号
-     * @return 处理结果，包含提示信息 msg 与处理标记 ok
-     */
     @Override
     public Map<Object, Object> applyActivity(Integer volunteerNum, Integer activityNum) {
 
@@ -156,13 +101,6 @@ public class ParticipationServiceImpl extends ServiceImpl<ParticipationMapper, P
         return map;
     }
 
-    /**
-     * 志愿者撤回报名：已通过的报名释放名额并自动递补候补队列中的第一位志愿者
-     *
-     * @param participateNum 报名编号
-     * @param volunteerNum   志愿者编号
-     * @return 处理结果，包含提示信息 msg 与处理标记 ok
-     */
     @Override
     public Map<Object, Object> cancelParticipate(Integer participateNum, Integer volunteerNum) {
         Map<Object, Object> map = new HashMap<>();
@@ -172,14 +110,6 @@ public class ParticipationServiceImpl extends ServiceImpl<ParticipationMapper, P
         return map;
     }
 
-    /**
-     * 志愿者确认参加或放弃参加，放弃时释放名额并自动递补候补志愿者
-     *
-     * @param participateNum 报名编号
-     * @param volunteerNum   志愿者编号
-     * @param confirmState   确认状态（1 确认参加、2 放弃参加）
-     * @return 处理结果，包含提示信息 msg 与处理标记 ok
-     */
     @Override
     public Map<Object, Object> confirmParticipate(Integer participateNum, Integer volunteerNum,
                                                   Integer confirmState) {
@@ -196,13 +126,6 @@ public class ParticipationServiceImpl extends ServiceImpl<ParticipationMapper, P
         return map;
     }
 
-    /**
-     * 志愿者组织移除本组织活动名单中的报名
-     *
-     * @param loginId        志愿者组织登录账号
-     * @param participateNum 报名编号
-     * @return 处理结果，包含提示信息 msg 与处理标记 ok
-     */
     @Override
     public Map<Object, Object> removeParticipate(String loginId, Integer participateNum) {
 
@@ -221,11 +144,6 @@ public class ParticipationServiceImpl extends ServiceImpl<ParticipationMapper, P
         return map;
     }
 
-    /**
-     * 释放未按期确认参加的报名名额，并记录释放数量
-     *
-     * @return 处理结果，包含释放数量 releasedCount
-     */
     @Override
     public Map<Object, Object> releaseUnconfirmedParticipations() {
 
@@ -239,12 +157,6 @@ public class ParticipationServiceImpl extends ServiceImpl<ParticipationMapper, P
         return map;
     }
 
-    /**
-     * 写入志愿者组织对报名申请的审核结果，并通知志愿者审核结果
-     *
-     * @param map 审核参数，包含报名编号与审核结果
-     * @return 存储过程返回的处理结果信息
-     */
     @Override
     public Object volCheckRecruit(Map<Object, Object> map) {
 
@@ -272,18 +184,15 @@ public class ParticipationServiceImpl extends ServiceImpl<ParticipationMapper, P
         return map.get("msg");
     }
 
-    /**
-     * 填充报名记录的状态文案与可执行操作标记
-     */
     private void fillOperationFlags(VolunteerParticipationView participation) {
 
         String applyState = participation.getParticipateApplystate();
         boolean approved = APPLY_STATE_APPROVED.equals(applyState);
-        // 一次报名只对应一组签到签退记录，已签到过的报名不再提供签到入口
+
         boolean notCheckedIn = participation.getCheckinBegintime() == null;
         boolean pendingCheckout = participation.getCheckinBegintime() != null
                 && participation.getCheckinEndtime() == null;
-        // 已结束的活动不再提供签到入口，具体的签到时间窗口由签到存储过程统一校验
+
         boolean activityOpen = ("1".equals(participation.getActivityState())
                 || "2".equals(participation.getActivityState()))
                 && participation.getActivityEndtime() != null
@@ -302,9 +211,6 @@ public class ParticipationServiceImpl extends ServiceImpl<ParticipationMapper, P
                 && activityOpen);
     }
 
-    /**
-     * 将报名审核状态转为页面展示文案
-     */
     private String applyStateText(String applyState) {
         if (APPLY_STATE_APPROVED.equals(applyState)) {
             return "已通过";
@@ -318,9 +224,6 @@ public class ParticipationServiceImpl extends ServiceImpl<ParticipationMapper, P
         return "待审核";
     }
 
-    /**
-     * 将参加确认状态转为页面展示文案
-     */
     private String confirmStateText(String confirmState) {
         if ("1".equals(confirmState)) {
             return "已确认参加";
@@ -331,9 +234,6 @@ public class ParticipationServiceImpl extends ServiceImpl<ParticipationMapper, P
         return "待确认";
     }
 
-    /**
-     * 向志愿者组织通知志愿者的参加确认结果
-     */
     private void notifyConfirmResult(Integer participateNum, Integer confirmState, String msg) {
 
         Participation participation = baseMapper.selectById(participateNum);
@@ -349,17 +249,11 @@ public class ParticipationServiceImpl extends ServiceImpl<ParticipationMapper, P
                 title + activity.getActivityName(), msg);
     }
 
-    /**
-     * 查询活动信息
-     */
     private Activity findActivity(Integer activityNum) {
         List<Activity> activities = activityMapper.selectByActivityNum(activityNum);
         return activities.isEmpty() ? null : activities.get(0);
     }
 
-    /**
-     * 查询活动所属志愿者组织的登录账号
-     */
     private String organizationAccountOf(Activity activity) {
         if (activity == null || activity.getOrganizationNum() == null) {
             return null;
@@ -368,9 +262,6 @@ public class ParticipationServiceImpl extends ServiceImpl<ParticipationMapper, P
         return organization == null ? null : organization.getOrganizationId();
     }
 
-    /**
-     * 查询志愿者编号对应的登录账号
-     */
     private String volunteerAccountOf(Integer volunteerNum) {
         if (volunteerNum == null) {
             return null;
@@ -379,9 +270,6 @@ public class ParticipationServiceImpl extends ServiceImpl<ParticipationMapper, P
         return volunteer == null ? null : volunteer.getVolunteerId();
     }
 
-    /**
-     * 判断存储过程返回的处理结果是否成功
-     */
     private boolean isSuccess(Map<Object, Object> map) {
         Object ok = map.get("ok");
         return ok != null && ((Number) ok).intValue() == 1;

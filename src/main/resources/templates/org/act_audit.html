@@ -7,34 +7,33 @@
     <link rel="icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <link rel="shortcut icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <title>审核中的活动 - E志愿志愿者服务平台 V1.0</title>
-    <!-- Font Awesome-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/fontawesome.css">
-    <!-- ico-font-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/icofont.css">
-    <!-- Themify icon-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/themify.css">
-    <!-- Flag icon-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/flag-icon.css">
-    <!-- Feather icon-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/feather-icon.css">
-    <!-- Bootstrap css-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/bootstrap.css">
-    <!-- App css-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/style.css">
-    <!-- Responsive css-->
+
     <link rel="stylesheet" type="text/css" href="/console/assets/css/responsive.css">
 </head>
 <body>
-<!-- Loader starts-->
+
 <div class="loader-wrapper">
     <div class="theme-loader">
         <div class="loader-p"></div>
     </div>
 </div>
-<!-- Loader ends-->
-<!-- page-wrapper Start-->
+
 <div class="page-wrapper compact-wrapper" id="pageWrapper">
-    <!-- Page Header Start-->
+
     <div class="page-main-header">
         <div class="main-header-right row m-0">
             <div class="main-header-left">
@@ -67,10 +66,9 @@
             <div class="d-lg-none mobile-toggle pull-right w-auto"><i data-feather="menu"></i></div>
         </div>
     </div>
-    <!-- Page Header Ends-->
-    <!-- Page Body Start-->
+
     <div class="page-body-wrapper sidebar-icon">
-        <!-- Page Sidebar Start-->
+
         <header class="main-nav">
             <div class="sidebar-user text-center">
                 <a class="setting-primary" href="org_info.html"><i data-feather="settings"></i></a>
@@ -138,7 +136,7 @@
                 </div>
             </nav>
         </header>
-        <!-- Page Sidebar Ends-->
+
         <div class="page-body">
             <div class="container-fluid">
                 <div class="row">
@@ -183,7 +181,7 @@
                 </div>
             </div>
         </div>
-        <!-- 活动详情模态框 start-->
+
         <div class="modal fade" id="activityModal" tabindex="-1" role="dialog" aria-labelledby="activityModalLabel"
              aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered" role="document">
@@ -249,27 +247,25 @@
                 </div>
             </div>
         </div>
-        <!-- 活动详情模态框 end-->
+
     </div>
 </div>
-<!-- latest jquery-->
+
 <script src="/console/assets/js/jquery-3.5.1.min.js"></script>
-<!-- feather icon js-->
+
 <script src="/console/assets/js/icons/feather-icon/feather.min.js"></script>
 <script src="/console/assets/js/icons/feather-icon/feather-icon.js"></script>
-<!-- Sidebar jquery-->
+
 <script src="/console/assets/js/sidebar-menu.js"></script>
 <script src="/console/assets/js/config.js"></script>
-<!-- Bootstrap js-->
+
 <script src="/console/assets/js/bootstrap/popper.min.js"></script>
 <script src="/console/assets/js/bootstrap/bootstrap.min.js"></script>
-<!-- Theme js-->
+
 <script src="/console/assets/js/script.js"></script>
 
 <script type="text/javascript">
-    /**
-     * 将后端返回的时间格式化为 yyyy-MM-dd HH:mm
-     */
+
     function formatTime(value) {
         if (!value) {
             return "—";
@@ -277,9 +273,6 @@
         return String(value).replace("T", " ").substring(0, 16);
     }
 
-    /**
-     * 将时间转换为 datetime-local 输入框需要的 yyyy-MM-ddTHH:mm
-     */
     function toDateTimeInput(value) {
         if (!value) {
             return "";
@@ -287,9 +280,6 @@
         return String(value).replace(" ", "T").substring(0, 16);
     }
 
-    /**
-     * 将 datetime-local 输入框的值转换为接口需要的 yyyy-MM-dd HH:mm
-     */
     function toApiTime(value) {
         if (!value) {
             return "";
@@ -297,9 +287,6 @@
         return String(value).replace("T", " ");
     }
 
-    /**
-     * 通用分页控件渲染：holderId 为分页容器编号，onChange 接收目标页码
-     */
     function renderPager(holderId, total, page, size, onChange) {
         total = Number(total) || 0;
         page = Number(page) || 1;
@@ -328,9 +315,6 @@
         });
     }
 
-    /**
-     * 分页响应统一取值：list 当前页数据、total 总条数、page 当前页、size 每页条数
-     */
     function pageData(result, fallbackPage, fallbackSize) {
         var extend = (result && result.extend) ? result.extend : {};
         var total = Number(extend.total);
@@ -344,9 +328,6 @@
         };
     }
 
-    /**
-     * 统一提示文案：优先使用接口返回的 msg，纯文本响应直接展示
-     */
     function tip(result, fallback) {
         if (result && result.msg) {
             return result.msg;
@@ -357,9 +338,6 @@
         return fallback;
     }
 
-    /**
-     * 查询顶部未读消息数量
-     */
     function loadUnreadCount() {
         $.ajax({
             url: "/org/notifications/unreadCount",
@@ -374,14 +352,10 @@
         });
     }
 
-    /** 当前页码、每页条数与检索关键字 */
     var page = 1, size = 10, keyword = "";
-    /** 活动详情模态框实例 */
+
     var activityModal = null;
 
-    /**
-     * 渲染审核中的活动列表
-     */
     function renderActivityTable(list) {
         var tabValue = "";
         $.each(list, function (index, item) {
@@ -407,9 +381,6 @@
         $("#activity_table tbody").html(tabValue);
     }
 
-    /**
-     * 加载当前组织的审核中活动
-     */
     function load() {
         $.ajax({
             url: "/activity/findAuditActivityByNumAndState",
@@ -429,9 +400,6 @@
         });
     }
 
-    /**
-     * 查看活动详情
-     */
     function activityInfo(activityNum) {
         $.ajax({
             url: "/activity/activityInfo",
@@ -463,9 +431,6 @@
         });
     }
 
-    /**
-     * 删除审核中的活动，删除后重新加载当前页
-     */
     function auditActivityDelete(activityNum) {
         if (!confirm("确定删除该活动吗？删除后不可恢复。")) {
             return;

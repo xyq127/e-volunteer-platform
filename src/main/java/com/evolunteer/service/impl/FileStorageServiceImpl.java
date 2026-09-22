@@ -18,49 +18,22 @@ import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 文件存储业务实现类：文件按“随机存储名.扩展名”保存在配置的上传目录中，
- * 仅允许白名单内的扩展名，下载时按严格的存储名规则解析路径，避免目录穿越。
- */
 @Slf4j
 @Service
 public class FileStorageServiceImpl implements FileStorageService {
 
-    /**
-     * 允许上传的文件扩展名
-     */
     private static final List<String> ALLOWED_EXTENSIONS =
             Arrays.asList("jpg", "jpeg", "png", "gif", "pdf", "doc", "docx", "xls", "xlsx", "txt", "zip");
 
-    /**
-     * 单个文件大小上限（字节）
-     */
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-    /**
-     * 存储名格式：由字母、数字、短横线组成的主体加上扩展名
-     */
     private static final Pattern STORED_NAME_PATTERN = Pattern.compile("[A-Za-z0-9-]{1,64}\\.[A-Za-z0-9]{1,8}");
 
-    /**
-     * 文件访问路径前缀
-     */
     private static final String DOWNLOAD_PREFIX = "/file/download/";
 
-    /**
-     * 上传目录，部署环境可通过环境变量 EVOLUNTEER_UPLOAD_DIR 覆盖
-     */
     @Value("${evolunteer.upload.dir}")
     private String uploadDir;
 
-    /**
-     * 保存上传文件
-     *
-     * @param file 上传文件
-     * @return 文件存储名
-     */
     @Override
     public String store(MultipartFile file) {
 
@@ -90,12 +63,6 @@ public class FileStorageServiceImpl implements FileStorageService {
         return storedName;
     }
 
-    /**
-     * 读取存储文件
-     *
-     * @param storedName 文件存储名
-     * @return 文件资源
-     */
     @Override
     public Resource load(String storedName) {
         Path path = resolve(storedName);
@@ -105,12 +72,6 @@ public class FileStorageServiceImpl implements FileStorageService {
         return new FileSystemResource(path);
     }
 
-    /**
-     * 删除存储文件
-     *
-     * @param storedName 文件存储名
-     * @return 删除成功或文件本来就不存在时返回 true
-     */
     @Override
     public boolean delete(String storedName) {
         try {
@@ -121,20 +82,11 @@ public class FileStorageServiceImpl implements FileStorageService {
         }
     }
 
-    /**
-     * 生成文件访问路径
-     *
-     * @param storedName 文件存储名
-     * @return 页面可直接使用的下载路径
-     */
     @Override
     public String routeOf(String storedName) {
         return DOWNLOAD_PREFIX + storedName;
     }
 
-    /**
-     * 解析存储名对应的文件路径，存储名不合法时直接拒绝
-     */
     private Path resolve(String storedName) {
         if (storedName == null || !STORED_NAME_PATTERN.matcher(storedName).matches()) {
             throw new IllegalArgumentException("文件标识不合法");
@@ -147,9 +99,6 @@ public class FileStorageServiceImpl implements FileStorageService {
         return path;
     }
 
-    /**
-     * 取文件名扩展名，统一转为小写
-     */
     private String extensionOf(String fileName) {
         int index = fileName.lastIndexOf('.');
         if (index < 0 || index == fileName.length() - 1) {

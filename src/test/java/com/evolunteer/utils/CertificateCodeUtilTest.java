@@ -7,16 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 志愿服务证明校验码工具类单元测试：校验码长度、稳定性与对数据变动的敏感性。
- */
 class CertificateCodeUtilTest {
 
-    /**
-     * 测试使用的平台密钥
-     */
     private static final String SECRET = "evolunteer-test-secret";
 
     @Test

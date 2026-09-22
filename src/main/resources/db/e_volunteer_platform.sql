@@ -1,25 +1,9 @@
--- =============================================================================
--- E志愿志愿者服务平台 V1.0 数据库脚本
--- 数据库：MySQL 8.0
--- 内容：数据库创建、业务表创建、存储过程创建、初始化数据
--- 执行方式：mysql -uroot -p < e_volunteer_platform.sql
--- 说明：脚本除基础志愿活动管理对象外，还包含志愿者工作台、可信签到与时长核算、
---       智能供需匹配、报名候补与信用、电子服务证明等突破能力所需的数据对象。
--- =============================================================================
-
--- 连接字符集与库、表的字符集保持一致，避免存储过程参数与字段比较时出现字符集冲突
 SET NAMES utf8mb4 COLLATE utf8mb4_general_ci;
 
 DROP DATABASE IF EXISTS e_volunteer_platform;
 CREATE DATABASE e_volunteer_platform DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE e_volunteer_platform;
 
-
--- -----------------------------------------------------------------------------
--- 1. 志愿者表：保存志愿者的编号、姓名、联系方式，以及技能标签之外的服务信用信息
---    volunteer_credit 志愿服务信用分（初始 100，通过时长复核加分、爽约扣分）
---    volunteer_totalduration 已核定累计服务时长（小时），仅统计经志愿者组织复核通过的时长
--- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS volunteer;
 CREATE TABLE volunteer
 (
@@ -43,9 +27,6 @@ CREATE TABLE volunteer
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='志愿者表';
 
--- -----------------------------------------------------------------------------
--- 2. 志愿者技能表：保存志愿者登记的服务技能标签，与活动技能要求求交实现供需匹配
--- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS volunteer_skill;
 CREATE TABLE volunteer_skill
 (
@@ -57,9 +38,6 @@ CREATE TABLE volunteer_skill
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='志愿者技能表';
 
--- -----------------------------------------------------------------------------
--- 3. 志愿者组织表：保存志愿者组织的账号、名称、成立日期与组织简介
--- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS organization;
 CREATE TABLE organization
 (
@@ -74,9 +52,6 @@ CREATE TABLE organization
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='志愿者组织表';
 
--- -----------------------------------------------------------------------------
--- 4. 平台管理员表：保存平台管理员的账号、密码与姓名
--- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS admin;
 CREATE TABLE admin
 (
@@ -88,9 +63,6 @@ CREATE TABLE admin
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='平台管理员表';
 
--- -----------------------------------------------------------------------------
--- 5. 统一用户表：保存志愿者、志愿者组织与平台管理员的登录账号、密码密文与角色权限
--- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS e_user;
 CREATE TABLE e_user
 (
@@ -102,13 +74,6 @@ CREATE TABLE e_user
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='统一用户表';
 
--- -----------------------------------------------------------------------------
--- 6. 志愿活动表：保存志愿者组织申报的志愿活动及其审核、开展状态
---    activity_checkin_secret 签到密钥，平台按签到密钥与时间窗口派生短时轮换的现场签到码
---    activity_latitude/activity_longitude/activity_radius 活动地点与签到地理围栏
---    activity_reason_code 审核不通过的结构化原因，activity_revision 申报被退回后修改提交的次数
---    activity_settle_time 活动结算时间，结算后统计爽约并计入志愿者信用
--- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS activity;
 CREATE TABLE activity
 (
@@ -145,9 +110,6 @@ CREATE TABLE activity
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='志愿活动表';
 
--- -----------------------------------------------------------------------------
--- 7. 活动技能表：保存志愿活动所需的技能标签，用于志愿者与活动的匹配度计算
--- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS activity_skill;
 CREATE TABLE activity_skill
 (
@@ -159,11 +121,6 @@ CREATE TABLE activity_skill
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='活动技能表';
 
--- -----------------------------------------------------------------------------
--- 8. 活动报名表：保存志愿者报名志愿活动的申请、审核与志愿服务时长信息
---    报名审核状态 participate_applystate：0 待审核、1 已通过、2 未通过、3 候补
---    participate_noshow 爽约标记，活动结算时对已通过但无签退记录的报名置 1
--- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS participate;
 CREATE TABLE participate
 (
@@ -189,12 +146,6 @@ CREATE TABLE participate
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='活动报名表';
 
--- -----------------------------------------------------------------------------
--- 9. 志愿服务签到表：保存志愿者参与志愿服务的签到签退时间、定位与时长
---    checkin_code 签到使用的现场签到码，checkin_distance/checkin_outdistance 签到签退时与活动地点的距离（米）
---    checkin_flag 轨迹标记，1 正常、2 异常待复核（超出地理围栏或缺少定位）
---    checkin_timecheck 时长复核状态，空 待复核、1 已确认、2 已驳回
--- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS checkin;
 CREATE TABLE checkin
 (
@@ -227,9 +178,6 @@ CREATE TABLE checkin
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='志愿服务签到表';
 
--- -----------------------------------------------------------------------------
--- 10. 志愿培训表：保存志愿活动对应的培训安排
--- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS training;
 CREATE TABLE training
 (
@@ -248,9 +196,6 @@ CREATE TABLE training
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='志愿培训表';
 
--- -----------------------------------------------------------------------------
--- 11. 志愿者培训情况表：保存志愿者参加志愿培训的情况
--- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS volunteer_training_situation;
 CREATE TABLE volunteer_training_situation
 (
@@ -267,9 +212,6 @@ CREATE TABLE volunteer_training_situation
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='志愿者培训情况表';
 
--- -----------------------------------------------------------------------------
--- 12. 志愿活动公告表：保存志愿者组织针对志愿活动发布的公告
--- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS act_announcement;
 CREATE TABLE act_announcement
 (
@@ -285,9 +227,6 @@ CREATE TABLE act_announcement
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='志愿活动公告表';
 
--- -----------------------------------------------------------------------------
--- 13. 通知公告表：保存平台管理员发布的通知公告
--- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS policy_announcement;
 CREATE TABLE policy_announcement
 (
@@ -302,9 +241,6 @@ CREATE TABLE policy_announcement
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='通知公告表';
 
--- -----------------------------------------------------------------------------
--- 14. 公告附件表：保存通知公告对应的附件文件信息
--- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS policy_file;
 CREATE TABLE policy_file
 (
@@ -320,9 +256,6 @@ CREATE TABLE policy_file
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='公告附件表';
 
--- -----------------------------------------------------------------------------
--- 15. 志愿秀表：保存志愿者分享的志愿服务经历及其浏览、点赞数据
--- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS `show`;
 CREATE TABLE `show`
 (
@@ -340,9 +273,6 @@ CREATE TABLE `show`
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='志愿秀表';
 
--- -----------------------------------------------------------------------------
--- 16. 志愿秀图片表：保存志愿秀内容对应的图片文件信息
--- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS show_picture;
 CREATE TABLE show_picture
 (
@@ -358,9 +288,6 @@ CREATE TABLE show_picture
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='志愿秀图片表';
 
--- -----------------------------------------------------------------------------
--- 17. 志愿秀点赞记录表：记录志愿者对志愿秀的点赞，保证同一志愿者对同一志愿秀只计一次
--- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS show_like_record;
 CREATE TABLE show_like_record
 (
@@ -372,9 +299,6 @@ CREATE TABLE show_like_record
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='志愿秀点赞记录表';
 
--- -----------------------------------------------------------------------------
--- 18. 站内通知表：保存平台向志愿者、志愿者组织发送的站内通知，支撑报名、审核、复核、提醒等消息触达
--- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS notification;
 CREATE TABLE notification
 (
@@ -391,9 +315,6 @@ CREATE TABLE notification
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='站内通知表';
 
--- -----------------------------------------------------------------------------
--- 19. 操作审计表：记录平台管理员与志愿者组织的关键操作，便于事后追溯与责任界定
--- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS audit_log;
 CREATE TABLE audit_log
 (
@@ -412,11 +333,6 @@ CREATE TABLE audit_log
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='操作审计表';
 
--- -----------------------------------------------------------------------------
--- 20. 时长异常规则表：保存服务时长异常检测规则的阈值与开关，规则由存储过程读取后执行
---     rule_threshold 含义：SINGLE_DAY_TOTAL 为单日累计小时上限、SINGLE_RECORD 为单条小时上限、
---     NIGHT_SERVICE 为夜间起始小时、MANUAL_BATCH 为同一报名补录条数上限
--- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS anomaly_rule;
 CREATE TABLE anomaly_rule
 (
@@ -430,14 +346,8 @@ CREATE TABLE anomaly_rule
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='时长异常规则表';
 
--- =============================================================================
--- 存储过程与函数
--- =============================================================================
 DELIMITER $$
 
--- -----------------------------------------------------------------------------
--- 志愿者注册：写入志愿者信息、生成志愿者编号并开通登录账号
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS volunteer_insert $$
 CREATE PROCEDURE volunteer_insert(IN volunteerName VARCHAR(50),
                                   IN volunteerTel VARCHAR(20),
@@ -460,15 +370,12 @@ BEGIN
         SET newNum = LAST_INSERT_ID();
         SET newVolunteerId = CONCAT('vol_', LPAD(newNum, 5, '0'));
         UPDATE volunteer SET volunteer_id = newVolunteerId WHERE volunteer_num = newNum;
-        -- 注册即开通登录账号，志愿者可凭注册编号进入个人工作台
+
         INSERT INTO e_user(id, password, role) VALUES (newVolunteerId, volunteerPassword, 'ROLE_VOLUNTEER');
         SET volunteerId = newVolunteerId;
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 活动技能标签维护：按逗号分隔的技能标签重建活动的技能要求
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS activity_skill_replace $$
 CREATE PROCEDURE activity_skill_replace(IN targetActivityNum INT, IN skillNames VARCHAR(200))
 BEGIN
@@ -495,9 +402,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 志愿活动申报：志愿者组织申报志愿活动，写入技能标签与签到围栏，申报后进入审核中状态
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS organization_insert_activity $$
 CREATE PROCEDURE organization_insert_activity(IN loginId VARCHAR(32),
                                               IN activityName VARCHAR(100),
@@ -538,7 +442,7 @@ BEGIN
                 activityLatitude, activityLongitude, IFNULL(activityRadius, 300),
                 0);
         SET newNum = LAST_INSERT_ID();
-        -- 现场签到码由签到密钥与时间窗口派生，每个活动生成独立的随机密钥
+
         SET newSecret = UPPER(SUBSTRING(SHA2(CONCAT(newNum, RAND(), NOW(), UUID()), 256), 1, 32));
         UPDATE activity
         SET activity_id = CONCAT('act_', LPAD(newNum, 5, '0')),
@@ -549,9 +453,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 志愿活动审核：平台管理员审核志愿活动，审核不通过时必须给出结构化的原因
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS admin_check_activity $$
 CREATE PROCEDURE admin_check_activity(IN loginId VARCHAR(32),
                                       IN activityNum INT,
@@ -589,9 +490,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 志愿活动重新申报：志愿者组织针对审核未通过的活动修改后重新提交审核
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS organization_revise_activity $$
 CREATE PROCEDURE organization_revise_activity(IN loginId VARCHAR(32),
                                               IN activityNum INT,
@@ -666,9 +564,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 报名审核：志愿者组织审核志愿者的活动报名申请，审核通过前校验活动剩余名额
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS organization_check_volunteer $$
 CREATE PROCEDURE organization_check_volunteer(IN participateNum INT,
                                               IN isPass INT,
@@ -690,7 +585,7 @@ BEGIN
     ELSEIF applyState NOT IN ('0', '3') THEN
         SET msg = '该报名申请已处理，无需重复审核';
     ELSEIF isPass = 1 THEN
-        -- 加锁读取活动名额，避免并发审核导致通过人数超出需求人数
+
         SELECT activity_needpeople INTO needPeople FROM activity WHERE activity_num = activityNumValue FOR UPDATE;
         SELECT COUNT(*) INTO approvedCount
         FROM participate
@@ -716,9 +611,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 活动报名：志愿者报名志愿活动，校验信用分、报名截止时间与名额，满员进入候补队列
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS volunteer_apply_activity $$
 CREATE PROCEDURE volunteer_apply_activity(IN volunteerNum INT,
                                           IN activityNum INT,
@@ -789,9 +681,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 撤回报名：志愿者撤回报名，已通过的报名释放名额并自动递补候补队列中的第一位志愿者
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS volunteer_cancel_participate $$
 CREATE PROCEDURE volunteer_cancel_participate(IN participateNum INT,
                                               IN volunteerNum INT,
@@ -856,9 +745,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 志愿者签到：校验现场签到码、签到时间窗口与地理围栏，写入签到轨迹
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS volunteer_checkin $$
 CREATE PROCEDURE volunteer_checkin(IN volunteerNum INT,
                                    IN activityNum INT,
@@ -893,7 +779,6 @@ BEGIN
     WHERE activity_num = activityNum
       AND activity_isdeleted = 0;
 
-    -- 现场签到码每 120 秒轮换一次，接受当前与上一个时间窗口，兼容志愿者输入耗时与时钟偏差
     SET rotationIndex = FLOOR(UNIX_TIMESTAMP(NOW()) / 120);
 
     SELECT participate_num INTO participateNumValue
@@ -923,7 +808,7 @@ BEGIN
         IF pendingCount > 0 THEN
             SET msg = '您已签到，请在活动结束后签退';
         ELSEIF checkedInCount > 0 THEN
-            -- 一次报名只对应一组签到签退记录，避免重复签到造成服务时长重复累计
+
             SET msg = '您已完成该活动的签到签退，服务时长待志愿者组织复核，无需重复签到';
         ELSEIF NOW() < DATE_SUB(activityBegintimeValue, INTERVAL 60 MINUTE) THEN
             SET msg = '签到尚未开始，请在活动开始前 60 分钟内签到';
@@ -934,7 +819,7 @@ BEGIN
                 AND UPPER(TRIM(inputCode)) <> activity_checkin_code(activitySecret, activityNum, rotationIndex - 1)) THEN
             SET msg = '签到码不正确或已过期，请向活动负责人确认当前签到码';
         ELSE
-            -- 计算签到位置与活动地点的球面距离，超出地理围栏则标记为异常待复核
+
             IF activityLatitudeValue IS NOT NULL AND activityLongitudeValue IS NOT NULL
                 AND inputLatitude IS NOT NULL AND inputLongitude IS NOT NULL THEN
                 SET distanceValue = ROUND(ST_Distance_Sphere(
@@ -944,7 +829,7 @@ BEGIN
                     SET flag = '2';
                 END IF;
             ELSE
-                -- 活动地点或签到定位缺失，无法验证位置，交由志愿者组织复核
+
                 SET flag = '2';
             END IF;
 
@@ -968,9 +853,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 志愿者签退：按签到签退时间自动核算服务时长，异常时长标记后交志愿者组织复核
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS volunteer_checkout $$
 CREATE PROCEDURE volunteer_checkout(IN volunteerNum INT,
                                     IN activityNum INT,
@@ -1032,7 +914,6 @@ BEGIN
                     POINT(inputLongitude, inputLatitude)), 0);
         END IF;
 
-        -- 时长过短或远超活动计划时长、以及签到阶段已标记的异常，均保留异常标记交由组织复核
         IF checkinFlagValue = '2' OR duration < 0.5 OR duration > planDuration * 2 + 1 THEN
             SET flagValue = '2';
         END IF;
@@ -1059,9 +940,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 服务时长复核：志愿者组织确认或驳回签到核算出的服务时长，确认后计入累计时长并奖励信用分
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS organization_check_checkin $$
 CREATE PROCEDURE organization_check_checkin(IN checkinNum INT,
                                             IN isPass INT,
@@ -1086,20 +964,20 @@ BEGIN
     WHERE checkin_num = checkinNum;
 
     IF sourceValue = '2' THEN
-        -- 志愿者组织补录的记录由平台管理员复核，避免录入与复核由同一方完成
+
         SET msg = '该记录为志愿者组织补录，需由平台管理员复核';
     ELSEIF participateNumValue IS NULL THEN
         SET msg = '未找到对应的签到记录';
     ELSEIF timecheckValue IS NOT NULL THEN
         SET msg = '该服务时长已复核，无需重复处理';
     ELSEIF objectConfirmValue = '2' THEN
-        -- 服务对象已否认该次服务，责任方不能直接确认时长，需由平台管理员裁定
+
         SET msg = '服务对象已否认该次服务，请核实后联系平台管理员处理';
     ELSEIF isPass = 1 THEN
         CALL service_anomaly_check(checkinNum, anomalyCode, anomalyMessage);
 
         IF anomalyCode IS NOT NULL THEN
-            -- 命中时长异常规则：本次不计入累计时长，转平台管理员裁定
+
             UPDATE checkin
             SET checkin_anomaly = anomalyCode,
                 checkin_remark  = remark
@@ -1146,9 +1024,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 活动结算：活动结束后结算考勤，对已通过报名但未签退的志愿者记爽约并扣减信用分
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS organization_settle_activity $$
 CREATE PROCEDURE organization_settle_activity(IN activityNum INT,
                                               OUT msg VARCHAR(200),
@@ -1186,7 +1061,7 @@ BEGIN
         SET msg = '未找到对应的志愿活动';
     ELSEIF settleTime IS NOT NULL THEN
         SET msg = '该志愿活动已完成结算，无需重复结算';
-    -- 活动已由志愿者组织人工置为已结束时，允许在计划结束时间之前结算
+
     ELSEIF activityStateValue <> '3' AND (activityEndtimeValue IS NULL OR NOW() < activityEndtimeValue) THEN
         SET msg = '活动尚未结束，暂不能结算考勤';
     ELSE
@@ -1213,9 +1088,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 活动状态流转：按活动时间自动把未开始的活动置为进行中、把到期的活动置为已结束
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS activity_state_refresh $$
 CREATE PROCEDURE activity_state_refresh(OUT startedCount INT, OUT finishedCount INT)
 BEGIN
@@ -1237,9 +1109,6 @@ BEGIN
     SET finishedCount = ROW_COUNT();
 END $$
 
--- -----------------------------------------------------------------------------
--- 活动状态人工流转：志愿者组织将本组织申报的活动置为进行中或已结束
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS organization_change_activity_state $$
 CREATE PROCEDURE organization_change_activity_state(IN loginId VARCHAR(32),
                                                     IN activityNum INT,
@@ -1286,9 +1155,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 服务时长补录：志愿者组织为未在平台签到的服务补录时长，提交平台管理员复核
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS organization_record_service_hours $$
 CREATE PROCEDURE organization_record_service_hours(IN loginId VARCHAR(32),
                                                    IN participateNum INT,
@@ -1348,7 +1214,6 @@ BEGIN
                 VALUES (participateNum, beginTime, endTime, durationValue, '2', '1', remark);
                 SET newCheckinNum = LAST_INSERT_ID();
 
-                -- 补录同样接受时长异常规则检测，命中规则的记录在管理员裁定前不计入累计时长
                 CALL service_anomaly_check(newCheckinNum, anomalyCode, anomalyMessage);
                 IF anomalyCode IS NOT NULL THEN
                     UPDATE checkin SET checkin_anomaly = anomalyCode WHERE checkin_num = newCheckinNum;
@@ -1363,10 +1228,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 服务时长裁定：平台管理员复核志愿者组织补录的服务时长，以及命中异常规则的平台签到记录
---   补录记录由平台管理员复核（录入与复核分离）；平台签到记录命中时长异常规则时同样转平台管理员裁定
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS admin_check_checkin $$
 CREATE PROCEDURE admin_check_checkin(IN loginId VARCHAR(32),
                                      IN checkinNum INT,
@@ -1418,7 +1279,7 @@ BEGIN
 
         IF isPass = 1 THEN
             IF timecheckValue = '1' THEN
-                -- 已计入的异常记录：裁定维持计入，仅记录裁定意见
+
                 UPDATE checkin
                 SET checkin_adminremark   = remark,
                     checkin_anomalyremark = remark
@@ -1446,7 +1307,7 @@ BEGIN
             END IF;
             SET ok = 1;
         ELSEIF timecheckValue = '1' THEN
-            -- 已计入的异常记录被驳回：冲销已计入的时长与信用分
+
             UPDATE checkin
             SET checkin_timecheck     = '3',
                 checkin_checktime     = NOW(),
@@ -1484,9 +1345,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 移除报名：志愿者组织移除本组织活动名单中的报名，已通过的报名释放名额并递补
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS organization_remove_participate $$
 CREATE PROCEDURE organization_remove_participate(IN loginId VARCHAR(32),
                                                  IN participateNum INT,
@@ -1553,9 +1411,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 参加确认：志愿者确认参加或放弃已通过的活动报名，放弃时释放名额并递补
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS volunteer_confirm_participate $$
 CREATE PROCEDURE volunteer_confirm_participate(IN participateNum INT,
                                                IN volunteerNum INT,
@@ -1623,10 +1478,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 参加确认到期：活动开始前 24 小时仍未确认的报名自动释放名额并递补候补志愿者
---   报名通过后至少保留 12 小时确认时间，避免临时发布的活动把已报名志愿者直接判定为放弃
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS participate_confirm_expire $$
 CREATE PROCEDURE participate_confirm_expire(OUT releasedCount INT)
 BEGIN
@@ -1690,9 +1541,6 @@ BEGIN
     CLOSE expireCursor;
 END $$
 
--- -----------------------------------------------------------------------------
--- 开通组织账号：平台管理员创建志愿者组织账号，同时写入组织信息与登录账号
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS admin_create_organization $$
 CREATE PROCEDURE admin_create_organization(IN loginId VARCHAR(32),
                                            IN organizationId VARCHAR(32),
@@ -1734,9 +1582,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 账号启停：平台管理员停用或启用组织账号与志愿者账号
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS admin_set_account_enabled $$
 CREATE PROCEDURE admin_set_account_enabled(IN loginId VARCHAR(32),
                                            IN accountId VARCHAR(32),
@@ -1781,9 +1626,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 志愿秀发布：志愿者分享志愿服务经历，可关联本人已通过报名的活动
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS volunteer_publish_show $$
 CREATE PROCEDURE volunteer_publish_show(IN volunteerNum INT,
                                         IN activityNum INT,
@@ -1824,10 +1666,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 现场签到码派生函数：由活动签到密钥、活动编号与时间窗口序号派生短时轮换的签到码
---   每 120 秒为一个时间窗口，签到码为 8 位字符（字符集剔除易混淆的 0、1、I、O）
--- -----------------------------------------------------------------------------
 DROP FUNCTION IF EXISTS activity_checkin_code $$
 CREATE FUNCTION activity_checkin_code(secret VARCHAR(32), activityNum INT, rotationIndex BIGINT)
     RETURNS VARCHAR(16)
@@ -1850,10 +1688,6 @@ BEGIN
     RETURN checkinCode;
 END $$
 
--- -----------------------------------------------------------------------------
--- 时长异常规则检测：按异常规则表的阈值判断一条服务记录是否命中异常规则
---   命中时返回规则编码与说明，由调用方决定是否计入累计时长（当前实现为转平台管理员裁定）
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS service_anomaly_check $$
 CREATE PROCEDURE service_anomaly_check(IN checkinNum INT,
                                        OUT anomalyCode VARCHAR(32),
@@ -1879,7 +1713,6 @@ BEGIN
     JOIN participate p ON p.participate_num = c.participate_num
     WHERE c.checkin_num = checkinNum;
 
-    -- 规则阈值由异常规则表配置，未配置或已停用时沿用默认阈值
     SELECT rule_threshold INTO singleRecordLimit
     FROM anomaly_rule WHERE rule_code = 'SINGLE_RECORD' AND rule_enabled = 1 LIMIT 1;
     SELECT rule_threshold INTO singleDayLimit
@@ -1894,7 +1727,6 @@ BEGIN
     ELSE
         SET serviceDate = DATE(beginValue);
 
-        -- 单日已计入时长（不含本记录）+ 本记录时长
         SELECT IFNULL(SUM(c.checkin_duration), 0) INTO dayTotal
         FROM checkin c
         JOIN participate p ON p.participate_num = c.participate_num
@@ -1931,9 +1763,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 服务确认单：志愿者组织为一条已确认的服务记录生成服务确认码，交给服务对象核对
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS organization_issue_confirm_sheet $$
 CREATE PROCEDURE organization_issue_confirm_sheet(IN loginId VARCHAR(32),
                                                   IN checkinNum INT,
@@ -1988,10 +1817,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 服务对象确认：服务对象使用确认码与本人手机号确认或否认本次服务（无需登录）
---   确认为正向补强；否认时若该时长已计入累计时长，平台立即冲销并通知志愿者组织核实
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS service_object_confirm $$
 CREATE PROCEDURE service_object_confirm(IN inputCode VARCHAR(16),
                                         IN inputPhone VARCHAR(20),
@@ -2041,7 +1866,7 @@ BEGIN
             WHERE checkin_num = checkinNumValue;
 
             IF timecheckValue = '1' THEN
-                -- 已计入累计时长的记录被否认时立即冲销，冲销只执行一次
+
                 UPDATE checkin SET checkin_timecheck = '3' WHERE checkin_num = checkinNumValue;
 
                 SELECT COUNT(*) INTO confirmedCount
@@ -2072,9 +1897,6 @@ BEGIN
     END IF;
 END $$
 
--- -----------------------------------------------------------------------------
--- 异常时长巡检：定时标记单日已计入时长超过上限的服务记录，供平台管理员裁定
--- -----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS service_anomaly_scan $$
 CREATE PROCEDURE service_anomaly_scan(OUT flaggedCount INT)
 BEGIN
@@ -2105,13 +1927,6 @@ BEGIN
 END $$
 
 DELIMITER ;
-
--- =============================================================================
--- 初始化数据
--- 平台管理员账号：admin_001，初始密码：123456
--- 志愿者组织账号：org_001、org_002，初始密码：123456
--- 志愿者账号：vol_00001 ~ vol_00004，初始密码：123456
--- =============================================================================
 
 INSERT INTO admin(admin_id, admin_name)
 VALUES ('admin_001', '王敏');
@@ -2204,7 +2019,6 @@ VALUES (1, 'act_00001', '社区爱心助学志愿活动',
         '请穿着便于活动的服装，注意食品卫生。', '2026-09-20 09:00:00', '2026-10-28 18:00:00', '1',
         1, '现场签到', 'A6C2E84F1B973D50E2A6C4F89B1D7350', 31.3000000, 121.6000000, 500, '2026-09-20 15:00:00', '审核通过', NULL, 0, NULL, 0);
 
--- 为未单独指定签到密钥的历史活动补充随机密钥，保证每个活动都能派生轮换签到码
 UPDATE activity
 SET activity_checkin_secret = UPPER(SUBSTRING(SHA2(CONCAT(activity_num, RAND(), NOW(), UUID()), 256), 1, 32))
 WHERE activity_checkin_secret IS NULL;

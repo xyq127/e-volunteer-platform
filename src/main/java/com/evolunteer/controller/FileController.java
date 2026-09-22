@@ -13,12 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 文件下载控制器：按文件存储名以附件方式下载公告附件与志愿秀图片，
- * 存储名不合法或文件不存在时返回 404，避免暴露上传目录结构。
- */
 @Slf4j
 @Controller
 @RequestMapping(value = "/file")
@@ -27,12 +21,6 @@ public class FileController {
     @Autowired
     FileStorageService fileStorageService;
 
-    /**
-     * 按存储名下载文件
-     *
-     * @param storedName 文件存储名
-     * @return 文件流，文件标识不合法或文件不存在时返回 404
-     */
     @RequestMapping(value = "/download/{storedName}", method = RequestMethod.GET)
     @ResponseBody
     public ResponseEntity<Resource> download(@PathVariable(value = "storedName") String storedName) {

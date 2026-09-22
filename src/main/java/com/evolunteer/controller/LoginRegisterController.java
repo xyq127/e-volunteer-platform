@@ -9,11 +9,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 注册控制器：提供志愿者注册手机号查重以及志愿者注册能力。
- */
 @Slf4j
 @Controller
 @RequestMapping(value = "/loginRegisterController")
@@ -22,26 +17,12 @@ public class LoginRegisterController {
     @Autowired
     VolunteerService volunteerService;
 
-    /**
-     * 校验注册手机号是否已被使用
-     *
-     * @param signUpTel 注册手机号
-     * @return 手机号可用返回 true，已被注册返回 false
-     */
     @RequestMapping(value = "/checkSignUpTel", method = RequestMethod.GET)
     @ResponseBody
     public boolean checkSignUpTel(@RequestParam(value = "signUpTel") String signUpTel) {
         return volunteerService.checkSignupTel(signUpTel) <= 0;
     }
 
-    /**
-     * 注册志愿者
-     *
-     * @param signUpName     志愿者姓名
-     * @param signUpTel      注册手机号
-     * @param signUpPassword 登录密码
-     * @return 新注册志愿者的志愿者编号
-     */
     @RequestMapping(value = "/signUp", method = RequestMethod.POST)
     @ResponseBody
     public String signUp(@RequestParam(value = "signUpName") String signUpName,

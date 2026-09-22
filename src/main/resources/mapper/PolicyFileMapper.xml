@@ -3,8 +3,6 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.evolunteer.mapper.PolicyFileMapper">
-    <!-- E志愿志愿者服务平台 V1.0 公告附件表 policy_file 的映射文件 -->
-
 
     <resultMap id="BaseResultMap" type="com.evolunteer.entity.PolicyFile">
             <id property="policyfileNum" column="policyfile_num" jdbcType="INTEGER"/>
@@ -22,7 +20,6 @@
         policyfile_isdeleted
     </sql>
 
-    <!-- 按公告查询附件列表，按附件编号升序排列 -->
     <select id="selectByAnnouncementNum" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>

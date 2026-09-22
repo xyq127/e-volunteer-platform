@@ -13,12 +13,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 平台定时任务：按活动时间自动流转活动状态，并释放活动开始前仍未确认参加的报名名额。
- * 两个任务都只做幂等的批量更新与状态释放，重复执行不会产生重复数据处理。
- */
 @Slf4j
 @Component
 public class PlatformTaskScheduler {
@@ -38,9 +32,6 @@ public class PlatformTaskScheduler {
     @Autowired
     private AdminMapper adminMapper;
 
-    /**
-     * 活动状态自动流转与未确认报名释放，默认每分钟执行一次
-     */
     @Scheduled(fixedDelayString = "${evolunteer.schedule.interval-ms:60000}", initialDelay = 10000)
     public void refreshActivityStateAndParticipateConfirm() {
         try {
@@ -63,11 +54,6 @@ public class PlatformTaskScheduler {
         }
     }
 
-    /**
-     * 异常时长巡检标记后通知平台管理员处理
-     *
-     * @param flaggedCount 本次标记的记录数
-     */
     private void notifyAdminsOfAnomaly(int flaggedCount) {
         for (Admin admin : adminMapper.selectList(null)) {
             notificationService.send(admin.getAdminId(), "ROLE_ADMIN", "异常服务时长待裁定",
@@ -75,9 +61,6 @@ public class PlatformTaskScheduler {
         }
     }
 
-    /**
-     * 把存储过程的数值出参转为整数
-     */
     private int toInt(Object value) {
         return value == null ? 0 : ((Number) value).intValue();
     }

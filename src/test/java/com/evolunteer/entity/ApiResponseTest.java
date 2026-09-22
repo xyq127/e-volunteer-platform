@@ -9,11 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 统一响应结果类单元测试：校验成功/失败状态码、提示信息与业务数据装载。
- */
 class ApiResponseTest {
 
     @Test

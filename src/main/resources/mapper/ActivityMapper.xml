@@ -2,7 +2,7 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<!-- E志愿志愿者服务平台 V1.0 志愿活动表 activity 的映射文件 -->
+
 <mapper namespace="com.evolunteer.mapper.ActivityMapper">
 
     <resultMap id="BaseResultMap" type="com.evolunteer.entity.Activity">
@@ -53,7 +53,6 @@
         </if>
     </sql>
 
-    <!-- 调用数据库存储过程 organization_insert_activity 写入志愿者组织申报的志愿活动 -->
     <insert id="organization_insert_activity" statementType="CALLABLE">
         {call organization_insert_activity(#{loginId,mode=IN,jdbcType=VARCHAR},
                                            #{activityName,mode=IN,jdbcType=VARCHAR},
@@ -72,7 +71,6 @@
         }
     </insert>
 
-    <!-- 调用数据库存储过程 admin_check_activity 写入平台管理员的活动审核结果 -->
     <insert id="admin_check_activity" statementType="CALLABLE">
         {call admin_check_activity(#{loginId,mode=IN,jdbcType=VARCHAR},
                                    #{activityNum,mode=IN,jdbcType=NUMERIC},
@@ -83,7 +81,6 @@
         }
     </insert>
 
-    <!-- 调用数据库存储过程 organization_revise_activity 将审核未通过的活动修改后重新提交审核 -->
     <insert id="organization_revise_activity" statementType="CALLABLE">
         {call organization_revise_activity(#{loginId,mode=IN,jdbcType=VARCHAR},
                                            #{activityNum,mode=IN,jdbcType=NUMERIC},
@@ -103,7 +100,6 @@
         }
     </insert>
 
-    <!-- 调用数据库存储过程 organization_change_activity_state 人工流转活动状态 -->
     <insert id="organization_change_activity_state" statementType="CALLABLE">
         {call organization_change_activity_state(#{loginId,mode=IN,jdbcType=VARCHAR},
                                                  #{activityNum,mode=IN,jdbcType=NUMERIC},
@@ -113,14 +109,12 @@
         }
     </insert>
 
-    <!-- 调用数据库存储过程 activity_state_refresh 按活动时间自动流转活动状态 -->
     <insert id="activity_state_refresh" statementType="CALLABLE">
         {call activity_state_refresh(#{startedCount,mode=OUT,jdbcType=INTEGER},
                                      #{finishedCount,mode=OUT,jdbcType=INTEGER})
         }
     </insert>
 
-    <!-- 按志愿者组织与活动状态分页查询活动 -->
     <select id="selectPageByOrganizationAndState" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
@@ -132,7 +126,6 @@
         order by activity_begintime desc, activity_num desc
     </select>
 
-    <!-- 按活动状态分页查询平台内活动 -->
     <select id="selectPageByState" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
@@ -143,7 +136,6 @@
         order by activity_publishtime desc, activity_num desc
     </select>
 
-    <!-- 按志愿者组织编号、活动状态查询未删除的活动 -->
     <select id="selectAllByOrganizationNumAndActivityStateAndActivityIsdeleted" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
@@ -154,7 +146,6 @@
         AND activity_isdeleted = #{activityIsdeleted,jdbcType=NUMERIC}
     </select>
 
-    <!-- 按活动状态查询平台内未删除的活动，供平台管理员审核使用 -->
     <select id="selectAllByActivityStateAndActivityIsdeleted" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
@@ -164,7 +155,6 @@
         AND activity_isdeleted = #{activityIsdeleted,jdbcType=NUMERIC}
     </select>
 
-    <!-- 按活动编号查询活动详情 -->
     <select id="selectByActivityNum" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
@@ -172,7 +162,6 @@
         where activity_num = #{activityNum,jdbcType=NUMERIC}
     </select>
 
-    <!-- 按活动名称精确查询活动 -->
     <select id="selectAllByActivityName" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
@@ -187,14 +176,12 @@
         where activity_name = #{activityName,jdbcType=VARCHAR}
     </select>
 
-    <!-- 更新志愿活动的签到密钥，重新生成签到码即更换密钥 -->
     <update id="updateActivityCheckinSecret">
         update activity
         set activity_checkin_secret = #{activityCheckinSecret,jdbcType=VARCHAR}
         where activity_num = #{activityNum,jdbcType=NUMERIC}
     </update>
 
-    <!-- 按签到密钥与当前时间窗口派生签到码，并给出该签到码的剩余有效秒数 -->
     <select id="selectCheckinCodeInfo" resultType="com.evolunteer.entity.CheckinCodeView">
         select
         activity_num as activityNum,
@@ -207,7 +194,6 @@
           and activity_isdeleted = 0
     </select>
 
-    <!-- 逻辑删除活动 -->
     <update id="updateActivityIsdeletedByActivityNum">
         update activity
         set activity_isdeleted = #{activityIsdeleted,jdbcType=NUMERIC}

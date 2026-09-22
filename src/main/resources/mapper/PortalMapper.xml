@@ -3,9 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.evolunteer.mapper.PortalMapper">
-    <!-- E志愿志愿者服务平台 V1.0 公众门户数据的映射文件，仅提供只读查询 -->
 
-    <!-- 门户通知公告的查询结果，附件列表由服务层按公告编号装配 -->
     <resultMap id="PortalAnnouncementResultMap" type="com.evolunteer.entity.PortalAnnouncementView">
         <id property="policyannouncementNum" column="policyannouncement_num" jdbcType="INTEGER"/>
         <result property="policyannouncementId" column="policyannouncement_id" jdbcType="VARCHAR"/>
@@ -16,7 +14,6 @@
         <result property="fileCount" column="file_count" jdbcType="INTEGER"/>
     </resultMap>
 
-    <!-- 门户公开志愿活动的查询结果，不包含签到码、地理围栏与审核意见等内部数据 -->
     <resultMap id="PortalActivityResultMap" type="com.evolunteer.entity.Activity">
         <id property="activityNum" column="activity_num" jdbcType="INTEGER"/>
         <result property="organizationNum" column="organization_num" jdbcType="INTEGER"/>
@@ -34,7 +31,6 @@
         <result property="activityCheckin" column="activity_checkin" jdbcType="VARCHAR"/>
     </resultMap>
 
-    <!-- 门户志愿者组织的查询结果 -->
     <resultMap id="PortalOrganizationResultMap" type="com.evolunteer.entity.Organization">
         <id property="organizationNum" column="organization_num" jdbcType="INTEGER"/>
         <result property="organizationId" column="organization_id" jdbcType="VARCHAR"/>
@@ -43,7 +39,6 @@
         <result property="organizationIntroduction" column="organization_introduction" jdbcType="VARCHAR"/>
     </resultMap>
 
-    <!-- 门户志愿秀的查询结果：关联分享志愿者姓名、关联活动名称与首图访问路径 -->
     <resultMap id="PortalShowResultMap" type="com.evolunteer.entity.PortalShowView">
         <id property="showNum" column="show_num" jdbcType="INTEGER"/>
         <result property="showId" column="show_id" jdbcType="VARCHAR"/>
@@ -107,7 +102,6 @@
         limit 1) as picture_route
     </sql>
 
-    <!-- 分页查询门户通知公告，并统计每条公告的附件数量 -->
     <select id="selectAnnouncementPage" resultMap="PortalAnnouncementResultMap">
         select
         <include refid="PortalAnnouncement_Column_List"/>,
@@ -123,7 +117,6 @@
         order by announcement.policyannouncement_num desc
     </select>
 
-    <!-- 按公告编号查询门户公告详情 -->
     <select id="selectAnnouncementByNum" resultMap="PortalAnnouncementResultMap">
         select
         <include refid="PortalAnnouncement_Column_List"/>,
@@ -135,7 +128,6 @@
         and announcement.policyannouncement_num = #{policyannouncementNum,jdbcType=INTEGER}
     </select>
 
-    <!-- 按公告编号批量查询附件，供门户公告列表一次性装配附件 -->
     <select id="selectFilesByAnnouncementNums" resultType="com.evolunteer.entity.PolicyFile">
         select
         policyfile_num as policyfileNum,
@@ -154,7 +146,6 @@
         order by policyfile_num asc
     </select>
 
-    <!-- 分页查询门户公开志愿活动，仅展示未开始与进行中且未删除的活动 -->
     <select id="selectActivityPage" resultMap="PortalActivityResultMap">
         select
         <include refid="PortalActivity_Column_List"/>
@@ -168,7 +159,6 @@
         order by activity.activity_begintime asc, activity.activity_num desc
     </select>
 
-    <!-- 分页查询门户志愿者组织 -->
     <select id="selectOrganizationPage" resultMap="PortalOrganizationResultMap">
         select
         organization.organization_num,
@@ -185,7 +175,6 @@
         order by organization.organization_num asc
     </select>
 
-    <!-- 分页查询门户志愿秀，关联分享志愿者姓名、关联活动名称与首图访问路径 -->
     <select id="selectShowPage" resultMap="PortalShowResultMap">
         select
         <include refid="PortalShow_Column_List"/>
@@ -200,7 +189,6 @@
         order by content.show_sharetime desc, content.show_num desc
     </select>
 
-    <!-- 按志愿秀编号查询门户志愿秀详情 -->
     <select id="selectShowByNum" resultMap="PortalShowResultMap">
         select
         <include refid="PortalShow_Column_List"/>
@@ -211,7 +199,6 @@
         and content.show_num = #{showNum,jdbcType=INTEGER}
     </select>
 
-    <!-- 按志愿秀编号查询全部图片访问路径 -->
     <select id="selectPictureRoutes" resultType="java.lang.String">
         select picture.picture_route
         from show_picture picture
@@ -220,7 +207,6 @@
         order by picture.picture_num asc
     </select>
 
-    <!-- 查询志愿者在指定志愿秀范围内已点赞的志愿秀编号 -->
     <select id="selectLikedShowNums" resultType="java.lang.Integer">
         select record.show_num
         from show_like_record record

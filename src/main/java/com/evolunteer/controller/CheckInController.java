@@ -21,12 +21,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 可信服务记录控制器：志愿者使用现场签到码并携带定位完成签到签退；
- * 志愿者组织分页查询签到轨迹、复核平台签到记录的服务时长，并为线下服务补录时长（补录由平台管理员复核）。
- */
 @Slf4j
 @Controller
 @RequestMapping(value = "/checkin")
@@ -41,16 +35,6 @@ public class CheckInController {
     @Autowired
     AuditLogService auditLogService;
 
-    /**
-     * 志愿者签到：校验现场签到码、签到时间窗口与地理围栏
-     *
-     * @param activityNum    活动编号
-     * @param code           现场签到码
-     * @param latitude       签到地点纬度，未获取到定位时可不传
-     * @param longitude      签到地点经度，未获取到定位时可不传
-     * @param authentication 当前登录用户信息
-     * @return 处理结果，异常轨迹的标记见 flag 字段
-     */
     @RequestMapping(value = "/in", method = RequestMethod.POST)
     @ResponseBody
     public ApiResponse checkin(@RequestParam(value = "activityNum") Integer activityNum,
@@ -76,15 +60,6 @@ public class CheckInController {
         return ApiResponse.success(msg).add("flag", result.get("flag"));
     }
 
-    /**
-     * 志愿者签退：按签到签退时间自动核算服务时长
-     *
-     * @param activityNum    活动编号
-     * @param latitude       签退地点纬度，未获取到定位时可不传
-     * @param longitude      签退地点经度，未获取到定位时可不传
-     * @param authentication 当前登录用户信息
-     * @return 处理结果，本次服务时长见 duration 字段
-     */
     @RequestMapping(value = "/out", method = RequestMethod.POST)
     @ResponseBody
     public ApiResponse checkout(@RequestParam(value = "activityNum") Integer activityNum,
@@ -108,16 +83,6 @@ public class CheckInController {
         return ApiResponse.success(msg).add("duration", result.get("duration"));
     }
 
-    /**
-     * 分页查询活动的服务记录，供志愿者组织复核
-     *
-     * @param activityNum 活动编号
-     * @param page        页码
-     * @param size        每页条数
-     * @param state       复核状态，0 待复核、1 已确认、2 已驳回
-     * @param source      记录来源，1 平台签到、2 组织补录
-     * @return 服务记录分页结果
-     */
     @RequestMapping(value = "/reviewList", method = RequestMethod.GET)
     @ResponseBody
     public ApiResponse reviewList(@RequestParam(value = "activityNum") Integer activityNum,
@@ -128,16 +93,6 @@ public class CheckInController {
         return PageSupport.toResponse(checkInService.pageCheckinRecords(activityNum, state, source, page, size));
     }
 
-    /**
-     * 志愿者组织复核平台签到记录的服务时长，确认后时长计入志愿者累计服务时长
-     *
-     * @param checkinNum  签到编号
-     * @param isPass      复核结果（1 确认时长、2 驳回）
-     * @param remark      复核意见
-     * @param request     请求对象
-     * @param auth        当前登录用户信息
-     * @return 处理结果
-     */
     @RequestMapping(value = "/review", method = RequestMethod.POST)
     @ResponseBody
     public ApiResponse review(@RequestParam(value = "checkinNum") Integer checkinNum,
@@ -157,17 +112,6 @@ public class CheckInController {
         return ApiResponse.success(msg);
     }
 
-    /**
-     * 志愿者组织为线下服务补录服务时长，补录记录提交平台管理员复核
-     *
-     * @param participateNum 报名编号
-     * @param beginTime      服务开始时间
-     * @param endTime        服务结束时间
-     * @param remark         补录说明
-     * @param request        请求对象
-     * @param auth           当前登录用户信息
-     * @return 处理结果
-     */
     @RequestMapping(value = "/manual", method = RequestMethod.POST)
     @ResponseBody
     public ApiResponse manual(@RequestParam(value = "participateNum") Integer participateNum,
@@ -189,12 +133,6 @@ public class CheckInController {
         return ApiResponse.success(msg);
     }
 
-    /**
-     * 查询活动的现场签到码
-     *
-     * @param activityNum 活动编号
-     * @return 现场签到码，尚未生成时返回 null
-     */
     @RequestMapping(value = "/code", method = RequestMethod.GET)
     @ResponseBody
     public ApiResponse getCheckinCode(@RequestParam(value = "activityNum") Integer activityNum) {
@@ -207,16 +145,6 @@ public class CheckInController {
                 .add("expiresInSeconds", codeInfo.getExpiresInSeconds());
     }
 
-    /**
-     * 志愿者组织为一条服务记录生成服务确认单，交给服务对象核对确认
-     *
-     * @param checkinNum     签到编号
-     * @param objectName     服务对象名称
-     * @param objectPhone    服务对象手机号
-     * @param request        请求对象
-     * @param authentication 当前登录用户信息
-     * @return 处理结果，确认码见 confirmCode 字段
-     */
     @RequestMapping(value = "/confirmSheet", method = RequestMethod.POST)
     @ResponseBody
     public ApiResponse confirmSheet(@RequestParam(value = "checkinNum") Integer checkinNum,
@@ -237,12 +165,6 @@ public class CheckInController {
         return ApiResponse.success(msg).add("confirmCode", result.get("confirmCode"));
     }
 
-    /**
-     * 生成或重新生成活动的现场签到码
-     *
-     * @param activityNum 活动编号
-     * @return 现场签到码
-     */
     @RequestMapping(value = "/code", method = RequestMethod.POST)
     @ResponseBody
     public ApiResponse refreshCheckinCode(@RequestParam(value = "activityNum") Integer activityNum) {
@@ -257,27 +179,15 @@ public class CheckInController {
                 .add("expiresInSeconds", codeInfo == null ? null : codeInfo.getExpiresInSeconds());
     }
 
-    /**
-     * 获取当前登录账号对应的志愿者信息
-     *
-     * @param authentication 当前登录用户信息
-     * @return 志愿者信息，账号未关联志愿者时返回 null
-     */
     private Volunteer currentVolunteer(Authentication authentication) {
         User user = (User) authentication.getPrincipal();
         return volunteerService.getByLoginId(user.getUsername());
     }
 
-    /**
-     * 取当前登录账号
-     */
     private String operator(Authentication authentication) {
         return ((User) authentication.getPrincipal()).getUsername();
     }
 
-    /**
-     * 解析页面提交的定位坐标，未获取到定位时返回 null
-     */
     private Double parseCoordinate(String value) {
         if (value == null || value.trim().isEmpty()) {
             return null;
@@ -289,9 +199,6 @@ public class CheckInController {
         }
     }
 
-    /**
-     * 判断存储过程返回的处理结果是否成功
-     */
     private boolean isSuccess(Map<Object, Object> result) {
         Object ok = result.get("ok");
         return ok != null && ((Number) ok).intValue() == 1;

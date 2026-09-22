@@ -12,24 +12,12 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 登录账号业务实现类：自助改密需要校验原密码，管理员重置直接生成随机初始密码，
- * 两者都通过密码编码器生成加盐密文后再写库。
- */
 @Slf4j
 @Service
 public class UserAccountServiceImpl implements UserAccountService {
 
-    /**
-     * 新密码最小长度
-     */
     private static final int MIN_PASSWORD_LENGTH = 8;
 
-    /**
-     * 新密码最大长度
-     */
     private static final int MAX_PASSWORD_LENGTH = 20;
 
     @Autowired
@@ -38,14 +26,6 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    /**
-     * 自助修改登录密码
-     *
-     * @param accountId   登录账号
-     * @param oldPassword 原密码
-     * @param newPassword 新密码
-     * @return 处理结果，包含提示信息 msg 与处理标记 ok
-     */
     @Override
     public Map<Object, Object> changePassword(String accountId, String oldPassword, String newPassword) {
 
@@ -82,12 +62,6 @@ public class UserAccountServiceImpl implements UserAccountService {
         return result;
     }
 
-    /**
-     * 平台管理员重置账号密码，重置后返回一次性的新密码
-     *
-     * @param accountId 登录账号
-     * @return 处理结果，包含提示信息 msg、处理标记 ok 与重置后的新密码 password
-     */
     @Override
     public Map<Object, Object> resetPassword(String accountId) {
 
@@ -108,12 +82,6 @@ public class UserAccountServiceImpl implements UserAccountService {
         return result;
     }
 
-    /**
-     * 判断账号是否存在
-     *
-     * @param accountId 登录账号
-     * @return 账号存在返回 true
-     */
     @Override
     public boolean exists(String accountId) {
         return accountId != null && userAccountMapper.selectById(accountId) != null;

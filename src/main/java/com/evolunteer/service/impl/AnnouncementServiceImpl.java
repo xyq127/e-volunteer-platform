@@ -21,31 +21,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 通知公告业务实现类：平台管理员发布与删除通知公告、上传与删除公告附件均在本类完成，
- * 公告业务编号按“前缀 + 五位自增编号”生成，附件删除时同时清理附件记录与物理文件，
- * 保证附件记录与服务器文件目录始终一致。
- */
 @Slf4j
 @Service
 public class AnnouncementServiceImpl extends ServiceImpl<PolicyAnnouncementMapper, PolicyAnnouncement>
         implements AnnouncementService {
 
-    /**
-     * 公告业务编号前缀
-     */
     private static final String ANNOUNCEMENT_ID_PREFIX = "pol_";
 
-    /**
-     * 附件业务编号前缀
-     */
     private static final String POLICY_FILE_ID_PREFIX = "pfile_";
 
-    /**
-     * 业务编号格式：前缀 + 五位自增编号
-     */
     private static final String BUSINESS_ID_FORMAT = "%s%05d";
 
     @Autowired
@@ -54,29 +38,12 @@ public class AnnouncementServiceImpl extends ServiceImpl<PolicyAnnouncementMappe
     @Autowired
     private FileStorageService fileStorageService;
 
-    /**
-     * 分页查询通知公告，每条公告附带附件数量
-     *
-     * @param pageNum  页码
-     * @param pageSize 每页条数
-     * @param keyword  关键字，按公告标题与公告内容模糊匹配，可为空
-     * @return 通知公告分页结果
-     */
     @Override
     public IPage<PortalAnnouncementView> page(Integer pageNum, Integer pageSize, String keyword) {
         Page<PortalAnnouncementView> page = PageSupport.of(pageNum, pageSize);
         return baseMapper.selectPageWithFileCount(page, PageSupport.normalizeKeyword(keyword));
     }
 
-    /**
-     * 保存通知公告：编号为空时新增并生成公告业务编号，否则更新公告标题与内容
-     *
-     * @param policyannouncementNum 公告编号，新增时传 null
-     * @param name                  公告标题
-     * @param detail                公告内容
-     * @param adminId               发布公告的管理员登录账号
-     * @return 处理结果，包含提示信息 msg、处理标记 ok 与公告编号 policyannouncementNum
-     */
     @Override
     @Transactional
     public Map<Object, Object> save(Integer policyannouncementNum, String name, String detail, String adminId) {
@@ -119,7 +86,6 @@ public class AnnouncementServiceImpl extends ServiceImpl<PolicyAnnouncementMappe
             return fail(result, "公告保存失败，请稍后重试");
         }
 
-        // 公告业务编号依赖自增主键，插入成功后按主键回写，保证编号唯一且与主键对应
         Integer newNum = announcement.getPolicyannouncementNum();
         String announcementId = businessId(ANNOUNCEMENT_ID_PREFIX, newNum);
         PolicyAnnouncement idUpdate = new PolicyAnnouncement();
@@ -132,12 +98,6 @@ public class AnnouncementServiceImpl extends ServiceImpl<PolicyAnnouncementMappe
         return success(result, "公告已发布");
     }
 
-    /**
-     * 逻辑删除通知公告，并同步清理公告附件记录与物理文件
-     *
-     * @param policyannouncementNum 公告编号
-     * @return 处理结果，包含提示信息 msg 与处理标记 ok
-     */
     @Override
     @Transactional
     public Map<Object, Object> delete(Integer policyannouncementNum) {
@@ -147,7 +107,6 @@ public class AnnouncementServiceImpl extends ServiceImpl<PolicyAnnouncementMappe
             return fail(result, "该通知公告不存在或已被删除");
         }
 
-        // 公告被删除后附件不再可用，附件记录与物理文件一并清理，避免残留占用存储
         List<PolicyFile> policyFiles = policyFileMapper.selectByAnnouncementNum(policyannouncementNum);
         for (PolicyFile policyFile : policyFiles) {
             policyFileMapper.deleteById(policyFile.getPolicyfileNum());
@@ -158,13 +117,6 @@ public class AnnouncementServiceImpl extends ServiceImpl<PolicyAnnouncementMappe
         return success(result, "公告已删除");
     }
 
-    /**
-     * 上传公告附件：文件保存到服务器文件目录并写入公告附件表
-     *
-     * @param policyannouncementNum 公告编号
-     * @param file                  上传文件
-     * @return 已保存的公告附件信息
-     */
     @Override
     @Transactional
     public PolicyFile uploadFile(Integer policyannouncementNum, MultipartFile file) {
@@ -185,7 +137,6 @@ public class AnnouncementServiceImpl extends ServiceImpl<PolicyAnnouncementMappe
             policyFile.setPolicyfileIsdeleted("0");
             policyFileMapper.insert(policyFile);
 
-            // 附件业务编号依赖自增主键，插入成功后按主键回写
             Integer newNum = policyFile.getPolicyfileNum();
             String policyFileId = businessId(POLICY_FILE_ID_PREFIX, newNum);
             PolicyFile idUpdate = new PolicyFile();
@@ -198,19 +149,13 @@ public class AnnouncementServiceImpl extends ServiceImpl<PolicyAnnouncementMappe
                     policyannouncementNum, newNum, storedName);
             return policyFile;
         } catch (RuntimeException e) {
-            // 写库失败时回滚事务，同时清理已经落盘的文件，保证记录与文件一致
+
             fileStorageService.delete(storedName);
             log.error("公告附件写入失败，公告编号：{}，存储名：{}", policyannouncementNum, storedName, e);
             throw e;
         }
     }
 
-    /**
-     * 删除公告附件：同时逻辑删除附件记录并删除服务器上的物理文件
-     *
-     * @param policyfileNum 附件编号
-     * @return 附件不存在时返回 false，删除成功返回 true
-     */
     @Override
     @Transactional
     public boolean deleteFile(Integer policyfileNum) {
@@ -225,36 +170,21 @@ public class AnnouncementServiceImpl extends ServiceImpl<PolicyAnnouncementMappe
         return true;
     }
 
-    /**
-     * 按公告查询附件列表
-     *
-     * @param policyannouncementNum 公告编号
-     * @return 附件列表
-     */
     @Override
     public List<PolicyFile> listFiles(Integer policyannouncementNum) {
         return policyFileMapper.selectByAnnouncementNum(policyannouncementNum);
     }
 
-    /**
-     * 按“前缀 + 五位自增编号”生成业务编号
-     */
     private String businessId(String prefix, Integer num) {
         return String.format(BUSINESS_ID_FORMAT, prefix, num);
     }
 
-    /**
-     * 组装处理失败的返回结果
-     */
     private Map<Object, Object> fail(Map<Object, Object> result, String msg) {
         result.put("ok", 0);
         result.put("msg", msg);
         return result;
     }
 
-    /**
-     * 组装处理成功的返回结果
-     */
     private Map<Object, Object> success(Map<Object, Object> result, String msg) {
         result.put("ok", 1);
         result.put("msg", msg);

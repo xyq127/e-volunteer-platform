@@ -31,12 +31,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 志愿者工作台控制器：面向志愿者提供个人档案与密码维护、分页浏览智能匹配的活动广场、活动报名、
- * 参加确认与撤回报名、本人报名与服务时长查询、站内通知以及志愿服务证明查询能力。
- */
 @Slf4j
 @Controller
 @RequestMapping(value = "/volunteer")
@@ -63,12 +57,6 @@ public class VolunteerController {
     @Autowired
     AuditLogService auditLogService;
 
-    /**
-     * 查询当前登录志愿者的个人档案与成长进度
-     *
-     * @param authentication 当前登录用户信息
-     * @return 志愿者档案
-     */
     @RequestMapping(value = "/profile", method = RequestMethod.GET)
     @ResponseBody
     public ApiResponse profile(Authentication authentication) {
@@ -79,15 +67,6 @@ public class VolunteerController {
         return ApiResponse.success().add("profile", buildProfileView(volunteer));
     }
 
-    /**
-     * 保存当前登录志愿者的服务技能标签与常住地点，供供需匹配使用
-     *
-     * @param skills         服务技能标签，多个标签以英文逗号分隔
-     * @param latitude       常住地点纬度，未获取到定位时可不传
-     * @param longitude      常住地点经度，未获取到定位时可不传
-     * @param authentication 当前登录用户信息
-     * @return 处理结果
-     */
     @RequestMapping(value = "/profile/save", method = RequestMethod.POST)
     @ResponseBody
     public ApiResponse saveProfile(@RequestParam(value = "skills", required = false) String skills,
@@ -131,15 +110,6 @@ public class VolunteerController {
         return ApiResponse.success("档案已保存");
     }
 
-    /**
-     * 修改当前登录账号的登录密码
-     *
-     * @param oldPassword    原密码
-     * @param newPassword    新密码
-     * @param authentication 当前登录用户信息
-     * @param request        请求对象
-     * @return 处理结果
-     */
     @RequestMapping(value = "/password/change", method = RequestMethod.POST)
     @ResponseBody
     public ApiResponse changePassword(@RequestParam(value = "oldPassword") String oldPassword,
@@ -157,15 +127,6 @@ public class VolunteerController {
         return ApiResponse.success(msg);
     }
 
-    /**
-     * 分页查询与当前登录志愿者匹配的可报名志愿活动，按匹配度降序排列
-     *
-     * @param page           页码
-     * @param size           每页条数
-     * @param keyword        活动名称或活动地点关键字
-     * @param authentication 当前登录用户信息
-     * @return 匹配活动分页结果
-     */
     @RequestMapping(value = "/plaza", method = RequestMethod.GET)
     @ResponseBody
     public ApiResponse plaza(@RequestParam(value = "page", required = false) Integer page,
@@ -180,13 +141,6 @@ public class VolunteerController {
                 volunteer.getVolunteerNum(), keyword, page, size));
     }
 
-    /**
-     * 志愿者报名志愿活动，名额已满时自动进入候补队列
-     *
-     * @param activityNum    活动编号
-     * @param authentication 当前登录用户信息
-     * @return 处理结果
-     */
     @RequestMapping(value = "/apply", method = RequestMethod.POST)
     @ResponseBody
     public ApiResponse apply(@RequestParam(value = "activityNum") Integer activityNum,
@@ -207,14 +161,6 @@ public class VolunteerController {
         return ApiResponse.success(msg);
     }
 
-    /**
-     * 分页查询当前登录志愿者的报名记录、参加确认与服务时长情况
-     *
-     * @param page           页码
-     * @param size           每页条数
-     * @param authentication 当前登录用户信息
-     * @return 报名记录分页结果
-     */
     @RequestMapping(value = "/myParticipations", method = RequestMethod.GET)
     @ResponseBody
     public ApiResponse myParticipations(@RequestParam(value = "page", required = false) Integer page,
@@ -228,13 +174,6 @@ public class VolunteerController {
                 volunteer.getVolunteerNum(), page, size));
     }
 
-    /**
-     * 志愿者撤回报名，已通过的报名会释放名额并自动递补候补志愿者
-     *
-     * @param participateNum 报名编号
-     * @param authentication 当前登录用户信息
-     * @return 处理结果
-     */
     @RequestMapping(value = "/cancel", method = RequestMethod.POST)
     @ResponseBody
     public ApiResponse cancel(@RequestParam(value = "participateNum") Integer participateNum,
@@ -255,14 +194,6 @@ public class VolunteerController {
         return ApiResponse.success(msg);
     }
 
-    /**
-     * 志愿者确认参加或放弃参加已通过的活动报名
-     *
-     * @param participateNum 报名编号
-     * @param confirmState   确认状态（1 确认参加、2 放弃参加）
-     * @param authentication 当前登录用户信息
-     * @return 处理结果
-     */
     @RequestMapping(value = "/confirm", method = RequestMethod.POST)
     @ResponseBody
     public ApiResponse confirm(@RequestParam(value = "participateNum") Integer participateNum,
@@ -284,12 +215,6 @@ public class VolunteerController {
         return ApiResponse.success(msg);
     }
 
-    /**
-     * 查询当前登录志愿者的志愿服务证明，包含累计服务时长、星级与证明校验码
-     *
-     * @param authentication 当前登录用户信息
-     * @return 志愿服务证明
-     */
     @RequestMapping(value = "/certificate", method = RequestMethod.GET)
     @ResponseBody
     public ApiResponse certificate(Authentication authentication) {
@@ -304,14 +229,6 @@ public class VolunteerController {
         return ApiResponse.success().add("certificate", certificate);
     }
 
-    /**
-     * 分页查询当前登录志愿者的站内通知
-     *
-     * @param page           页码
-     * @param size           每页条数
-     * @param authentication 当前登录用户信息
-     * @return 通知分页结果
-     */
     @RequestMapping(value = "/notifications", method = RequestMethod.GET)
     @ResponseBody
     public ApiResponse notifications(@RequestParam(value = "page", required = false) Integer page,
@@ -320,25 +237,12 @@ public class VolunteerController {
         return PageSupport.toResponse(notificationService.page(operator(authentication), page, size));
     }
 
-    /**
-     * 查询当前登录志愿者的未读通知数量
-     *
-     * @param authentication 当前登录用户信息
-     * @return 未读通知数量
-     */
     @RequestMapping(value = "/notifications/unreadCount", method = RequestMethod.GET)
     @ResponseBody
     public ApiResponse unreadCount(Authentication authentication) {
         return ApiResponse.success().add("count", notificationService.unreadCount(operator(authentication)));
     }
 
-    /**
-     * 将指定通知标记为已读
-     *
-     * @param notificationNum 通知编号
-     * @param authentication  当前登录用户信息
-     * @return 处理结果
-     */
     @RequestMapping(value = "/notifications/read", method = RequestMethod.POST)
     @ResponseBody
     public ApiResponse readNotification(@RequestParam(value = "notificationNum") Integer notificationNum,
@@ -350,12 +254,6 @@ public class VolunteerController {
         return ApiResponse.success("通知已标记为已读");
     }
 
-    /**
-     * 将当前登录志愿者的全部通知标记为已读
-     *
-     * @param authentication 当前登录用户信息
-     * @return 处理结果
-     */
     @RequestMapping(value = "/notifications/readAll", method = RequestMethod.POST)
     @ResponseBody
     public ApiResponse readAllNotifications(Authentication authentication) {
@@ -363,27 +261,15 @@ public class VolunteerController {
         return ApiResponse.success("已标记 " + updated + " 条通知为已读");
     }
 
-    /**
-     * 获取当前登录账号对应的志愿者信息
-     *
-     * @param authentication 当前登录用户信息
-     * @return 志愿者信息，账号未关联志愿者时返回 null
-     */
     private Volunteer currentVolunteer(Authentication authentication) {
         User user = (User) authentication.getPrincipal();
         return volunteerService.getByLoginId(user.getUsername());
     }
 
-    /**
-     * 取当前登录账号
-     */
     private String operator(Authentication authentication) {
         return ((User) authentication.getPrincipal()).getUsername();
     }
 
-    /**
-     * 组装志愿者档案视图：累计服务时长决定当前星级与成长进度
-     */
     private VolunteerProfileView buildProfileView(Volunteer volunteer) {
 
         Double totalDuration = volunteer.getVolunteerTotalduration();
@@ -409,9 +295,6 @@ public class VolunteerController {
         return profile;
     }
 
-    /**
-     * 解析页面提交的经纬度并校验取值范围
-     */
     private BigDecimal parseCoordinate(String value, int maxAbsolute) {
         if (value == null || value.trim().isEmpty()) {
             return null;
@@ -428,9 +311,6 @@ public class VolunteerController {
         return coordinate;
     }
 
-    /**
-     * 判断服务层返回的处理结果是否成功
-     */
     private boolean isSuccess(Map<Object, Object> result) {
         Object ok = result.get("ok");
         return ok != null && ((Number) ok).intValue() == 1;

@@ -18,12 +18,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 志愿者志愿秀控制器：面向志愿者提供本人志愿秀分页查询、发布志愿秀、上传志愿秀图片
- * 与点赞取消点赞能力，志愿者只能发布与维护本人的志愿秀内容。
- */
 @Slf4j
 @Controller
 @RequestMapping(value = "/volunteer/content")
@@ -35,14 +29,6 @@ public class VolunteerShowController {
     @Autowired
     ShowService showService;
 
-    /**
-     * 分页查询本人发布的志愿秀
-     *
-     * @param page           页码
-     * @param size           每页条数
-     * @param authentication 当前登录用户信息
-     * @return 志愿秀分页结果
-     */
     @RequestMapping(value = "/shows", method = RequestMethod.GET)
     @ResponseBody
     public ApiResponse shows(@RequestParam(value = "page", required = false) Integer page,
@@ -56,14 +42,6 @@ public class VolunteerShowController {
         return PageSupport.toResponse(showService.pageByVolunteer(volunteer.getVolunteerNum(), page, size));
     }
 
-    /**
-     * 发布志愿秀，可关联本人已通过报名的志愿活动
-     *
-     * @param detail         分享内容
-     * @param activityNum    关联活动编号，可不传
-     * @param authentication 当前登录用户信息
-     * @return 处理结果，包含生成的志愿秀编号
-     */
     @RequestMapping(value = "/show/publish", method = RequestMethod.POST)
     @ResponseBody
     public ApiResponse publish(@RequestParam(value = "detail", required = false) String detail,
@@ -84,14 +62,6 @@ public class VolunteerShowController {
         return ApiResponse.success(msg).add("showNum", result.get("showNum"));
     }
 
-    /**
-     * 为本人发布的志愿秀上传图片
-     *
-     * @param showNum        志愿秀编号
-     * @param file           上传图片
-     * @param authentication 当前登录用户信息
-     * @return 处理结果
-     */
     @RequestMapping(value = "/show/picture", method = RequestMethod.POST)
     @ResponseBody
     public ApiResponse picture(@RequestParam(value = "showNum") Integer showNum,
@@ -115,13 +85,6 @@ public class VolunteerShowController {
         }
     }
 
-    /**
-     * 点赞或取消点赞志愿秀，同一志愿者对同一志愿秀只计一次
-     *
-     * @param showNum        志愿秀编号
-     * @param authentication 当前登录用户信息
-     * @return 处理结果，包含是否已点赞与最新点赞次数
-     */
     @RequestMapping(value = "/show/like", method = RequestMethod.POST)
     @ResponseBody
     public ApiResponse like(@RequestParam(value = "showNum") Integer showNum,
@@ -142,20 +105,11 @@ public class VolunteerShowController {
                 .add("likeCount", result.get("likeCount"));
     }
 
-    /**
-     * 获取当前登录账号对应的志愿者信息
-     *
-     * @param authentication 当前登录用户信息
-     * @return 志愿者信息，账号未关联志愿者时返回 null
-     */
     private Volunteer currentVolunteer(Authentication authentication) {
         User user = (User) authentication.getPrincipal();
         return volunteerService.getByLoginId(user.getUsername());
     }
 
-    /**
-     * 判断服务层返回的处理结果是否成功
-     */
     private boolean isSuccess(Map<Object, Object> result) {
         Object ok = result.get("ok");
         return ok != null && ((Number) ok).intValue() == 1;

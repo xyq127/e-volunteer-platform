@@ -2,7 +2,7 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<!-- E志愿志愿者服务平台 V1.0 志愿者表 volunteer 的映射文件 -->
+
 <mapper namespace="com.evolunteer.mapper.VolunteerMapper">
 
     <resultMap id="BaseResultMap" type="com.evolunteer.entity.Volunteer">
@@ -30,7 +30,6 @@
         volunteer_isdeleted
     </sql>
 
-    <!-- 按志愿者姓名查询志愿者 -->
     <select id="selectByVolunteerName" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
@@ -39,7 +38,6 @@
         volunteer_name = #{volunteerName,jdbcType=VARCHAR}
     </select>
 
-    <!-- 按志愿者编号查询志愿者 -->
     <select id="selectByVolunteerId" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
@@ -48,14 +46,12 @@
         volunteer_id = #{volunteerId,jdbcType=VARCHAR}
     </select>
 
-    <!-- 统计使用指定手机号注册的志愿者数量，用于注册手机号查重 -->
     <select id="countByVolunteerTel" resultType="int">
         select count(*)
         from volunteer
         where volunteer_tel = #{signUpTel,jdbcType=VARCHAR}
     </select>
 
-    <!-- 调用数据库存储过程完成志愿者注册，并返回数据库生成的志愿者编号 -->
     <insert id="volunteer_insert" statementType="CALLABLE">
         {call volunteer_insert(#{volunteerName,mode=IN,jdbcType=VARCHAR},
                                #{volunteerTel,mode=IN,jdbcType=VARCHAR},

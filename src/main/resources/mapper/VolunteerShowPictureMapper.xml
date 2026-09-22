@@ -3,8 +3,6 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.evolunteer.mapper.VolunteerShowPictureMapper">
-    <!-- E志愿志愿者服务平台 V1.0 志愿秀图片表 show_picture 的映射文件 -->
-
 
     <resultMap id="BaseResultMap" type="com.evolunteer.entity.VolunteerShowPicture">
             <id property="pictureNum" column="picture_num" jdbcType="INTEGER"/>

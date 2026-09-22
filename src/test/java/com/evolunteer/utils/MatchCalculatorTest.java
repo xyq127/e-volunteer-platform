@@ -10,16 +10,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 供需匹配计算工具类单元测试：校验技能、距离、时间与历史参与四个维度的得分与匹配理由。
- */
 class MatchCalculatorTest {
 
-    /**
-     * 活动要求的技能标签
-     */
     private static final List<String> ACTIVITY_SKILLS = Arrays.asList("社区服务", "文化宣传");
 
     @Test
@@ -44,7 +36,6 @@ class MatchCalculatorTest {
                 Collections.singletonList("社区服务"), ACTIVITY_SKILLS, 1500,
                 Collections.emptyList(), 0);
 
-        // 技能 40 * 1/2 = 20，距离 30 * (20000-1500)/19000 ≈ 29，时间 20，历史 0
         assertEquals(69, result.getScore());
         assertEquals(Collections.singletonList("社区服务"), result.getMatchedSkills());
     }
@@ -55,7 +46,6 @@ class MatchCalculatorTest {
         MatchCalculator.MatchResult result = MatchCalculator.calculate(
                 Collections.emptyList(), Collections.emptyList(), null, Collections.emptyList(), 0);
 
-        // 活动未设置技能要求 20，距离中性 15，时间不冲突 20
         assertEquals(55, result.getScore());
         assertTrue(result.getReasons().contains("未设置常住定位，按中性距离分值计算"));
     }

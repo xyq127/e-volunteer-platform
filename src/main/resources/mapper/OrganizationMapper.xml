@@ -3,8 +3,6 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.evolunteer.mapper.OrganizationMapper">
-    <!-- E志愿志愿者服务平台 V1.0 志愿者组织表 organization 的映射文件 -->
-
 
     <resultMap id="BaseResultMap" type="com.evolunteer.entity.Organization">
             <id property="organizationNum" column="organization_num" jdbcType="INTEGER"/>
@@ -43,7 +41,6 @@ where
 organization_id = #{organizationId,jdbcType=VARCHAR}
 </update>
 
-    <!-- 志愿者组织账号名单查询结果：组织信息 + 登录账号状态 + 已申报的活动数量 -->
     <resultMap id="AccountResultMap" type="com.evolunteer.entity.Organization" extends="BaseResultMap">
         <result property="accountEnabled" column="account_enabled" jdbcType="INTEGER"/>
         <result property="activityCount" column="activity_count" jdbcType="INTEGER"/>
@@ -59,7 +56,6 @@ organization_id = #{organizationId,jdbcType=VARCHAR}
         and a.activity_isdeleted = 0) as activity_count
     </sql>
 
-    <!-- 平台管理员分页查询志愿者组织名单，含已被停用的组织，并关联登录账号状态与已申报的活动数量 -->
     <select id="selectAccountPage" resultMap="AccountResultMap">
         select
         <include refid="Account_Column_List"/>
@@ -74,7 +70,6 @@ organization_id = #{organizationId,jdbcType=VARCHAR}
         order by o.organization_num asc
     </select>
 
-    <!-- 查询全部志愿者组织的编号与名称，含已被停用的组织，供活动清单导出回填申报组织名称 -->
     <select id="selectAllOrganizationNumAndName" resultMap="BaseResultMap">
         select organization_num,organization_id,organization_name
         from organization

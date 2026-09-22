@@ -3,8 +3,6 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.evolunteer.mapper.VolunteerTrainingSituationMapper">
-    <!-- E志愿志愿者服务平台 V1.0 志愿者培训情况表 volunteer_training_situation 的映射文件 -->
-
 
     <resultMap id="BaseResultMap" type="com.evolunteer.entity.VolunteerTrainingSituation">
             <id property="vtsituationNum" column="vtsituation_num" jdbcType="INTEGER"/>
@@ -16,7 +14,6 @@
             <result property="vtsituationIsdeleted" column="vtsituation_isdeleted" jdbcType="INTEGER"/>
     </resultMap>
 
-    <!-- 培训情况关联志愿者业务编号、姓名与联系电话的查询结果 -->
     <resultMap id="TrainingSituationViewResultMap" type="com.evolunteer.entity.TrainingSituationView">
         <id property="vtsituationNum" column="vtsituation_num" jdbcType="INTEGER"/>
         <result property="trainingNum" column="training_num" jdbcType="INTEGER"/>
@@ -35,7 +32,6 @@
         vtsituation_isdeleted
     </sql>
 
-    <!-- 按培训分页查询志愿者参加培训的情况，关联志愿者业务编号、姓名与联系电话 -->
     <select id="selectPageByTraining" resultMap="TrainingSituationViewResultMap">
         select
         volunteer_training_situation.vtsituation_num,
@@ -55,7 +51,6 @@
         order by volunteer_training_situation.vtsituation_num asc
     </select>
 
-    <!-- 生成下一个培训情况业务编号的自增序号，业务编号格式为 vts_ + 5 位数字 -->
     <select id="selectNextSituationSeq" resultType="int">
         select coalesce(max(cast(substring(vtsituation_id, 5) as unsigned)), 0) + 1
         from volunteer_training_situation
@@ -63,7 +58,6 @@
         and char_length(vtsituation_id) = 9
     </select>
 
-    <!-- 统计志愿者报名指定活动的记录数，用于登记培训情况前校验报名资格 -->
     <select id="countVolunteerParticipate" resultType="int">
         select count(*)
         from participate

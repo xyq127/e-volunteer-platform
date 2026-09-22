@@ -10,11 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 活动时间解析工具类单元测试：校验多种页面时间格式的解析结果与非法输入的提示。
- */
 class DateTimeParserTest {
 
     @Test
@@ -45,9 +40,6 @@ class DateTimeParserTest {
         assertThrows(IllegalArgumentException.class, () -> DateTimeParser.parse("2026-13-40"));
     }
 
-    /**
-     * 将解析出的时间按 yyyy-MM-dd HH:mm:ss 格式化，便于断言
-     */
     private String format(Date date) {
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date);
     }

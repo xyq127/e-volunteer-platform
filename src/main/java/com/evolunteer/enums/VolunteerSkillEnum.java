@@ -2,12 +2,6 @@ package com.evolunteer.enums;
 
 import lombok.Getter;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 志愿服务技能标签枚举：志愿者档案与志愿活动申报共用的固定标签集合，
- * 标签一致是供需匹配计算的基础，避免同一技能因写法不同而无法匹配。
- */
 @Getter
 public enum VolunteerSkillEnum {
 
@@ -22,21 +16,12 @@ public enum VolunteerSkillEnum {
     PSYCHOLOGICAL_CARE("心理疏导"),
     INFORMATION_TECHNOLOGY("信息技术");
 
-    /**
-     * 技能标签名称
-     */
     private final String skillName;
 
     VolunteerSkillEnum(String skillName) {
         this.skillName = skillName;
     }
 
-    /**
-     * 校验技能标签是否属于平台固定的标签集合
-     *
-     * @param skillName 技能标签名称
-     * @return 属于固定标签集合返回 true
-     */
     public static boolean isSupported(String skillName) {
         if (skillName == null) {
             return false;

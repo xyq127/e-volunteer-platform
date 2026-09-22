@@ -2,7 +2,7 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<!-- E志愿志愿者服务平台 V1.0 操作审计表 audit_log 的映射文件 -->
+
 <mapper namespace="com.evolunteer.mapper.AuditLogMapper">
 
     <resultMap id="BaseResultMap" type="com.evolunteer.entity.AuditLog">
@@ -22,7 +22,6 @@
         audit_ip,audit_time
     </sql>
 
-    <!-- 按操作类型与操作账号分页查询审计日志，按时间倒序 -->
     <select id="selectPageByCondition" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>

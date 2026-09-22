@@ -12,11 +12,6 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 分页支持工具类单元测试：校验分页参数边界、上限截断与响应字段。
- */
 class PageSupportTest {
 
     @Test

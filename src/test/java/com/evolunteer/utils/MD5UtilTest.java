@@ -8,11 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 密码摘要工具类单元测试：校验摘要结果、固定长度与空值处理。
- */
 class MD5UtilTest {
 
     @Test

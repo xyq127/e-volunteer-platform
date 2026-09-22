@@ -3,8 +3,6 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.evolunteer.mapper.ActivityAnnouncementMapper">
-    <!-- E志愿志愿者服务平台 V1.0 志愿活动公告表 act_announcement 的映射文件 -->
-
 
     <resultMap id="BaseResultMap" type="com.evolunteer.entity.ActivityAnnouncement">
             <id property="actannouncementNum" column="actannouncement_num" jdbcType="INTEGER"/>
@@ -16,7 +14,6 @@
             <result property="actannouncementIsdeleted" column="actannouncement_isdeleted" jdbcType="INTEGER"/>
     </resultMap>
 
-    <!-- 活动公告关联活动名称的查询结果 -->
     <resultMap id="ActivityAnnouncementViewResultMap" type="com.evolunteer.entity.ActivityAnnouncementView">
         <id property="actannouncementNum" column="actannouncement_num" jdbcType="INTEGER"/>
         <result property="activityNum" column="activity_num" jdbcType="INTEGER"/>
@@ -43,7 +40,6 @@
         activity.activity_name
     </sql>
 
-    <!-- 志愿者组织分页查询本组织发布的活动公告，关联活动名称 -->
     <select id="selectPageByOrganization" resultMap="ActivityAnnouncementViewResultMap">
         select
         <include refid="ActivityAnnouncementView_Column_List"/>
@@ -58,7 +54,6 @@
         order by act_announcement.actannouncement_num desc
     </select>
 
-    <!-- 志愿者分页查询本人已报名（待审核、已通过、候补）活动的公告 -->
     <select id="selectPageForVolunteer" resultMap="ActivityAnnouncementViewResultMap">
         select
         <include refid="ActivityAnnouncementView_Column_List"/>
@@ -75,7 +70,6 @@
         order by act_announcement.actannouncement_num desc
     </select>
 
-    <!-- 生成下一个公告业务编号的自增序号，业务编号格式为 ann_ + 5 位数字 -->
     <select id="selectNextAnnouncementSeq" resultType="int">
         select coalesce(max(cast(substring(actannouncement_id, 5) as unsigned)), 0) + 1
         from act_announcement

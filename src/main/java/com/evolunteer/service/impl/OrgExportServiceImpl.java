@@ -16,37 +16,17 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 志愿者组织数据导出业务实现类：按活动汇总报名考勤与服务时长明细并转成 CSV 文本。
- */
 @Service
 public class OrgExportServiceImpl implements OrgExportService {
 
-    /**
-     * 报名审核状态：待审核
-     */
     private static final String APPLY_STATE_PENDING = "0";
 
-    /**
-     * 报名审核状态：已通过
-     */
     private static final String APPLY_STATE_APPROVED = "1";
 
-    /**
-     * 报名审核状态：未通过
-     */
     private static final String APPLY_STATE_REJECTED = "2";
 
-    /**
-     * 报名审核状态：候补
-     */
     private static final String APPLY_STATE_WAITING = "3";
 
-    /**
-     * 时间格式
-     */
     private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm";
 
     @Autowired
@@ -55,12 +35,6 @@ public class OrgExportServiceImpl implements OrgExportService {
     @Autowired
     private CheckInService checkInService;
 
-    /**
-     * 导出活动报名考勤名单
-     *
-     * @param activityNum 活动编号
-     * @return CSV 文本
-     */
     @Override
     public String exportParticipants(Integer activityNum) {
 
@@ -84,12 +58,6 @@ public class OrgExportServiceImpl implements OrgExportService {
         return CsvExporter.toCsv(headers, rows);
     }
 
-    /**
-     * 导出活动服务时长明细
-     *
-     * @param activityNum 活动编号
-     * @return CSV 文本
-     */
     @Override
     public String exportServiceHours(Integer activityNum) {
 
@@ -113,9 +81,6 @@ public class OrgExportServiceImpl implements OrgExportService {
         return CsvExporter.toCsv(headers, rows);
     }
 
-    /**
-     * 报名审核状态文案
-     */
     private String applyStateText(String applyState) {
         if (APPLY_STATE_APPROVED.equals(applyState)) {
             return "已通过";
@@ -129,9 +94,6 @@ public class OrgExportServiceImpl implements OrgExportService {
         return "待审核";
     }
 
-    /**
-     * 参加确认状态文案
-     */
     private String confirmStateText(String confirmState) {
         if ("1".equals(confirmState)) {
             return "已确认参加";
@@ -142,9 +104,6 @@ public class OrgExportServiceImpl implements OrgExportService {
         return "待确认";
     }
 
-    /**
-     * 时长复核状态文案
-     */
     private String timecheckText(String timecheck) {
         if ("1".equals(timecheck)) {
             return "已确认";
@@ -155,23 +114,14 @@ public class OrgExportServiceImpl implements OrgExportService {
         return "待复核";
     }
 
-    /**
-     * 时长文案，保留一位小数
-     */
     private String durationText(Double duration) {
         return duration == null ? "" : String.format("%.1f", duration);
     }
 
-    /**
-     * 时间文案
-     */
     private String formatTime(Date time, SimpleDateFormat format) {
         return time == null ? "" : format.format(time);
     }
 
-    /**
-     * 空值转空串
-     */
     private String nullToEmpty(String value) {
         return value == null ? "" : value;
     }

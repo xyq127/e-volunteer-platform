@@ -8,11 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 随机初始密码工具类单元测试：校验长度、字符集与随机性。
- */
 class RandomPasswordUtilTest {
 
     @Test

@@ -3,8 +3,6 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.evolunteer.mapper.ParticipationMapper">
-    <!-- E志愿志愿者服务平台 V1.0 活动报名表 participate 的映射文件 -->
-
 
     <resultMap id="BaseResultMap" type="com.evolunteer.entity.Participation">
             <id property="participateNum" column="participate_num" jdbcType="INTEGER"/>
@@ -56,7 +54,6 @@
         </association>
     </resultMap>
 
-    <!-- 志愿者本人报名记录的查询结果，关联活动信息与最近一次服务记录 -->
     <resultMap id="VolunteerParticipationResultMap" type="com.evolunteer.entity.VolunteerParticipationView">
         <id property="participateNum" column="participate_num" jdbcType="INTEGER"/>
         <result property="activityNum" column="activity_num" jdbcType="INTEGER"/>
@@ -119,7 +116,6 @@
         </if>
     </sql>
 
-    <!-- 按活动分页查询报名志愿者名单 -->
     <select id="selectPageParticipateWithVolunteerByActivityNum" resultMap="WithVolunteerResultMap">
         select
         <include refid="ParticipationWithVolunteer_Column_List"/>
@@ -140,7 +136,6 @@
         and participate.participate_isdeleted=0
     </select>
 
-    <!-- 查询指定活动已通过报名的志愿者登录账号，用于发送站内通知 -->
     <select id="selectApprovedVolunteerAccounts" resultType="java.lang.String">
         select volunteer.volunteer_id
         from participate, volunteer
@@ -150,7 +145,6 @@
           and participate.participate_isdeleted = 0
     </select>
 
-    <!-- 分页查询志愿者本人的报名记录，关联活动信息与最近一次服务记录 -->
     <select id="selectPageVolunteerParticipations" resultMap="VolunteerParticipationResultMap">
         select
         p.participate_num,
@@ -185,7 +179,6 @@
         order by a.activity_begintime desc, p.participate_num desc
     </select>
 
-    <!-- 查询志愿者经复核通过的服务记录，用于生成志愿服务证明 -->
     <select id="selectApprovedServiceRecords" resultType="com.evolunteer.entity.ServiceRecord">
         select
         a.activity_name as activityName,
@@ -202,7 +195,6 @@
         order by a.activity_begintime desc
     </select>
 
-    <!-- 调用数据库存储过程 volunteer_apply_activity 完成活动报名 -->
     <insert id="volunteer_apply_activity" statementType="CALLABLE">
         {call volunteer_apply_activity(#{volunteerNum,mode=IN,jdbcType=INTEGER},
                                        #{activityNum,mode=IN,jdbcType=INTEGER},
@@ -211,7 +203,6 @@
         }
     </insert>
 
-    <!-- 调用数据库存储过程 volunteer_cancel_participate 完成报名撤回 -->
     <insert id="volunteer_cancel_participate" statementType="CALLABLE">
         {call volunteer_cancel_participate(#{participateNum,mode=IN,jdbcType=INTEGER},
                                            #{volunteerNum,mode=IN,jdbcType=INTEGER},
@@ -220,7 +211,6 @@
         }
     </insert>
 
-    <!-- 调用数据库存储过程 volunteer_confirm_participate 完成参加确认 -->
     <insert id="volunteer_confirm_participate" statementType="CALLABLE">
         {call volunteer_confirm_participate(#{participateNum,mode=IN,jdbcType=INTEGER},
                                             #{volunteerNum,mode=IN,jdbcType=INTEGER},
@@ -230,7 +220,6 @@
         }
     </insert>
 
-    <!-- 调用数据库存储过程 organization_check_volunteer 写入报名审核结果 -->
     <insert id="organization_check_volunteer" statementType="CALLABLE">
         {call organization_check_volunteer(#{participateNum,mode=IN,jdbcType=NUMERIC},
                                            #{isPass,mode=IN,jdbcType=NUMERIC},
@@ -238,7 +227,6 @@
             }
     </insert>
 
-    <!-- 调用数据库存储过程 organization_remove_participate 移除活动报名 -->
     <insert id="organization_remove_participate" statementType="CALLABLE">
         {call organization_remove_participate(#{loginId,mode=IN,jdbcType=VARCHAR},
                                               #{participateNum,mode=IN,jdbcType=INTEGER},
@@ -247,13 +235,11 @@
         }
     </insert>
 
-    <!-- 调用数据库存储过程 participate_confirm_expire 释放未确认参加的报名 -->
     <insert id="participate_confirm_expire" statementType="CALLABLE">
         {call participate_confirm_expire(#{releasedCount,mode=OUT,jdbcType=INTEGER})
         }
     </insert>
 
-    <!-- 统计志愿者已核定服务时长所覆盖的志愿活动数量，用于生成志愿服务证明 -->
     <select id="countApprovedActivities" resultType="int">
         select count(distinct p.activity_num)
         from checkin c
