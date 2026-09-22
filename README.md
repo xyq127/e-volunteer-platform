@@ -99,11 +99,15 @@ e-volunteer-platform
 ├── README.md                                  软件说明
 ├── docs                                       项目文档与软件著作权申请材料
 │   ├── 痛点分析与突破说明.md                    行业痛点调研与本次功能突破说明
-│   ├── 软件说明书.md                           软件使用说明书（含操作截图）
+│   ├── 软件说明书.md / 软件说明书.pdf            软件使用说明书（PDF 每页页眉含软件名称、版本号与页码）
 │   ├── 软件著作权申请信息.md                    申请表所需软件信息
-│   └── images                                 说明书插图
+│   ├── 源程序.txt / 源程序-提交.txt / .pdf       源程序清单、提交用文档与 PDF
+│   ├── E志愿.docx                             提交用文档的 Word 版
+│   └── images                                 说明书插图（40 张）
 ├── tools
-│   └── source_doc.py                          源程序文档生成工具
+│   ├── source_doc.py                          源程序文档生成工具（txt / PDF / Word）
+│   ├── manual_doc.py                          说明书排版工具（Markdown → 分页 PDF）
+│   └── pdf_render.py                          无头 Chromium 打印 PDF 的公共模块
 └── src
     ├── main
     │   ├── java/com/evolunteer
@@ -219,11 +223,22 @@ java -jar target/e-volunteer-platform-1.0.0.jar
 mvn test
 ```
 
-## 六、软件著作权申请材料
+| 材料 | 提交件 | 说明 |
+| --- | --- | --- |
+| 源程序鉴别材料 | [`docs/源程序-提交.pdf`](docs/源程序-提交.pdf) | 前 30 页 + 后 30 页共 60 页，每页 50 行，页眉为“E志愿志愿者服务平台 V1.0”与页码；同内容提供 [`docs/源程序-提交.txt`](docs/源程序-提交.txt) 与 Word 版 [`docs/E志愿.docx`](docs/E志愿.docx)。前 30 页取正文开头 1500 行、后 30 页取正文结尾 1500 行，两个区块各自从页首起排，60 页页页排满 |
+| 源程序全量清单 | [`docs/源程序.txt`](docs/源程序.txt) | 189 个源程序文件、33782 行（剥离注释后 27432 行），每页 50 行共 564 页，备查用 |
+| 软件说明书 | [`docs/软件说明书.pdf`](docs/软件说明书.pdf) | 22 页，每页 30 行以上，页眉含软件名称、版本号与页码；源文件 [`docs/软件说明书.md`](docs/软件说明书.md) 与 40 张界面截图（`docs/images/`）；不足 60 页，按“不足 60 页的全部提交”提交 |
+| 申请信息 | [`docs/软件著作权申请信息.md`](docs/软件著作权申请信息.md) | 汇总申请表所需的软件信息，含提交材料清单 |
+| 痛点分析与突破 | [`docs/痛点分析与突破说明.md`](docs/痛点分析与突破说明.md) | 行业痛点调研来源、本次功能突破的规则取值与验证方式（非必需材料） |
 
-| 材料 | 说明 |
-| --- | --- |
-| 源程序文档 | 提交用文档 [`docs/源程序-提交.txt`](docs/源程序-提交.txt)（前 30 页 + 后 30 页共 60 页，每页 50 行）；全部源程序清单 [`docs/源程序.txt`](docs/源程序.txt)（189 个源程序文件、33782 行，每页 50 行共 564 页）。两者页眉均为“E志愿志愿者服务平台 V1.0”，且已剥离源码注释、不含第三方库源码；源程序变动后执行 `python3 tools/source_doc.py --output docs/源程序.txt` 与 `python3 tools/source_doc.py --output docs/源程序-提交.txt --head-tail 30` 重新生成 |
-| 软件说明书 | 见 [`docs/软件说明书.md`](docs/软件说明书.md)，含软件概述、运行环境、功能模块与操作说明及 40 张界面截图（插图见 `docs/images/`） |
-| 申请信息 | 见 [`docs/软件著作权申请信息.md`](docs/软件著作权申请信息.md)，汇总申请表所需的软件信息 |
-| 痛点分析与突破 | 见 [`docs/痛点分析与突破说明.md`](docs/痛点分析与突破说明.md)，汇总行业痛点调研来源、本次功能突破的规则取值与验证方式 |
+材料变动后重新生成（在项目根目录执行）：
+
+```bash
+python3 tools/source_doc.py --output docs/源程序.txt
+python3 tools/source_doc.py --output docs/源程序-提交.txt --head-tail 30 \
+    --pdf docs/源程序-提交.pdf --docx docs/E志愿.docx
+python3 tools/manual_doc.py
+```
+
+> PDF 由无头 Chromium 打印，浏览器路径可用环境变量 `CHROMIUM_BIN` 指定（未设置时按系统
+> PATH 与 Playwright / Puppeteer 的缓存目录查找）。
