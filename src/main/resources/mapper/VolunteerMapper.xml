@@ -8,18 +8,24 @@
     <resultMap id="BaseResultMap" type="com.evolunteer.entity.Volunteer">
         <id property="volunteerNum" column="volunteer_num" jdbcType="INTEGER"/>
         <result property="volunteerId" column="volunteer_id" jdbcType="VARCHAR"/>
-        <result property="volunteerPassword" column="volunteer_password" jdbcType="VARCHAR"/>
         <result property="volunteerName" column="volunteer_name" jdbcType="VARCHAR"/>
         <result property="volunteerRegisterdate" column="volunteer_registerdate" jdbcType="DATE"/>
         <result property="volunteerGender" column="volunteer_gender" jdbcType="VARCHAR"/>
         <result property="volunteerBirth" column="volunteer_birth" jdbcType="DATE"/>
         <result property="volunteerTel" column="volunteer_tel" jdbcType="VARCHAR"/>
+        <result property="volunteerLatitude" column="volunteer_latitude" jdbcType="DECIMAL"/>
+        <result property="volunteerLongitude" column="volunteer_longitude" jdbcType="DECIMAL"/>
+        <result property="volunteerCredit" column="volunteer_credit" jdbcType="INTEGER"/>
+        <result property="volunteerNoshow" column="volunteer_noshow" jdbcType="INTEGER"/>
+        <result property="volunteerTotalduration" column="volunteer_totalduration" jdbcType="FLOAT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        volunteer_num,volunteer_id,volunteer_password,
+        volunteer_num,volunteer_id,
         volunteer_name,volunteer_registerdate,volunteer_gender,
-        volunteer_birth,volunteer_tel
+        volunteer_birth,volunteer_tel,
+        volunteer_latitude,volunteer_longitude,
+        volunteer_credit,volunteer_noshow,volunteer_totalduration
     </sql>
 
     <!-- 按志愿者姓名查询志愿者 -->

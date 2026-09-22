@@ -23,4 +23,11 @@
         where
         id = #{id,jdbcType=VARCHAR}
     </select>
+
+    <!-- 更新登录账号的密码密文 -->
+    <update id="updatePasswordById">
+        update e_user
+        set password = #{password,jdbcType=VARCHAR}
+        where id = #{id,jdbcType=VARCHAR}
+    </update>
 </mapper>

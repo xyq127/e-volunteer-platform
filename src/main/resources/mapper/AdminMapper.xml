@@ -9,12 +9,11 @@
     <resultMap id="BaseResultMap" type="com.evolunteer.entity.Admin">
             <id property="adminNum" column="admin_num" jdbcType="INTEGER"/>
             <result property="adminId" column="admin_id" jdbcType="VARCHAR"/>
-            <result property="adminPassword" column="admin_password" jdbcType="VARCHAR"/>
             <result property="adminName" column="admin_name" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        admin_num,admin_id,admin_password,
+        admin_num,admin_id,
         admin_name
     </sql>
     <select id="selectByAdminName" resultMap="BaseResultMap">

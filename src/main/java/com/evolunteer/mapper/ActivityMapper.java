@@ -11,15 +11,8 @@ import java.util.Map;
 /**
  * E志愿志愿者服务平台 V1.0
  * <p>
- * 志愿活动表 activity 的数据访问接口，提供活动申报、活动查询、活动审核与逻辑删除等数据库操作，
- * 其中活动申报与活动审核通过数据库存储过程完成。
- *
- * @Entity com.evolunteer.entity.Activity
- */
-/**
- * E志愿志愿者服务平台 V1.0
- * <p>
- * 志愿活动表 activity 的数据访问接口。
+ * 志愿活动表 activity 的数据访问接口，提供活动申报、活动查询、活动审核、修改后重新申报与逻辑删除等数据库操作，
+ * 其中活动申报、活动审核与重新申报通过数据库存储过程完成。
  *
  * @Entity com.evolunteer.entity.Activity
  */
@@ -27,18 +20,25 @@ import java.util.Map;
 public interface ActivityMapper extends BaseMapper<Activity> {
 
     /**
-     * 调用数据库存储过程 organization_insert_activity，写入门户组织申报的志愿活动
+     * 调用数据库存储过程 organization_insert_activity，写入志愿者组织申报的志愿活动
      *
-     * @param map 申报参数，包含组织账号、活动基本信息与输出参数 msg
+     * @param map 申报参数，包含组织账号、活动基本信息、技能标签、活动坐标、签到围栏半径与输出参数 msg
      */
     void organization_insert_activity(Map<Object, Object> map);
 
     /**
      * 调用数据库存储过程 admin_check_activity，写入平台管理员的活动审核结果
      *
-     * @param map 审核参数，包含管理员账号、活动编号、审核结果、审核意见与输出参数 msg
+     * @param map 审核参数，包含管理员账号、活动编号、审核结果、结构化原因编码、审核意见与输出参数 msg
      */
     void admin_check_activity(Map<Object, Object> map);
+
+    /**
+     * 调用数据库存储过程 organization_revise_activity，将审核未通过的活动修改后重新提交审核
+     *
+     * @param map 重新申报参数，包含组织账号、活动编号、活动基本信息、技能标签、活动坐标与输出参数 msg
+     */
+    void organization_revise_activity(Map<Object, Object> map);
 
     /**
      * 按志愿者组织编号与活动状态查询未删除的活动
@@ -87,6 +87,16 @@ public interface ActivityMapper extends BaseMapper<Activity> {
      * @return 活动列表
      */
     List<Activity> selectByActivityName(@Param("activityName") String activityName);
+
+    /**
+     * 更新志愿活动的现场签到码
+     *
+     * @param activityCheckinCode 现场签到码
+     * @param activityNum         活动编号
+     * @return 受影响的行数
+     */
+    int updateActivityCheckinCode(@Param("activityCheckinCode") String activityCheckinCode,
+                                  @Param("activityNum") Integer activityNum);
 
     /**
      * 逻辑删除活动

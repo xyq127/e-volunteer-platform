@@ -49,6 +49,18 @@ public class ApiResponse {
     }
 
     /**
+     * 构造带自定义提示信息的成功响应结果
+     *
+     * @param msg 提示信息
+     * @return 处理成功的响应结果
+     */
+    public static ApiResponse success(String msg) {
+        ApiResponse result = success();
+        result.setMsg(msg);
+        return result;
+    }
+
+    /**
      * 构造处理失败的响应结果
      *
      * @return 处理失败的响应结果
@@ -57,6 +69,18 @@ public class ApiResponse {
         ApiResponse result = new ApiResponse();
         result.setCode(CODE_FAIL);
         result.setMsg("处理失败！");
+        return result;
+    }
+
+    /**
+     * 构造带自定义提示信息的失败响应结果
+     *
+     * @param msg 提示信息
+     * @return 处理失败的响应结果
+     */
+    public static ApiResponse fail(String msg) {
+        ApiResponse result = fail();
+        result.setMsg(msg);
         return result;
     }
 

@@ -1,9 +1,12 @@
 package com.evolunteer.controller;
 
+import com.evolunteer.entity.Activity;
 import com.evolunteer.entity.ApiResponse;
 import com.evolunteer.entity.Organization;
 import com.evolunteer.service.ActivityService;
+import com.evolunteer.service.CheckInService;
 import com.evolunteer.service.OrganizationService;
+import com.evolunteer.utils.DateTimeParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -14,8 +17,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,23 +25,22 @@ import java.util.Map;
 /**
  * E志愿志愿者服务平台 V1.0
  * <p>
- * 志愿者组织控制器：提供志愿活动申报、活动重名校验以及志愿者组织资料查询与修改能力。
+ * 志愿者组织控制器：提供志愿活动申报、活动重名校验、审核未通过活动的修改后重新申报、活动结算，
+ * 以及志愿者组织资料查询与修改能力。
  */
 @Slf4j
 @Controller
 @RequestMapping(value = "/org")
 public class OrganizationController {
 
-    /**
-     * 志愿活动申报页面使用的日期格式
-     */
-    private static final String DATE_PATTERN = "MM/dd/yyyy";
-
     @Autowired
     OrganizationService organizationService;
 
     @Autowired
     ActivityService activityService;
+
+    @Autowired
+    CheckInService checkInService;
 
     /**
      * 志愿者组织申报志愿活动
@@ -52,6 +53,10 @@ public class OrganizationController {
      * @param affair         注意事项
      * @param need           招募人数
      * @param sign_ddl       报名截止时间
+     * @param tags           活动所需服务技能标签，多个标签以英文逗号分隔
+     * @param latitude       活动地点纬度，用于签到地理围栏
+     * @param longitude      活动地点经度，用于签到地理围栏
+     * @param radius         签到地理围栏半径（米）
      * @param authentication 当前登录用户信息
      * @return 申报处理结果信息
      */
@@ -65,28 +70,45 @@ public class OrganizationController {
                         @RequestParam(value = "affair") String affair,
                         @RequestParam(value = "need") String need,
                         @RequestParam(value = "sign_ddl") String sign_ddl,
+                        @RequestParam(value = "tags", required = false) String tags,
+                        @RequestParam(value = "latitude", required = false) String latitude,
+                        @RequestParam(value = "longitude", required = false) String longitude,
+                        @RequestParam(value = "radius", required = false) String radius,
                         Authentication authentication) {
 
         Date start;
         Date end;
         Date signDdl;
         try {
-            SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_PATTERN);
-            dateFormat.setLenient(false);
-            start = dateFormat.parse(startTime);
-            end = dateFormat.parse(endTime);
-            signDdl = dateFormat.parse(sign_ddl);
-        } catch (ParseException e) {
+            start = DateTimeParser.parse(startTime);
+            end = DateTimeParser.parse(endTime);
+            signDdl = DateTimeParser.parse(sign_ddl);
+        } catch (IllegalArgumentException e) {
             log.warn("志愿活动申报时间格式不正确，开始时间：{}，结束时间：{}，报名截止时间：{}", startTime, endTime, sign_ddl);
-            return "活动时间格式不正确，请重新选择活动时间";
+            return "活动时间格式不正确，请按年-月-日 时:分重新填写";
         }
 
         Integer needPeople;
         try {
             needPeople = Integer.valueOf(need.trim());
+            if (needPeople <= 0) {
+                throw new NumberFormatException("招募人数必须大于 0");
+            }
         } catch (RuntimeException e) {
             log.warn("志愿活动申报的招募人数格式不正确：{}", need);
-            return "招募人数必须为数字，请重新填写";
+            return "招募人数必须为大于 0 的数字，请重新填写";
+        }
+
+        BigDecimal activityLatitude;
+        BigDecimal activityLongitude;
+        Integer activityRadius;
+        try {
+            activityLatitude = parseDecimal(latitude, 90, "活动地点纬度");
+            activityLongitude = parseDecimal(longitude, 180, "活动地点经度");
+            activityRadius = parseRadius(radius);
+        } catch (IllegalArgumentException e) {
+            log.warn("志愿活动申报的签到围栏参数不正确：{}", e.getMessage());
+            return e.getMessage();
         }
 
         User user = (User) authentication.getPrincipal();
@@ -101,9 +123,117 @@ public class OrganizationController {
         map.put("activityNeedpeople", needPeople);
         map.put("activityNotice", affair);
         map.put("activitySignddl", signDdl);
+        map.put("activitySkillNames", tags);
+        map.put("activityLatitude", activityLatitude);
+        map.put("activityLongitude", activityLongitude);
+        map.put("activityRadius", activityRadius);
         organizationService.upAct(map);
         log.info("志愿者组织申报志愿活动，活动名称：{}", name);
         return (String) map.get("msg");
+    }
+
+    /**
+     * 志愿者组织将审核未通过的志愿活动修改后重新提交审核
+     *
+     * @param activityNum    活动编号
+     * @param name           活动名称
+     * @param content        活动内容
+     * @param startTime      活动开始时间
+     * @param endTime        活动结束时间
+     * @param location       活动地点
+     * @param affair         注意事项
+     * @param need           招募人数
+     * @param sign_ddl       报名截止时间
+     * @param tags           活动所需服务技能标签，多个标签以英文逗号分隔
+     * @param latitude       活动地点纬度
+     * @param longitude      活动地点经度
+     * @param radius         签到地理围栏半径（米）
+     * @param authentication 当前登录用户信息
+     * @return 重新申报的处理结果信息
+     */
+    @RequestMapping(value = "/reviseAct", method = RequestMethod.POST)
+    @ResponseBody
+    public String reviseAct(@RequestParam(value = "activityNum") Integer activityNum,
+                            @RequestParam(value = "name") String name,
+                            @RequestParam(value = "content") String content,
+                            @RequestParam(value = "startTime") String startTime,
+                            @RequestParam(value = "endTime") String endTime,
+                            @RequestParam(value = "location") String location,
+                            @RequestParam(value = "affair") String affair,
+                            @RequestParam(value = "need") String need,
+                            @RequestParam(value = "sign_ddl") String sign_ddl,
+                            @RequestParam(value = "tags", required = false) String tags,
+                            @RequestParam(value = "latitude", required = false) String latitude,
+                            @RequestParam(value = "longitude", required = false) String longitude,
+                            @RequestParam(value = "radius", required = false) String radius,
+                            Authentication authentication) {
+
+        Date start;
+        Date end;
+        Date signDdl;
+        Integer needPeople;
+        BigDecimal activityLatitude;
+        BigDecimal activityLongitude;
+        Integer activityRadius;
+        try {
+            start = DateTimeParser.parse(startTime);
+            end = DateTimeParser.parse(endTime);
+            signDdl = DateTimeParser.parse(sign_ddl);
+            needPeople = Integer.valueOf(need.trim());
+            if (needPeople <= 0) {
+                throw new NumberFormatException("招募人数必须大于 0");
+            }
+            activityLatitude = parseDecimal(latitude, 90, "活动地点纬度");
+            activityLongitude = parseDecimal(longitude, 180, "活动地点经度");
+            activityRadius = parseRadius(radius);
+        } catch (IllegalArgumentException e) {
+            log.warn("志愿活动重新申报参数不正确：{}", e.getMessage());
+            return e.getMessage();
+        } catch (RuntimeException e) {
+            log.warn("志愿活动重新申报的招募人数格式不正确：{}", need);
+            return "招募人数必须为大于 0 的数字，请重新填写";
+        }
+
+        User user = (User) authentication.getPrincipal();
+
+        Map<Object, Object> map = new HashMap<>();
+        map.put("loginId", user.getUsername());
+        map.put("activityNum", activityNum);
+        map.put("activityName", name);
+        map.put("activityDetail", content);
+        map.put("activityBegintime", start);
+        map.put("activityEndtime", end);
+        map.put("activityLocation", location);
+        map.put("activityNeedpeople", needPeople);
+        map.put("activityNotice", affair);
+        map.put("activitySignddl", signDdl);
+        map.put("activitySkillNames", tags);
+        map.put("activityLatitude", activityLatitude);
+        map.put("activityLongitude", activityLongitude);
+        map.put("activityRadius", activityRadius);
+        activityService.reviseAct(map);
+        log.info("志愿者组织修改后重新申报志愿活动，活动编号：{}", activityNum);
+        return (String) map.get("msg");
+    }
+
+    /**
+     * 活动结算：对已通过报名但未签退的志愿者记录爽约并扣减信用分
+     *
+     * @param activityNum 活动编号
+     * @return 处理结果
+     */
+    @RequestMapping(value = "/settle", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResponse settle(@RequestParam(value = "activityNum") Integer activityNum) {
+
+        Map<Object, Object> result = checkInService.settleActivity(activityNum);
+        String msg = (String) result.get("msg");
+        if (!isSuccess(result)) {
+            log.warn("活动结算未完成，活动编号：{}，原因：{}", activityNum, msg);
+            return ApiResponse.fail(msg);
+        }
+        log.info("志愿者组织完成活动结算，活动编号：{}，结果：{}", activityNum, msg);
+        return ApiResponse.success(msg);
     }
 
     /**
@@ -156,5 +286,50 @@ public class OrganizationController {
             return ApiResponse.success();
         }
         return ApiResponse.fail();
+    }
+
+    /**
+     * 解析页面提交的经纬度并校验取值范围
+     */
+    private BigDecimal parseDecimal(String value, int maxAbsolute, String fieldName) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        BigDecimal decimal;
+        try {
+            decimal = new BigDecimal(value.trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(fieldName + "格式不正确，请重新获取定位");
+        }
+        if (decimal.abs().compareTo(new BigDecimal(maxAbsolute)) > 0) {
+            throw new IllegalArgumentException(fieldName + "超出合理范围，请重新获取定位");
+        }
+        return decimal;
+    }
+
+    /**
+     * 解析签到地理围栏半径，未填写时返回 null 交由存储过程取默认值
+     */
+    private Integer parseRadius(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            Integer radius = Integer.valueOf(value.trim());
+            if (radius <= 0) {
+                throw new NumberFormatException("签到围栏半径必须大于 0");
+            }
+            return radius;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("签到围栏半径必须为大于 0 的数字");
+        }
+    }
+
+    /**
+     * 判断存储过程返回的处理结果是否成功
+     */
+    private boolean isSuccess(Map<Object, Object> result) {
+        Object ok = result.get("ok");
+        return ok != null && ((Number) ok).intValue() == 1;
     }
 }

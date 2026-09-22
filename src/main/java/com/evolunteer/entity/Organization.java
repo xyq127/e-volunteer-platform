@@ -9,7 +9,7 @@ import lombok.Data;
 /**
  * E志愿志愿者服务平台 V1.0
  * <p>
- * 志愿者组织表 organization，保存志愿者组织的账号、名称、成立日期与组织简介。
+ * 志愿者组织表 organization，保存志愿者组织的账号、名称、成立日期与组织简介，登录密码统一保存在 e_user 表。
  */
 @TableName(value ="organization")
 @Data
@@ -20,9 +20,6 @@ public class Organization implements Serializable {
 
     /** 组织登录账号 */
     private String organizationId;
-
-    /** 登录密码密文 */
-    private String organizationPassword;
 
     /** 组织名称 */
     private String organizationName;

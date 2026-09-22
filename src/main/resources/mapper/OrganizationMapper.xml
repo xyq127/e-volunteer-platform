@@ -9,7 +9,6 @@
     <resultMap id="BaseResultMap" type="com.evolunteer.entity.Organization">
             <id property="organizationNum" column="organization_num" jdbcType="INTEGER"/>
             <result property="organizationId" column="organization_id" jdbcType="VARCHAR"/>
-            <result property="organizationPassword" column="organization_password" jdbcType="VARCHAR"/>
             <result property="organizationName" column="organization_name" jdbcType="VARCHAR"/>
             <result property="organizationEstablishdate" column="organization_establishdate" jdbcType="DATE"/>
             <result property="organizationIntroduction" column="organization_introduction" jdbcType="VARCHAR"/>
@@ -17,7 +16,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        organization_num,organization_id,organization_password,
+        organization_num,organization_id,
         organization_name,organization_establishdate,organization_introduction,
         organization_isdeleted
     </sql>

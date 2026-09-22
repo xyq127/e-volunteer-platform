@@ -126,6 +126,9 @@
                             <li class="dropdown"><a class="nav-link menu-title" href="act_end.html"><i
                                     data-feather="check"></i><span>已结束的活动</span></a>
                             </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="checkin_review.html"><i
+                                    data-feather="check-square"></i><span>签到与时长复核</span></a>
+                            </li>
                             <li class="sidebar-main-title">
                                 <div><h6>组织中心</h6></div>
                             </li>
@@ -266,8 +269,11 @@
                             </td>
                           </tr>
                 `;
-            $("#notStartActivity_table tbody").html(tabValue);
         });
+        if (notStartActivity.length === 0) {
+            tabValue = `<tr><td colspan="6" class="text-center text-muted">暂无数据</td></tr>`;
+        }
+        $("#notStartActivity_table tbody").html(tabValue);
     }
 
     function volRecruit(activityNum) {
@@ -289,31 +295,26 @@
                                 <td class="text-center">报名时间</td>
                                 <td class="text-center">性别</td>
                                 <td class="text-center">联系电话</td>
+                                <td class="text-center">匹配度</td>
                                 <td class="text-center">操作</td>
                               </tr>
                 `;
                 $("#volRecruitList_table thead").html(modalValueThead);
 
-                var recruitVolList = result.extend.volunteerList;
+                var recruitVolList = (result && result.extend) ? (result.extend.volunteerList || []) : [];
                 var modalValueTbody = ``;
                 $.each(recruitVolList, function (index, item) {
-                    console.log(typeof item.participateApplytime);
-                    // var today = new Date();
-                    // var todayYear= today.getFullYear();
-                    // var birth=parseDate(item.volunteer.volunteerBirth);
-                    // var birthYear=birth.getFullYear();
-                    // age=todayYear-birthYear;
-                    if (item.volunteer.volunteerGender == '1') {
-                        var gender = '女';
-                    } else {
-                        var gender = '男';
-                    }
+                    // 志愿者表中的性别直接保存中文，无值时以占位符展示
+                    var gender = item.volunteer.volunteerGender || '—';
                     modalValueTbody += `<tr>
                                             <td class="text-center">${item.volunteer.volunteerId}</td>
                                             <td class="text-center">${item.volunteer.volunteerName}</td>
                                             <td class="text-center">${formatTime(item.participateApplytime)}</td>
                                             <td class="text-center">${gender}</td>
                                             <td class="text-center">${item.volunteer.volunteerTel}</td>
+                                            <td class="text-center">${(item.matchScore === null || item.matchScore === undefined) ? "—" : item.matchScore + " 分"}
+                                                <div class="text-muted small">${item.matchReasons || "—"}</div>
+                                            </td>
 
                     `;
                     if (item.participateApplystate == '0') {
@@ -333,6 +334,9 @@
                     }
 
                 });
+                if (recruitVolList.length === 0) {
+                    modalValueTbody = `<tr><td colspan="7" class="text-center text-muted">暂无数据</td></tr>`;
+                }
                 $("#volRecruitList_table tbody").html(modalValueTbody);
             },
             error: function (result) {
@@ -350,11 +354,10 @@
             },
             success: function (result) {
                 console.log(result);
-                if (result == "success") {
-                    var name = "#" + participateNum;
-                    $(name).empty();
-                    $(name).html("已通过").css("color", "green");
-                    volRecruit(activityNum);//画表格
+                if (result && result.code === 100) {
+                    volRecruit(activityNum);//审核结果以接口返回为准，重新渲染招募列表
+                } else {
+                    alert((result && result.msg) ? result.msg : "审核操作失败");
                 }
             },
             error: function (result) {
@@ -372,13 +375,10 @@
             },
             success: function (result) {
                 console.log(result);
-                if(result=="success"){
-                    var name="#"+participateNum;
-                    console.log(name);
-                    $(name).empty();
-
-                    $(name).html("未通过").css("color","red");
-                    volRecruit(activityNum);//画表格
+                if (result && result.code === 100) {
+                    volRecruit(activityNum);//审核结果以接口返回为准，重新渲染招募列表
+                } else {
+                    alert((result && result.msg) ? result.msg : "审核操作失败");
                 }
             },
             error: function (result) {

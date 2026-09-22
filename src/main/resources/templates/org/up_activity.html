@@ -126,6 +126,9 @@
                             <li class="dropdown"><a class="nav-link menu-title" href="act_end.html"><i
                                     data-feather="check"></i><span>已结束的活动</span></a>
                             </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="checkin_review.html"><i
+                                    data-feather="check-square"></i><span>签到与时长复核</span></a>
+                            </li>
                             <li class="sidebar-main-title">
                                 <div><h6>组织中心</h6></div>
                             </li>
@@ -171,21 +174,19 @@
                         </div>
 
                         <div class="form-group row">
-                            <label class="col-sm-3 col-form-label text-end">开始时间</label>
+                            <label class="col-sm-3 col-form-label text-end">开始时间（年-月-日 时:分）</label>
                             <div class="col-xl-5 col-sm-9">
                                 <div class="input-group">
-                                    <input class="datepicker-here form-control digits" type="text" data-language="en"
-                                           id="start_time">
+                                    <input class="form-control" type="datetime-local" id="start_time">
                                 </div>
                             </div>
                         </div>
 
                         <div class="form-group row">
-                            <label class="col-sm-3 col-form-label text-end">结束时间</label>
+                            <label class="col-sm-3 col-form-label text-end">结束时间（年-月-日 时:分）</label>
                             <div class="col-xl-5 col-sm-9">
                                 <div class="input-group">
-                                    <input class="datepicker-here form-control digits" type="text" data-language="en"
-                                           id="end_time">
+                                    <input class="form-control" type="datetime-local" id="end_time">
                                 </div>
                             </div>
                         </div>
@@ -218,12 +219,79 @@
                         </div>
 
                         <div class="form-group row">
-                            <label class="col-sm-3 col-form-label text-end">报名结束时间</label>
+                            <label class="col-sm-3 col-form-label text-end">报名结束时间（年-月-日 时:分）</label>
                             <div class="col-xl-5 col-sm-9">
                                 <div class="input-group">
-                                    <input class="datepicker-here form-control digits" type="text" data-language="en"
-                                           id="sign_ddl">
+                                    <input class="form-control" type="datetime-local" id="sign_ddl">
                                 </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label text-end">服务技能标签</label>
+                            <div class="col-xl-5 col-sm-9">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input skill_checkbox" type="checkbox" id="skill_tag_1" value="助学支教">
+                                    <label class="form-check-label" for="skill_tag_1">助学支教</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input skill_checkbox" type="checkbox" id="skill_tag_2" value="助老服务">
+                                    <label class="form-check-label" for="skill_tag_2">助老服务</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input skill_checkbox" type="checkbox" id="skill_tag_3" value="环保公益">
+                                    <label class="form-check-label" for="skill_tag_3">环保公益</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input skill_checkbox" type="checkbox" id="skill_tag_4" value="社区服务">
+                                    <label class="form-check-label" for="skill_tag_4">社区服务</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input skill_checkbox" type="checkbox" id="skill_tag_5" value="医疗健康">
+                                    <label class="form-check-label" for="skill_tag_5">医疗健康</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input skill_checkbox" type="checkbox" id="skill_tag_6" value="应急救援">
+                                    <label class="form-check-label" for="skill_tag_6">应急救援</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input skill_checkbox" type="checkbox" id="skill_tag_7" value="大型赛会">
+                                    <label class="form-check-label" for="skill_tag_7">大型赛会</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input skill_checkbox" type="checkbox" id="skill_tag_8" value="文化宣传">
+                                    <label class="form-check-label" for="skill_tag_8">文化宣传</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input skill_checkbox" type="checkbox" id="skill_tag_9" value="心理疏导">
+                                    <label class="form-check-label" for="skill_tag_9">心理疏导</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input skill_checkbox" type="checkbox" id="skill_tag_10" value="信息技术">
+                                    <label class="form-check-label" for="skill_tag_10">信息技术</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label text-end">活动定位</label>
+                            <div class="col-xl-5 col-sm-9">
+                                <div class="input-group">
+                                    <input class="form-control" id="activity_latitude" type="text" readonly placeholder="纬度">
+                                    <input class="form-control" id="activity_longitude" type="text" readonly placeholder="经度">
+                                    <button class="btn btn-outline-primary" type="button" id="locate_activity">获取活动地点定位</button>
+                                </div>
+                                <span class="text-muted small">点击按钮用浏览器定位填充活动地点的纬度与经度，签到围栏以此为准</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label text-end">签到围栏半径（米）</label>
+                            <div class="col-xl-5 col-sm-9">
+                                <div class="input-group">
+                                    <input class="form-control" id="activity_radius" type="number" min="0" step="10" value="300">
+                                </div>
+                                <span class="text-muted small">志愿者签到位置超出该半径时标记为异常，需志愿者组织复核</span>
                             </div>
                         </div>
 
@@ -257,10 +325,6 @@
 <!-- Bootstrap js-->
 <script src="/console/assets/js/bootstrap/popper.min.js"></script>
 <script src="/console/assets/js/bootstrap/bootstrap.min.js"></script>
-<!-- Datepicker js-->
-<script src="/console/assets/js/datepicker/date-picker/datepicker.js"></script>
-<script src="/console/assets/js/datepicker/date-picker/datepicker.en.js"></script>
-<script src="/console/assets/js/datepicker/date-picker/datepicker.custom.js"></script>
 <!-- Theme js-->
 <script src="/console/assets/js/script.js"></script>
 <!-- login js-->
@@ -297,6 +361,10 @@
         var affair = $("#activity_affair").val();
         var need = $("#activity_need").val();
         var sign_ddl = $("#sign_ddl").val();
+        var tags = collectSkillTags();
+        var latitude = $("#activity_latitude").val();
+        var longitude = $("#activity_longitude").val();
+        var radius = $("#activity_radius").val();
 
         $.ajax({
             url: "/org/upact",
@@ -309,7 +377,11 @@
                 "location": location,
                 "affair": affair,
                 "need": need,
-                "sign_ddl": sign_ddl
+                "sign_ddl": sign_ddl,
+                "tags": tags,
+                "latitude": latitude,
+                "longitude": longitude,
+                "radius": radius
             },
             success: function (result) {
                 if (result) {
@@ -323,6 +395,33 @@
             }
         })
     })
+
+    /**
+     * 收集表单中选中的服务技能标签，使用英文逗号连接
+     */
+    function collectSkillTags() {
+        var tags = [];
+        $(".skill_checkbox:checked").each(function () {
+            tags.push($(this).val());
+        });
+        return tags.join(",");
+    }
+
+    /**
+     * 使用浏览器定位填充活动地点的纬度与经度
+     */
+    $("#locate_activity").click(function () {
+        if (!navigator.geolocation) {
+            alert("当前浏览器不支持定位功能，请手动填写活动定位");
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(function (position) {
+            $("#activity_latitude").val(position.coords.latitude.toFixed(6));
+            $("#activity_longitude").val(position.coords.longitude.toFixed(6));
+        }, function () {
+            alert("定位失败，请检查浏览器定位权限后重试");
+        });
+    });
 </script>
 
 </body>

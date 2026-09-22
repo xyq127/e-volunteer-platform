@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- E志愿志愿者服务平台 V1.0 志愿者技能表 volunteer_skill 的映射文件 -->
+<mapper namespace="com.evolunteer.mapper.VolunteerSkillMapper">
+
+    <resultMap id="BaseResultMap" type="com.evolunteer.entity.VolunteerSkill">
+        <id property="skillNum" column="skill_num" jdbcType="INTEGER"/>
+        <result property="volunteerNum" column="volunteer_num" jdbcType="INTEGER"/>
+        <result property="skillName" column="skill_name" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        skill_num,volunteer_num,skill_name
+    </sql>
+
+    <!-- 按志愿者查询其登记的服务技能标签 -->
+    <select id="selectSkillNamesByVolunteerNum" resultType="java.lang.String">
+        select skill_name
+        from volunteer_skill
+        where volunteer_num = #{volunteerNum,jdbcType=INTEGER}
+        order by skill_num asc
+    </select>
+
+    <!-- 清除志愿者已登记的服务技能标签 -->
+    <delete id="deleteSkillNamesByVolunteerNum">
+        delete
+        from volunteer_skill
+        where volunteer_num = #{volunteerNum,jdbcType=INTEGER}
+    </delete>
+
+</mapper>

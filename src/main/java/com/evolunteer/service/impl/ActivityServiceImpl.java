@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * E志愿志愿者服务平台 V1.0
  * <p>
- * 志愿活动业务实现类：封装志愿活动的查询、平台审核结果回写以及活动逻辑删除等数据库操作。
+ * 志愿活动业务实现类：封装志愿活动的查询、平台审核结果回写、审核未通过后的重新申报以及活动逻辑删除等数据库操作。
  */
 @Service
 public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> implements ActivityService {
@@ -65,12 +65,24 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, Activity> i
     /**
      * 调用存储过程写入平台管理员的活动审核结果
      *
-     * @param map 审核参数，包含管理员账号、活动编号、审核结果与审核意见
+     * @param map 审核参数，包含管理员账号、活动编号、审核结果、结构化原因与审核意见
      * @return 存储过程返回的处理结果信息
      */
     @Override
     public Object passActByAdminIdWithStatue(Map<Object, Object> map) {
         baseMapper.admin_check_activity(map);
+        return map.get("msg");
+    }
+
+    /**
+     * 调用存储过程将审核未通过的活动修改后重新提交审核
+     *
+     * @param map 重新申报参数，包含组织账号、活动编号、活动基本信息、技能标签与活动坐标
+     * @return 存储过程返回的处理结果信息
+     */
+    @Override
+    public Object reviseAct(Map<Object, Object> map) {
+        baseMapper.organization_revise_activity(map);
         return map.get("msg");
     }
 

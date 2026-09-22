@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/console/assets/images/favicon.png" type="image/x-icon">
+    <link rel="shortcut icon" href="/console/assets/images/favicon.png" type="image/x-icon">
+    <title>签到与时长复核 - E志愿志愿者服务平台 V1.0</title>
+    <!-- Font Awesome-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/fontawesome.css">
+    <!-- ico-font-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/icofont.css">
+    <!-- Themify icon-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/themify.css">
+    <!-- Flag icon-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/flag-icon.css">
+    <!-- Feather icon-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/feather-icon.css">
+    <!-- Bootstrap css-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/bootstrap.css">
+    <!-- App css-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/style.css">
+    <!-- Responsive css-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/responsive.css">
+</head>
+<body>
+<!-- Loader starts-->
+<div class="loader-wrapper">
+    <div class="theme-loader">
+        <div class="loader-p"></div>
+    </div>
+</div>
+<!-- Loader ends-->
+<!-- page-wrapper Start-->
+<div class="page-wrapper compact-wrapper" id="pageWrapper">
+    <!-- Page Header Start-->
+    <div class="page-main-header">
+        <div class="main-header-right row m-0">
+            <div class="main-header-left">
+                <div class="logo-wrapper"><a href="index.html"><img class="img-fluid"
+                                                                   src="/console/assets/images/logo/app-logo.svg" alt=""></a>
+                </div>
+                <div class="dark-logo-wrapper"><a href="index.html"><img class="img-fluid"
+                                                                         src="/console/assets/images/logo/app-logo-dark.svg"
+                                                                         alt=""></a></div>
+                <div class="toggle-sidebar"><i class="status_toggle middle" data-feather="sidebar"
+                                               id="sidebar-toggle"></i></div>
+            </div>
+            <div class="left-menu-header col">
+                <h6 class="f-w-600 mb-0">志愿者组织工作台</h6>
+            </div>
+            <div class="nav-right col pull-right right-menu p-0">
+                <ul class="nav-menus">
+                    <li><a class="text-dark" href="#!" onclick="javascript:toggleFullScreen()"><i
+                            data-feather="maximize"></i></a></li>
+                    <li class="p-0">
+                        <button class="btn btn-primary-light" type="button"><a href="/logout"><i
+                                data-feather="power"></i>退出登录</a></button>
+                    </li>
+                </ul>
+            </div>
+            <div class="d-lg-none mobile-toggle pull-right w-auto"><i data-feather="menu"></i></div>
+        </div>
+    </div>
+    <!-- Page Header Ends-->
+    <!-- Page Body Start-->
+    <div class="page-body-wrapper sidebar-icon">
+        <!-- Page Sidebar Start-->
+        <header class="main-nav">
+            <div class="sidebar-user text-center">
+                <a class="setting-primary" href="org_info.html"><i data-feather="settings"></i></a>
+                <img class="img-90 rounded-circle" src="/console/assets/images/dashboard/1.png" alt="">
+                <a href="org_info.html"><h6 class="mt-3 f-14 f-w-600" id="organization_name">志愿者组织</h6></a>
+                <p class="mb-0 font-roboto">志愿活动申报与报名管理</p>
+            </div>
+            <nav>
+                <div class="main-navbar">
+                    <div class="left-arrow" id="left-arrow"><i data-feather="rewind"></i></div>
+                    <div id="mainnav">
+                        <ul class="nav-menu custom-scrollbar">
+                            <li class="back-btn">
+                                <div class="mobile-back text-end"><span>返回</span><i class="fa fa-angle-right ps-2"
+                                                                                   aria-hidden="true"></i></div>
+                            </li>
+                            <li class="sidebar-main-title">
+                                <div><h6>工作台</h6></div>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="index.html"><i
+                                    data-feather="home"></i><span>组织工作台</span></a>
+                            </li>
+                            <li class="sidebar-main-title">
+                                <div><h6>志愿活动管理</h6></div>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="up_activity.html"><i
+                                    data-feather="plus"></i><span>申报志愿活动</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="act_audit.html"><i
+                                    data-feather="airplay"></i><span>审核中的活动</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="act_not_audit.html"><i
+                                    data-feather="octagon"></i><span>审核未通过的活动</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="act_not_start.html"><i
+                                    data-feather="clock"></i><span>未开始的活动</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="act_carry.html"><i
+                                    data-feather="play"></i><span>进行中的活动</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="act_end.html"><i
+                                    data-feather="check"></i><span>已结束的活动</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title active" href="checkin_review.html"><i
+                                    data-feather="check-square"></i><span>签到与时长复核</span></a>
+                            </li>
+                            <li class="sidebar-main-title">
+                                <div><h6>组织中心</h6></div>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="org_info.html"><i
+                                    data-feather="sliders"></i><span>组织资料</span></a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="right-arrow" id="right-arrow"><i data-feather="play"></i></div>
+                </div>
+            </nav>
+        </header>
+        <!-- Page Sidebar Ends-->
+        <div class="page-body">
+            <!-- Container-fluid starts-->
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-xl-4">
+                        <div class="card">
+                            <div class="card-header pb-0">
+                                <h5>未开始的活动</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-bordered" id="notStartActivity_table">
+                                        <thead>
+                                        <tr class="active">
+                                            <th scope="col">活动名称</th>
+                                            <th scope="col">服务时间</th>
+                                            <th scope="col">活动地点</th>
+                                            <th scope="col">招募人数</th>
+                                            <th scope="col">结算状态</th>
+                                            <th scope="col">操作</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">数据加载中……</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-4">
+                        <div class="card">
+                            <div class="card-header pb-0">
+                                <h5>进行中的活动</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-bordered" id="carryActivity_table">
+                                        <thead>
+                                        <tr class="active">
+                                            <th scope="col">活动名称</th>
+                                            <th scope="col">服务时间</th>
+                                            <th scope="col">活动地点</th>
+                                            <th scope="col">招募人数</th>
+                                            <th scope="col">结算状态</th>
+                                            <th scope="col">操作</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">数据加载中……</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-4">
+                        <div class="card">
+                            <div class="card-header pb-0">
+                                <h5>已结束的活动</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-bordered" id="endActivity_table">
+                                        <thead>
+                                        <tr class="active">
+                                            <th scope="col">活动名称</th>
+                                            <th scope="col">服务时间</th>
+                                            <th scope="col">活动地点</th>
+                                            <th scope="col">招募人数</th>
+                                            <th scope="col">结算状态</th>
+                                            <th scope="col">操作</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">数据加载中……</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 选中活动后的签到与时长管理区 start-->
+                <div class="row d-none" id="manageArea">
+                    <div class="col-xl-12">
+                        <div class="card">
+                            <div class="card-header pb-0">
+                                <h5>现场签到码<span class="text-muted" id="manage_activity_name"></span></h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-4">
+                                        <p class="mb-1 text-muted">当前签到码</p>
+                                        <h4 class="mb-0" id="checkin_code">尚未生成</h4>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="btn-group btn-group-pill" role="group" aria-label="签到码操作">
+                                            <button class="btn btn-outline-primary" type="button"
+                                                    id="generate_checkin_code">生成签到码
+                                            </button>
+                                            <button class="btn btn-outline-secondary" type="button"
+                                                    id="refresh_checkin_code">重新生成
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="mb-0 mt-3 text-muted">请在活动现场向志愿者公布该签到码，志愿者签到时须填写该签到码。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-12">
+                        <div class="card">
+                            <div class="card-header pb-0 d-flex justify-content-between align-items-center">
+                                <h5>签到与时长记录</h5>
+                                <button class="btn btn-outline-danger d-none" type="button" id="settle_activity">
+                                    活动结算
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-bordered" id="checkinReview_table">
+                                        <thead>
+                                        <tr class="active">
+                                            <th scope="col">志愿者编号</th>
+                                            <th scope="col">姓名</th>
+                                            <th scope="col">联系电话</th>
+                                            <th scope="col">签到时间</th>
+                                            <th scope="col">签退时间</th>
+                                            <th scope="col">服务时长</th>
+                                            <th scope="col">签到距离（米）</th>
+                                            <th scope="col">轨迹标记</th>
+                                            <th scope="col">复核状态</th>
+                                            <th scope="col">操作</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td colspan="10" class="text-center text-muted">数据加载中……</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 选中活动后的签到与时长管理区 end-->
+            </div>
+            <!-- Container-fluid Ends-->
+        </div>
+
+        <!-- 复核模态框（Modal） start-->
+        <div class="modal fade" id="reviewModal" tabindex="-1" role="dialog" aria-labelledby="reviewModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="reviewModalLabel">复核服务时长</h5>
+                        <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-1 text-muted">复核结果</p>
+                        <h6 id="review_result">—</h6>
+                        <p class="mb-1 mt-3 text-muted">复核备注</p>
+                        <textarea class="form-control" id="review_remark" rows="3"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" type="button" id="review_submit">提交复核</button>
+                        <button class="btn btn-light" type="button" data-bs-dismiss="modal">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 复核模态框（Modal） end-->
+    </div>
+</div>
+<!-- latest jquery-->
+<script src="/console/assets/js/jquery-3.5.1.min.js"></script>
+<!-- feather icon js-->
+<script src="/console/assets/js/icons/feather-icon/feather.min.js"></script>
+<script src="/console/assets/js/icons/feather-icon/feather-icon.js"></script>
+<!-- Sidebar jquery-->
+<script src="/console/assets/js/sidebar-menu.js"></script>
+<script src="/console/assets/js/config.js"></script>
+<!-- Bootstrap js-->
+<script src="/console/assets/js/bootstrap/popper.min.js"></script>
+<script src="/console/assets/js/bootstrap/bootstrap.min.js"></script>
+<!-- Theme js-->
+<script src="/console/assets/js/script.js"></script>
+
+<script type="text/javascript">
+    /**
+     * 将后端返回的时间格式化为 yyyy-MM-dd HH:mm
+     */
+    function formatTime(value) {
+        if (!value) {
+            return "—";
+        }
+        return String(value).replace("T", " ").substring(0, 16);
+    }
+
+    /** 当前正在管理的活动编号，未选中时为 null */
+    var currentActivityNum = null;
+    /** 活动编号与活动名称、是否可结算的对应关系 */
+    var activityMeta = {};
+    /** 复核模态框实例 */
+    var reviewModal = null;
+    /** 当前待复核的签到记录 */
+    var reviewTarget = {checkinNum: null, isPass: null};
+
+    /**
+     * 渲染活动列表（未开始 / 进行中 / 已结束）
+     */
+    function loadActivityList(url, holderName, tableId, endActivity) {
+        $.ajax({
+            url: url,
+            type: "GET",
+            data: {},
+            success: function (result) {
+                var activities = (result && result.extend) ? (result.extend[holderName] || []) : [];
+                var tabValue = ``;
+                $.each(activities, function (index, activity) {
+                    activityMeta[activity.activityNum] = {
+                        name: activity.activityName,
+                        endActivity: endActivity
+                    };
+                    tabValue += `<tr>
+                                    <td>${activity.activityName}</td>
+                                    <td>${formatTime(activity.activityBegintime)} ~ ${formatTime(activity.activityEndtime)}</td>
+                                    <td>${activity.activityLocation || "—"}</td>
+                                    <td>${activity.activityNeedpeople || 0}</td>
+                                    <td>${activity.activitySettleTime ? "已结算" : "未结算"}</td>
+                                    <td>
+                                        <button class="btn btn-outline-primary activity_manage_button" type="button" data-activity-num="${activity.activityNum}">签到与时长管理</button>
+                                    </td>
+                                 </tr>`;
+                });
+                if (activities.length === 0) {
+                    tabValue = `<tr><td colspan="6" class="text-center text-muted">暂无数据</td></tr>`;
+                }
+                $("#" + tableId + " tbody").html(tabValue);
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
+    /**
+     * 选中活动，展示签到码与签到记录管理区
+     */
+    function selectActivity(activityNum) {
+        currentActivityNum = activityNum;
+        var meta = activityMeta[activityNum] || {};
+        $("#manage_activity_name").text(meta.name ? "：" + meta.name : "");
+        if (meta.endActivity) {
+            $("#settle_activity").removeClass("d-none");
+        } else {
+            $("#settle_activity").addClass("d-none");
+        }
+        $("#manageArea").removeClass("d-none");
+        loadCheckinCode();
+        loadCheckinReviewList();
+        document.getElementById("manageArea").scrollIntoView();
+    }
+
+    /**
+     * 查询当前活动的现场签到码
+     */
+    function loadCheckinCode() {
+        if (currentActivityNum === null) {
+            return;
+        }
+        $.ajax({
+            url: "/checkin/code",
+            type: "GET",
+            data: {
+                "activityNum": currentActivityNum
+            },
+            success: function (result) {
+                var checkinCode = (result && result.extend) ? result.extend.checkinCode : null;
+                $("#checkin_code").text(checkinCode ? checkinCode : "尚未生成");
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
+    /**
+     * 生成 / 重新生成现场签到码
+     */
+    function generateCheckinCode(refresh) {
+        if (currentActivityNum === null) {
+            return;
+        }
+        $.ajax({
+            url: "/checkin/code",
+            type: "POST",
+            data: {
+                "activityNum": currentActivityNum,
+                "refresh": refresh
+            },
+            success: function (result) {
+                if (result && result.extend && result.extend.checkinCode) {
+                    $("#checkin_code").text(result.extend.checkinCode);
+                    alert("签到码已生成，请在活动现场向志愿者公布");
+                } else {
+                    alert((result && result.msg) ? result.msg : "签到码生成失败");
+                }
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
+    /**
+     * 复核状态文案：null 待复核、"1" 已确认、"2" 已驳回
+     */
+    function checkinStateText(checkinTimecheck) {
+        if (checkinTimecheck === "1") {
+            return "已确认";
+        }
+        if (checkinTimecheck === "2") {
+            return "已驳回";
+        }
+        return "待复核";
+    }
+
+    /**
+     * 轨迹标记文案："1" 正常、"2" 异常（异常标红）
+     */
+    function checkinFlagText(checkinFlag) {
+        if (checkinFlag === "1") {
+            return "正常";
+        }
+        if (checkinFlag === "2") {
+            return '<span style="color: red">异常</span>';
+        }
+        return "—";
+    }
+
+    /**
+     * 复核操作列：待复核显示确认 / 驳回按钮，已复核显示复核备注
+     */
+    function reviewControlTd(item) {
+        if (!item.checkinTimecheck) {
+            return `<td class="text-center">
+                        <div class="btn-group btn-group-pill" role="group" aria-label="时长复核">
+                            <button class="btn btn-outline-primary" type="button" onclick="openReviewModal(${item.checkinNum},1)">确认时长</button>
+                            <button class="btn btn-outline-danger" type="button" onclick="openReviewModal(${item.checkinNum},2)">驳回</button>
+                        </div>
+                    </td>`;
+        }
+        return `<td class="text-center">${item.checkinRemark || "—"}</td>`;
+    }
+
+    /**
+     * 查询当前活动的签到与时长记录
+     */
+    function loadCheckinReviewList() {
+        if (currentActivityNum === null) {
+            return;
+        }
+        $.ajax({
+            url: "/checkin/reviewList",
+            type: "GET",
+            data: {
+                "activityNum": currentActivityNum
+            },
+            success: function (result) {
+                var checkins = (result && result.extend) ? (result.extend.checkins || []) : [];
+                var tabValue = ``;
+                $.each(checkins, function (index, item) {
+                    tabValue += `<tr>
+                                    <td>${item.volunteerId}</td>
+                                    <td>${item.volunteerName}</td>
+                                    <td>${item.volunteerTel || "—"}</td>
+                                    <td>${formatTime(item.checkinBegintime)}</td>
+                                    <td>${formatTime(item.checkinEndtime)}</td>
+                                    <td>${(item.checkinDuration === null || item.checkinDuration === undefined) ? "—" : item.checkinDuration + " 小时"}</td>
+                                    <td>${(item.checkinDistance === null || item.checkinDistance === undefined) ? "—" : item.checkinDistance}</td>
+                                    <td>${checkinFlagText(item.checkinFlag)}</td>
+                                    <td>${checkinStateText(item.checkinTimecheck)}</td>
+                                    ${reviewControlTd(item)}
+                                 </tr>`;
+                });
+                if (checkins.length === 0) {
+                    tabValue = `<tr><td colspan="10" class="text-center text-muted">暂无数据</td></tr>`;
+                }
+                $("#checkinReview_table tbody").html(tabValue);
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
+    /**
+     * 打开复核模态框，isPass 为 1 确认时长、2 驳回
+     */
+    function openReviewModal(checkinNum, isPass) {
+        reviewTarget.checkinNum = checkinNum;
+        reviewTarget.isPass = isPass;
+        $("#review_result").text(isPass === 1 ? "确认时长" : "驳回");
+        $("#review_remark").val("");
+        if (!reviewModal) {
+            reviewModal = new bootstrap.Modal(document.getElementById("reviewModal"));
+        }
+        reviewModal.show();
+    }
+
+    /**
+     * 提交时长复核结果
+     */
+    function submitReview() {
+        $.ajax({
+            url: "/checkin/review",
+            type: "POST",
+            data: {
+                "checkinNum": reviewTarget.checkinNum,
+                "isPass": reviewTarget.isPass,
+                "remark": $("#review_remark").val()
+            },
+            success: function (result) {
+                if (result && result.code === 100) {
+                    if (reviewModal) {
+                        reviewModal.hide();
+                    }
+                    alert(result.msg || "复核完成");
+                    loadCheckinReviewList();
+                } else {
+                    alert((result && result.msg) ? result.msg : "复核失败");
+                }
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
+    /**
+     * 活动结算，结算后刷新签到记录与活动列表
+     */
+    function settleActivity() {
+        if (currentActivityNum === null) {
+            return;
+        }
+        if (!confirm("确定对该活动进行结算吗？结算后将记录未签到志愿者的爽约情况。")) {
+            return;
+        }
+        $.ajax({
+            url: "/org/settle",
+            type: "POST",
+            data: {
+                "activityNum": currentActivityNum
+            },
+            success: function (result) {
+                alert((result && result.msg) ? result.msg : "活动结算完成");
+                loadCheckinReviewList();
+                loadActivityList("/activity/findNotStartActivityByNumAndState", "auditActivity", "notStartActivity_table", false);
+                loadActivityList("/activity/findCarryActivityByNumAndState", "carryActivity", "carryActivity_table", false);
+                loadActivityList("/activity/findEndActivityByNumAndState", "endActivity", "endActivity_table", true);
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
+    //一进网页就加载三个活动列表
+    $(document).ready(function () {
+        loadActivityList("/activity/findNotStartActivityByNumAndState", "auditActivity", "notStartActivity_table", false);
+        loadActivityList("/activity/findCarryActivityByNumAndState", "carryActivity", "carryActivity_table", false);
+        loadActivityList("/activity/findEndActivityByNumAndState", "endActivity", "endActivity_table", true);
+
+        $(document).on("click", ".activity_manage_button", function () {
+            selectActivity($(this).attr("data-activity-num"));
+        });
+        $("#generate_checkin_code").click(function () {
+            generateCheckinCode(false);
+        });
+        $("#refresh_checkin_code").click(function () {
+            generateCheckinCode(true);
+        });
+        $("#settle_activity").click(function () {
+            settleActivity();
+        });
+        $("#review_submit").click(function () {
+            submitReview();
+        });
+    });
+</script>
+</body>
+</html>

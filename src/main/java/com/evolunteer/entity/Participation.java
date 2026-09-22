@@ -9,7 +9,7 @@ import lombok.Data;
 /**
  * E志愿志愿者服务平台 V1.0
  * <p>
- * 活动报名表 participate，保存志愿者报名志愿活动的申请、审核与志愿服务时长信息。
+ * 活动报名表 participate，保存志愿者报名志愿活动的申请、审核、服务时长与爽约信息。
  */
 @TableName(value ="participate")
 @Data
@@ -27,7 +27,7 @@ public class Participation implements Serializable {
     /** 报名申请时间 */
     private Date participateApplytime;
 
-    /** 报名审核状态 */
+    /** 报名审核状态，0 待审核、1 已通过、2 未通过、3 候补 */
     private String participateApplystate;
 
     /** 报名审核时间 */
@@ -48,6 +48,12 @@ public class Participation implements Serializable {
     /** 服务时长审核状态 */
     private String participateTimecheck;
 
+    /** 爽约标记，0 正常、1 爽约 */
+    private Integer participateNoshow;
+
+    /** 志愿者撤回报名时间 */
+    private Date participateCancelTime;
+
     /** 删除标记 */
     @TableLogic
     private Integer participateIsdeleted;
@@ -57,6 +63,18 @@ public class Participation implements Serializable {
      */
     @TableField(exist = false)
     private Volunteer volunteer;
+
+    /**
+     * 志愿者与所报活动的匹配度，志愿者组织审核报名时参考，取值 0 至 100
+     */
+    @TableField(exist = false)
+    private Integer matchScore;
+
+    /**
+     * 志愿者与所报活动的匹配理由，用于志愿者组织快速判断岗位适配度
+     */
+    @TableField(exist = false)
+    private String matchReasons;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

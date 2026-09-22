@@ -154,6 +154,31 @@
                         <p id="activityInformation">Cras mattis consectetur purus sit amet fermentum. Cras justo odio,
                             dapibus ac facilisis in, egestas eget quam. Morbi leo risus, porta ac consectetur ac,
                             vestibulum at eros.</p>
+                        <div class="form-group row mt-3">
+                            <label class="col-sm-3 col-form-label text-end">审核不通过原因</label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+                                    <select class="form-control" id="audit_reason">
+                                        <option value="">请选择</option>
+                                        <option value="PLAN_INCOMPLETE">活动方案不完整</option>
+                                        <option value="PEOPLE_UNCLEAR">人员安排不明确</option>
+                                        <option value="TIME_CONFLICT">活动时间或场地存在冲突</option>
+                                        <option value="INFO_MISSING">活动信息缺失</option>
+                                        <option value="SAFETY_RISK">存在安全风险</option>
+                                        <option value="OTHER">其他原因</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label text-end">审核意见</label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+                                    <textarea class="form-control" id="audit_remark" rows="2"
+                                              placeholder="可选，补充说明审核意见"></textarea>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
 <!--                        <button class="btn btn-danger" type="button" data-bs-dismiss="modal">不通过</button>-->
@@ -234,8 +259,12 @@
                             </td>
                           </tr>
                 `;
-            $("#auditActivity_table tbody").html(tabValue);
         });
+        //列表为空时展示“暂无数据”；.html() 必须写在 $.each 之外，否则只会渲染最后一行
+        if (!auditActivity || auditActivity.length === 0) {
+            tabValue = `<tr><td class="text-center" colspan="6">暂无数据</td></tr>`;
+        }
+        $("#auditActivity_table tbody").html(tabValue);
     }
 
     //查看活动详情
@@ -250,6 +279,9 @@
             success: function (result) {
                 console.log(result);
                 $("#activityInformation").empty();
+                //每次打开详情时清空上一次的审核意见与不通过原因
+                $("#audit_reason").val("");
+                $("#audit_remark").val("");
                 var modalValue = ``;
                 modalValue = `<div class="form-group row">
                                 <div class="form-group row">
@@ -368,6 +400,7 @@
         });
     }
 
+    //审核通过：statue=1，原因码留空
     $("#btn_pass").click(function () {
         var actName = $("#actvity_name").val();
         $.ajax({
@@ -375,7 +408,9 @@
             type: "POST",
             data: {
                 "actName": actName,
-                "statue":1
+                "statue": 1,
+                "reasonCode": "",
+                "remark": $("#audit_remark").val()
             },
             success: function (result) {
                 alert(result);
@@ -386,14 +421,22 @@
 
     });
 
+    //审核不通过：必须选择原因，statue=4
     $("#btn_not_pass").click(function () {
         var actName = $("#actvity_name").val();
+        var reasonCode = $("#audit_reason").val();
+        if (!reasonCode) {
+            alert("请选择审核不通过的原因");
+            return;
+        }
         $.ajax({
             url: "/admin/passAct",
             type: "POST",
             data: {
                 "actName": actName,
-                "statue":4
+                "statue": 4,
+                "reasonCode": reasonCode,
+                "remark": $("#audit_remark").val()
             },
             success: function (result) {
                 alert(result);

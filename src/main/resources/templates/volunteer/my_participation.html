@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/console/assets/images/favicon.png" type="image/x-icon">
+    <link rel="shortcut icon" href="/console/assets/images/favicon.png" type="image/x-icon">
+    <title>我的报名 - E志愿志愿者服务平台 V1.0</title>
+    <!-- Font Awesome-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/fontawesome.css">
+    <!-- ico-font-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/icofont.css">
+    <!-- Themify icon-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/themify.css">
+    <!-- Flag icon-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/flag-icon.css">
+    <!-- Feather icon-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/feather-icon.css">
+    <!-- Bootstrap css-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/bootstrap.css">
+    <!-- App css-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/style.css">
+    <!-- Responsive css-->
+    <link rel="stylesheet" type="text/css" href="/console/assets/css/responsive.css">
+</head>
+<body>
+<!-- Loader starts-->
+<div class="loader-wrapper">
+    <div class="theme-loader">
+        <div class="loader-p"></div>
+    </div>
+</div>
+<!-- Loader ends-->
+<!-- page-wrapper Start-->
+<div class="page-wrapper compact-wrapper" id="pageWrapper">
+    <!-- Page Header Start-->
+    <div class="page-main-header">
+        <div class="main-header-right row m-0">
+            <div class="main-header-left">
+                <div class="logo-wrapper"><a href="index.html"><img class="img-fluid"
+                                                                   src="/console/assets/images/logo/app-logo.svg" alt=""></a>
+                </div>
+                <div class="dark-logo-wrapper"><a href="index.html"><img class="img-fluid"
+                                                                         src="/console/assets/images/logo/app-logo-dark.svg"
+                                                                         alt=""></a></div>
+                <div class="toggle-sidebar"><i class="status_toggle middle" data-feather="sidebar"
+                                               id="sidebar-toggle"></i></div>
+            </div>
+            <div class="left-menu-header col">
+                <h6 class="f-w-600 mb-0">志愿者工作台</h6>
+            </div>
+            <div class="nav-right col pull-right right-menu p-0">
+                <ul class="nav-menus">
+                    <li><a class="text-dark" href="#!" onclick="javascript:toggleFullScreen()"><i
+                            data-feather="maximize"></i></a></li>
+                    <li class="p-0">
+                        <button class="btn btn-primary-light" type="button"><a href="/logout"><i
+                                data-feather="power"></i>退出登录</a></button>
+                    </li>
+                </ul>
+            </div>
+            <div class="d-lg-none mobile-toggle pull-right w-auto"><i data-feather="menu"></i></div>
+        </div>
+    </div>
+    <!-- Page Header Ends-->
+    <!-- Page Body Start-->
+    <div class="page-body-wrapper sidebar-icon">
+        <!-- Page Sidebar Start-->
+        <header class="main-nav">
+            <div class="sidebar-user text-center">
+                <a class="setting-primary" href="profile.html"><i data-feather="settings"></i></a>
+                <img class="img-90 rounded-circle" src="/console/assets/images/dashboard/1.png" alt="">
+                <a href="profile.html"><h6 class="mt-3 f-14 f-w-600" id="sidebar_volunteer_name">志愿者</h6></a>
+                <p class="mb-0 font-roboto" id="sidebar_volunteer_id">编号：—</p>
+            </div>
+            <nav>
+                <div class="main-navbar">
+                    <div class="left-arrow" id="left-arrow"><i data-feather="rewind"></i></div>
+                    <div id="mainnav">
+                        <ul class="nav-menu custom-scrollbar">
+                            <li class="back-btn">
+                                <div class="mobile-back text-end"><span>返回</span><i class="fa fa-angle-right ps-2"
+                                                                                   aria-hidden="true"></i></div>
+                            </li>
+                            <li class="sidebar-main-title">
+                                <div><h6>志愿服务</h6></div>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="index.html"><i
+                                    data-feather="home"></i><span>个人工作台</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="activity_plaza.html"><i
+                                    data-feather="compass"></i><span>活动广场</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title active" href="my_participation.html"><i
+                                    data-feather="clipboard"></i><span>我的报名</span></a>
+                            </li>
+                            <li class="sidebar-main-title">
+                                <div><h6>我的中心</h6></div>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="profile.html"><i
+                                    data-feather="user"></i><span>我的档案</span></a>
+                            </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="certificate.html"><i
+                                    data-feather="award"></i><span>志愿服务证明</span></a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="right-arrow" id="right-arrow"><i data-feather="play"></i></div>
+                </div>
+            </nav>
+        </header>
+        <!-- Page Sidebar Ends-->
+        <div class="page-body">
+            <!-- Container-fluid starts-->
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-xl-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>我的报名</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small mb-2">报名通过后可按活动安排现场签到与签退，服务时长需经志愿者组织复核后计入累计服务时长。</p>
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-bordernone">
+                                        <thead>
+                                        <tr>
+                                            <th scope="col">活动名称</th>
+                                            <th scope="col">服务时间</th>
+                                            <th scope="col">活动地点</th>
+                                            <th scope="col">报名时间</th>
+                                            <th scope="col">报名状态</th>
+                                            <th scope="col">服务时长</th>
+                                            <th scope="col">时长复核状态</th>
+                                            <th scope="col">操作</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody id="participation_table">
+                                        <tr>
+                                            <td colspan="8" class="text-center text-muted">数据加载中……</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Container-fluid Ends-->
+        </div>
+    </div>
+    <!-- 模态框（Modal） start-->
+    <div class="modal fade" id="checkinModal" tabindex="-1" role="dialog" aria-labelledby="checkinModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="checkinModalLabel">现场签到</h5>
+                    <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="checkin_activity_num">
+                    <div class="form-group">
+                        <label class="col-form-label" for="checkin_code">现场签到码</label>
+                        <input class="form-control" type="text" id="checkin_code"
+                               placeholder="请输入活动负责人现场公布的签到码">
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-6">
+                            <label class="col-form-label" for="checkin_latitude">纬度</label>
+                            <input class="form-control" type="text" id="checkin_latitude" readonly>
+                        </div>
+                        <div class="col-6">
+                            <label class="col-form-label" for="checkin_longitude">经度</label>
+                            <input class="form-control" type="text" id="checkin_longitude" readonly>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm mt-2" type="button" id="btn_get_location"
+                            onclick="fillCheckinLocation()">获取当前位置
+                    </button>
+                    <p class="text-muted small mb-0 mt-2">未获取到定位时可直接提交，系统会标记为异常并交志愿者组织复核。</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">取消</button>
+                    <button class="btn btn-primary" type="button" id="btn_checkin_submit" onclick="submitCheckin()">
+                        提交签到
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 模态框（Modal） end-->
+</div>
+<!-- latest jquery-->
+<script src="/console/assets/js/jquery-3.5.1.min.js"></script>
+<!-- feather icon js-->
+<script src="/console/assets/js/icons/feather-icon/feather.min.js"></script>
+<script src="/console/assets/js/icons/feather-icon/feather-icon.js"></script>
+<!-- Sidebar jquery-->
+<script src="/console/assets/js/sidebar-menu.js"></script>
+<script src="/console/assets/js/config.js"></script>
+<!-- Bootstrap js-->
+<script src="/console/assets/js/bootstrap/popper.min.js"></script>
+<script src="/console/assets/js/bootstrap/bootstrap.min.js"></script>
+<!-- Theme js-->
+<script src="/console/assets/js/script.js"></script>
+
+<script type="text/javascript">
+    /**
+     * 将后端返回的时间格式化为 yyyy-MM-dd HH:mm
+     */
+    function formatTime(value) {
+        if (!value) {
+            return "—";
+        }
+        return String(value).replace("T", " ").substring(0, 16);
+    }
+
+    /**
+     * 将数值格式化为一位小数，非法数值按 0.0 处理
+     */
+    function formatHours(value) {
+        var num = Number(value);
+        if (isNaN(num)) {
+            num = 0;
+        }
+        return num.toFixed(1);
+    }
+
+    /**
+     * 拼接活动的服务时间区间
+     */
+    function formatActivityTime(item) {
+        var begin = formatTime(item.activityBegintime);
+        var end = formatTime(item.activityEndtime);
+        if (begin === "—" && end === "—") {
+            return "—";
+        }
+        return begin + " ~ " + end;
+    }
+
+    /**
+     * 查询当前登录志愿者资料，并刷新侧边栏身份信息
+     */
+    function loadProfile() {
+        $.ajax({
+            url: "/volunteer/profile",
+            type: "GET",
+            success: function (result) {
+                if (!result || result.code !== 100 || !result.extend || !result.extend.profile) {
+                    if (result && result.msg) {
+                        alert(result.msg);
+                    }
+                    return;
+                }
+                var profile = result.extend.profile;
+                $("#sidebar_volunteer_name").text(profile.volunteerName || "志愿者");
+                $("#sidebar_volunteer_id").text("编号：" + (profile.volunteerId || "—"));
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
+    /**
+     * 报名状态对应的文字颜色
+     */
+    function applyStateHtml(item) {
+        var stateClass = "text-muted";
+        if (item.participateApplystate === "1") {
+            stateClass = "text-success";
+        } else if (item.participateApplystate === "2") {
+            stateClass = "text-danger";
+        } else if (item.participateApplystate === "3") {
+            stateClass = "text-warning";
+        }
+        return '<span class="' + stateClass + '">' + (item.participateApplystateText || "—") + '</span>';
+    }
+
+    /**
+     * 服务时长复核状态（null 待复核、1 已确认、2 已驳回）
+     */
+    function timecheckHtml(value) {
+        if (value !== null && value !== undefined && value !== "" && String(value) === "1") {
+            return '<span class="badge badge-success">已确认</span>';
+        }
+        if (value !== null && value !== undefined && value !== "" && String(value) === "2") {
+            return '<span class="badge badge-danger">已驳回</span>';
+        }
+        return '<span class="badge badge-secondary">待复核</span>';
+    }
+
+    /**
+     * 操作列按钮：签到、签退、撤回报名（签到与签退互斥）
+     */
+    function actionHtml(item) {
+        var buttons = "";
+        if (item.canCheckin) {
+            buttons += '<button class="btn btn-primary btn-xs" type="button" onclick="prepareCheckin('
+                + item.activityNum + ')" data-bs-toggle="modal" data-bs-target="#checkinModal">签到</button> ';
+        }
+        if (item.canCheckout) {
+            buttons += '<button class="btn btn-info btn-xs" type="button" onclick="checkoutActivity('
+                + item.activityNum + ')">签退</button> ';
+        }
+        if (item.canCancel) {
+            buttons += '<button class="btn btn-outline-danger btn-xs" type="button" onclick="cancelParticipation('
+                + item.participateNum + ')">撤回报名</button>';
+        }
+        return buttons ? buttons : "—";
+    }
+
+    /**
+     * 渲染我的报名列表
+     */
+    function renderParticipations(participations) {
+        var html = "";
+        if (!participations || participations.length === 0) {
+            html = '<tr><td colspan="8" class="text-center text-muted">暂无数据</td></tr>';
+        } else {
+            $.each(participations, function (index, item) {
+                html += "<tr>"
+                    + "<td>" + item.activityName + "</td>"
+                    + "<td>" + formatActivityTime(item) + "</td>"
+                    + "<td>" + (item.activityLocation || "—") + "</td>"
+                    + "<td>" + formatTime(item.participateApplytime) + "</td>"
+                    + "<td>" + applyStateHtml(item) + "</td>"
+                    + "<td>" + ((item.participateDuration === null || item.participateDuration === undefined)
+                        ? "—" : formatHours(item.participateDuration) + " 小时") + "</td>"
+                    + "<td>" + timecheckHtml(item.participateTimecheck) + "</td>"
+                    + "<td>" + actionHtml(item) + "</td>"
+                    + "</tr>";
+            });
+        }
+        $("#participation_table").html(html);
+    }
+
+    /**
+     * 加载我的报名列表
+     */
+    function loadParticipations() {
+        $.ajax({
+            url: "/volunteer/myParticipations",
+            type: "GET",
+            success: function (result) {
+                if (!result || result.code !== 100 || !result.extend) {
+                    if (result && result.msg) {
+                        alert(result.msg);
+                    }
+                    return;
+                }
+                renderParticipations(result.extend.participations);
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
+    /**
+     * 获取浏览器当前定位，取不到时返回空经纬度
+     */
+    function getPosition(callback) {
+        if (!navigator.geolocation) {
+            callback("", "");
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(function (position) {
+            callback(position.coords.latitude, position.coords.longitude);
+        }, function () {
+            callback("", "");
+        }, {enableHighAccuracy: true, timeout: 10000, maximumAge: 0});
+    }
+
+    /**
+     * 打开签到弹窗前的准备：记录活动编号并清空上次填写内容
+     */
+    function prepareCheckin(activityNum) {
+        $("#checkin_activity_num").val(activityNum);
+        $("#checkin_code").val("");
+        $("#checkin_latitude").val("");
+        $("#checkin_longitude").val("");
+    }
+
+    /**
+     * 将浏览器定位结果填充到签到弹窗的经纬度输入框
+     */
+    function fillCheckinLocation() {
+        getPosition(function (latitude, longitude) {
+            if (latitude === "" || longitude === "") {
+                alert("未能获取当前位置，可直接提交签到，系统将标记为异常并交志愿者组织复核");
+                return;
+            }
+            $("#checkin_latitude").val(latitude);
+            $("#checkin_longitude").val(longitude);
+        });
+    }
+
+    /**
+     * 关闭签到弹窗
+     */
+    function hideCheckinModal() {
+        var modalElement = document.getElementById("checkinModal");
+        if (window.bootstrap && bootstrap.Modal && modalElement) {
+            var modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+        }
+    }
+
+    /**
+     * 提交签到（活动编号 + 现场签到码 + 定位）
+     */
+    function submitCheckin() {
+        var code = $.trim($("#checkin_code").val());
+        if (!code) {
+            alert("请输入现场公布的签到码");
+            return;
+        }
+        $.ajax({
+            url: "/checkin/in",
+            type: "POST",
+            data: {
+                activityNum: $("#checkin_activity_num").val(),
+                code: code,
+                latitude: $("#checkin_latitude").val(),
+                longitude: $("#checkin_longitude").val()
+            },
+            success: function (result) {
+                hideCheckinModal();
+                alert((result && result.msg) ? result.msg : "操作完成");
+                loadParticipations();
+            },
+            error: function (result) {
+                console.log(result);
+                hideCheckinModal();
+                alert("网络异常，请稍后重试");
+                loadParticipations();
+            }
+        });
+    }
+
+    /**
+     * 签退：先获取定位，再提交签退
+     */
+    function checkoutActivity(activityNum) {
+        getPosition(function (latitude, longitude) {
+            $.ajax({
+                url: "/checkin/out",
+                type: "POST",
+                data: {activityNum: activityNum, latitude: latitude, longitude: longitude},
+                success: function (result) {
+                    alert((result && result.msg) ? result.msg : "操作完成");
+                    loadParticipations();
+                },
+                error: function (result) {
+                    console.log(result);
+                    alert("网络异常，请稍后重试");
+                    loadParticipations();
+                }
+            });
+        });
+    }
+
+    /**
+     * 撤回报名
+     */
+    function cancelParticipation(participateNum) {
+        if (!confirm("确认撤回该志愿活动的报名？")) {
+            return;
+        }
+        $.ajax({
+            url: "/volunteer/cancel",
+            type: "POST",
+            data: {participateNum: participateNum},
+            success: function (result) {
+                alert((result && result.msg) ? result.msg : "操作完成");
+                loadParticipations();
+            },
+            error: function (result) {
+                console.log(result);
+                alert("网络异常，请稍后重试");
+                loadParticipations();
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        loadProfile();
+        loadParticipations();
+    });
+</script>
+</body>
+</html>

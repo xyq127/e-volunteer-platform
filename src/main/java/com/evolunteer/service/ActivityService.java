@@ -10,7 +10,7 @@ import java.util.Map;
  * E志愿志愿者服务平台 V1.0
  * <p>
  * 志愿活动业务接口，基于 MyBatis-Plus 提供志愿活动数据的通用增删改查能力，
- * 并面向志愿者组织与平台管理员提供分状态查询、活动详情查询、活动审核与逻辑删除能力。
+ * 并面向志愿者组织与平台管理员提供分状态查询、活动详情查询、活动审核、重新申报与逻辑删除能力。
  */
 public interface ActivityService extends IService<Activity> {
 
@@ -58,10 +58,18 @@ public interface ActivityService extends IService<Activity> {
     /**
      * 写入平台管理员的活动审核结果
      *
-     * @param map 审核参数，包含管理员账号、活动编号、审核结果与审核意见
+     * @param map 审核参数，包含管理员账号、活动编号、审核结果、结构化原因与审核意见
      * @return 处理结果信息
      */
     Object passActByAdminIdWithStatue(Map<Object, Object> map);
+
+    /**
+     * 将审核未通过的活动修改后重新提交审核
+     *
+     * @param map 重新申报参数，包含组织账号、活动编号、活动基本信息、技能标签与活动坐标
+     * @return 处理结果信息
+     */
+    Object reviseAct(Map<Object, Object> map);
 
     /**
      * 按活动名称精确查询活动

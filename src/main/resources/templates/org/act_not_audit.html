@@ -126,6 +126,9 @@
                             <li class="dropdown"><a class="nav-link menu-title" href="act_end.html"><i
                                     data-feather="check"></i><span>已结束的活动</span></a>
                             </li>
+                            <li class="dropdown"><a class="nav-link menu-title" href="checkin_review.html"><i
+                                    data-feather="check-square"></i><span>签到与时长复核</span></a>
+                            </li>
                             <li class="sidebar-main-title">
                                 <div><h6>组织中心</h6></div>
                             </li>
@@ -169,14 +172,15 @@
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">详情界面</h5>
+                        <h5 class="modal-title">活动详情（修改后重新申报）</h5>
                         <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p id="activityInformation">Cras mattis consectetur purus sit amet fermentum. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</p>
+                        <div id="activityInformation"></div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-primary" type="button" data-bs-dismiss="modal">确认更新</button>
+                        <button class="btn btn-primary" type="button" id="revise_act_submit">修改后重新申报</button>
+                        <button class="btn btn-light" type="button" data-bs-dismiss="modal">取消</button>
                     </div>
                 </div>
             </div>
@@ -196,10 +200,6 @@
 <!-- Bootstrap js-->
 <script src="/console/assets/js/bootstrap/popper.min.js"></script>
 <script src="/console/assets/js/bootstrap/bootstrap.min.js"></script>
-<!-- Datepicker js-->
-<script src="/console/assets/js/datepicker/date-picker/datepicker.js"></script>
-<script src="/console/assets/js/datepicker/date-picker/datepicker.en.js"></script>
-<script src="/console/assets/js/datepicker/date-picker/datepicker.custom.js"></script>
 <!-- Theme js-->
 <script src="/console/assets/js/script.js"></script>
 <!-- login js-->
@@ -220,6 +220,204 @@
 <script type="text/javascript">
 
     //查看活动详情
+
+    /** 固定的服务技能标签（与志愿者档案共用，顺序固定） */
+    var SKILL_TAGS = ["助学支教", "助老服务", "环保公益", "社区服务", "医疗健康", "应急救援", "大型赛会", "文化宣传", "心理疏导", "信息技术"];
+
+    /** 审核不通过原因码与原因说明的映射 */
+    var REASON_TEXT = {
+        PLAN_INCOMPLETE: "活动方案不完整",
+        PEOPLE_UNCLEAR: "人员安排不明确",
+        TIME_CONFLICT: "活动时间或场地存在冲突",
+        INFO_MISSING: "活动信息缺失",
+        SAFETY_RISK: "存在安全风险",
+        OTHER: "其他原因"
+    };
+    /** 当前正在修改重新申报的活动编号 */
+    var currentNotAuditActivityNum = null;
+
+    /**
+     * 驳回原因文案：优先结构化原因码，其次审核意见，均无时显示 —
+     */
+    function reasonText(item) {
+        if (item.activityReasonCode) {
+            return REASON_TEXT[item.activityReasonCode] || item.activityReasonCode;
+        }
+        return item.activityRemark || "—";
+    }
+
+    /**
+     * 将接口返回的时间截断为 datetime-local 需要的 yyyy-MM-ddTHH:mm
+     */
+    function toDateTimeInput(value) {
+        if (!value) {
+            return "";
+        }
+        return String(value).substring(0, 16);
+    }
+
+    /**
+     * 收集表单中选中的服务技能标签，使用英文逗号连接
+     */
+    function collectSkillTags() {
+        var tags = [];
+        $(".revise_skill_checkbox:checked").each(function () {
+            tags.push($(this).val());
+        });
+        return tags.join(",");
+    }
+
+    /**
+     * 回显活动已选中的服务技能标签
+     */
+    function applyReviseSkillChecked(actInfo) {
+        var names = actInfo.activitySkillNames ? String(actInfo.activitySkillNames).split(",") : [];
+        $(".revise_skill_checkbox").each(function () {
+            $(this).prop("checked", $.inArray($(this).val(), names) >= 0);
+        });
+    }
+
+    /**
+     * 构建“修改后重新申报”表单
+     */
+    function buildReviseActForm() {
+        var skillInputs = "";
+        $.each(SKILL_TAGS, function (index, tag) {
+            skillInputs += `<div class="form-check form-check-inline">
+                                <input class="form-check-input revise_skill_checkbox" type="checkbox" id="revise_skill_${index}" value="${tag}">
+                                <label class="form-check-label" for="revise_skill_${index}">${tag}</label>
+                            </div>`;
+        });
+        return `<div class="form-group row">
+                    <p class="col-sm-12 text-muted">该活动已修改 <span id="actvity_revision">0</span> 次，修改后需重新提交平台管理员审核。</p>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label text-end">活动名称</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <input class="form-control" id="actvity_name" type="text">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label text-end">活动内容</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <textarea class="form-control" id="actvity_detail" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label text-end">活动开始时间（年-月-日 时:分）</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <input class="form-control" type="datetime-local" id="actvity_begintime">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label text-end">活动结束时间（年-月-日 时:分）</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <input class="form-control" type="datetime-local" id="actvity_endtime">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label text-end">活动地点</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <input class="form-control" id="actvity_location" type="text">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label text-end">需求人数</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <input class="form-control" id="actvity_needpeople" type="text">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label text-end">注意事项</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <input class="form-control" id="actvity_notice" type="text">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label text-end">报名截止时间（年-月-日 时:分）</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <input class="form-control" type="datetime-local" id="actvity_signddl">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label text-end">服务技能标签</label>
+                        <div class="col-sm-9">
+                            ${skillInputs}
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label text-end">活动定位</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <input class="form-control" id="actvity_latitude" type="text" placeholder="纬度">
+                                <input class="form-control" id="actvity_longitude" type="text" placeholder="经度">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label text-end">签到围栏半径（米）</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <input class="form-control" id="actvity_radius" type="number" min="0" step="10">
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+    }
+
+    /**
+     * 修改后重新申报，成功提示后跳转审核中的活动列表
+     */
+    function submitReviseAct() {
+        if (currentNotAuditActivityNum === null) {
+            return;
+        }
+        $.ajax({
+            url: "/org/reviseAct",
+            type: "POST",
+            data: {
+                "activityNum": currentNotAuditActivityNum,
+                "name": $("#actvity_name").val(),
+                "content": $("#actvity_detail").val(),
+                "startTime": $("#actvity_begintime").val(),
+                "endTime": $("#actvity_endtime").val(),
+                "location": $("#actvity_location").val(),
+                "affair": $("#actvity_notice").val(),
+                "need": $("#actvity_needpeople").val(),
+                "sign_ddl": $("#actvity_signddl").val(),
+                "tags": collectSkillTags(),
+                "latitude": $("#actvity_latitude").val(),
+                "longitude": $("#actvity_longitude").val(),
+                "radius": $("#actvity_radius").val()
+            },
+            success: function (result) {
+                var unified = result && typeof result === "object";
+                var message = unified ? (result.msg || "修改后重新申报失败") : (result || "修改后重新申报失败");
+                alert(message);
+                if (unified ? result.code === 100 : !!result) {
+                    window.location.href = "act_audit.html";
+                }
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
     function notAuditActivityChange(activityNum) {
         console.log("修改活动申请");
         $.ajax({
@@ -230,94 +428,26 @@
             },
             success: function (result) {
                 console.log(result);
-                $("#activityInformation").empty();
-                var modalValue = ``;
-                modalValue=`<div class="form-group row">
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label text-end">活动名称</label>
-                                    <div class="col-sm-9">
-                                        <div class="input-group">
-                                            <input class="form-control" id="actvity_name" type="text" >
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label text-end">活动内容</label>
-                                    <div class="col-sm-9">
-                                        <div class="input-group">
-                                            <textarea class="form-control" id="actvity_detail" type="text" ></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label text-end">活动开始时间</label>
-                                    <div class="col-sm-9">
-                                        <div class="input-group">
-                                            <input class="datepicker-here form-control digits" type="text" data-language="en"
-                                                id="actvity_begintime" >
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label text-end">活动结束时间</label>
-                                    <div class="col-sm-9">
-                                        <div class="input-group">
-                                            <input class="datepicker-here form-control digits" type="text" data-language="en"
-                                                   id="actvity_endtime" >
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label text-end">活动地点</label>
-                                    <div class="col-sm-9">
-                                        <div class="input-group">
-                                            <input class="form-control" id="actvity_location" type="text" >
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label text-end">需求人数</label>
-                                    <div class="col-sm-9">
-                                        <div class="input-group">
-                                            <input class="form-control" id="actvity_needpeople" type="text" >
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label text-end">注意事项</label>
-                                    <div class="col-sm-9">
-                                        <div class="input-group">
-                                            <input class="form-control" id="actvity_notice" type="text" >
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label text-end">报名截止时间</label>
-                                    <div class="col-sm-9">
-                                        <div class="input-group">
-                                            <input class="datepicker-here form-control digits" type="text" data-language="en"
-                                                      id="actvity_signddl" >
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                `;
-                $("#activityInformation").html(modalValue);
-                let actInfo = result.extend.activityInfo[0];
+                var actInfo = (result && result.extend && result.extend.activityInfo) ? result.extend.activityInfo[0] : null;
+                if (!actInfo) {
+                    alert((result && result.msg) ? result.msg : "活动详情加载失败");
+                    return;
+                }
+                currentNotAuditActivityNum = actInfo.activityNum;
+                $("#activityInformation").html(buildReviseActForm());
                 $("#actvity_name").val(actInfo.activityName);
                 $("#actvity_detail").val(actInfo.activityDetail);
-                $("#actvity_begintime").val(actInfo.activityBegintime);
-                $("#actvity_endtime").val(actInfo.activityEndtime);
+                $("#actvity_begintime").val(toDateTimeInput(actInfo.activityBegintime));
+                $("#actvity_endtime").val(toDateTimeInput(actInfo.activityEndtime));
                 $("#actvity_location").val(actInfo.activityLocation);
                 $("#actvity_needpeople").val(actInfo.activityNeedpeople);
                 $("#actvity_notice").val(actInfo.activityNotice);
-                $("#actvity_signddl").val(actInfo.activitySignddl);
+                $("#actvity_signddl").val(toDateTimeInput(actInfo.activitySignddl));
+                $("#actvity_latitude").val(actInfo.activityLatitude === null || actInfo.activityLatitude === undefined ? "" : actInfo.activityLatitude);
+                $("#actvity_longitude").val(actInfo.activityLongitude === null || actInfo.activityLongitude === undefined ? "" : actInfo.activityLongitude);
+                $("#actvity_radius").val(actInfo.activityRadius === null || actInfo.activityRadius === undefined ? 300 : actInfo.activityRadius);
+                $("#actvity_revision").text(actInfo.activityRevision || 0);
+                applyReviseSkillChecked(actInfo);
             },
             error: function (result) {
                 console.log(result);
@@ -337,12 +467,16 @@
         var activityEndtimeTd = $("<td></td>").addClass("text-center").append("活动结束时间");
         var activityLocationTd = $("<td></td>").addClass("text-center").append("活动地点");
         var activityNeedpeopleTd = $("<td></td>").addClass("text-center").append("需求人数");
+        var activityChecktimeTd = $("<td></td>").addClass("text-center").append("审核时间");
+        var activityReasonTd = $("<td></td>").addClass("text-center").append("驳回原因");
         var controlTd = $("<td></td>").addClass("text-center").append("操作");
         $("<tr></tr>").append(activityNameTd)
             .append(activityBegintimeTd)
             .append(activityEndtimeTd)
             .append(activityLocationTd)
             .append(activityNeedpeopleTd)
+            .append(activityChecktimeTd)
+            .append(activityReasonTd)
             .append(controlTd)
             .addClass("active")
             .appendTo("#notAuditActivity_table thead");
@@ -354,6 +488,8 @@
                             <td class="text-center">${formatTime(item.activityEndtime)}</td>
                             <td class="text-center">${item.activityLocation}</td>
                             <td class="text-center">${item.activityNeedpeople}</td>
+                            <td class="text-center">${formatTime(item.activityChecktime)}</td>
+                            <td class="text-center">${reasonText(item)}</td>
                             <td class="text-center">
                                 <div class="btn-group btn-group-pill" role="group" aria-label="Basic example">
                                     <button class="btn btn-outline-primary" type="button" onclick="notAuditActivityChange(${item.activityNum})" data-bs-toggle="modal" data-bs-target="#myModal" data-bs-original-title title>修改</button>
@@ -362,8 +498,11 @@
                             </td>
                           </tr>
                 `;
-            $("#notAuditActivity_table tbody").html(tabValue);
         });
+        if (notAuditActivity.length === 0) {
+            tabValue = `<tr><td colspan="8" class="text-center text-muted">暂无数据</td></tr>`;
+        }
+        $("#notAuditActivity_table tbody").html(tabValue);
     }
 
     //删除该待审核的活动
@@ -403,6 +542,10 @@
             error: function (result) {
                 console.log(result);
             }
+        });
+
+        $("#revise_act_submit").click(function () {
+            submitReviseAct();
         });
 
     });

@@ -5,13 +5,15 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 import lombok.Data;
 
 /**
  * E志愿志愿者服务平台 V1.0
  * <p>
- * 志愿活动表 activity，保存志愿者组织申报的志愿活动及其审核、开展状态。
+ * 志愿活动表 activity，保存志愿者组织申报的志愿活动及其审核、开展状态，
+ * 以及可信签到所需的现场签到码、活动地点围栏与结构化审核原因。
  */
 @TableName(value ="activity")
 @Data
@@ -70,6 +72,27 @@ public class Activity implements Serializable {
 
     /** 审核意见 */
     private String activityRemark;
+
+    /** 现场签到码，志愿者签到凭证之一 */
+    private String activityCheckinCode;
+
+    /** 活动地点纬度 */
+    private BigDecimal activityLatitude;
+
+    /** 活动地点经度 */
+    private BigDecimal activityLongitude;
+
+    /** 签到地理围栏半径（米） */
+    private Integer activityRadius;
+
+    /** 审核不通过的结构化原因编码 */
+    private String activityReasonCode;
+
+    /** 修改后重新申报的次数 */
+    private Integer activityRevision;
+
+    /** 活动结算时间 */
+    private Date activitySettleTime;
 
     /** 删除标记 */
     private Integer activityIsdeleted;

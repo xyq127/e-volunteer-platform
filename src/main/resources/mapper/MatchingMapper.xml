@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- E志愿志愿者服务平台 V1.0 志愿者与志愿活动供需匹配的映射文件 -->
+<mapper namespace="com.evolunteer.mapper.MatchingMapper">
+
+    <resultMap id="ActivityMatchResultMap" type="com.evolunteer.entity.ActivityMatch">
+        <id property="activityNum" column="activity_num" jdbcType="INTEGER"/>
+        <result property="organizationNum" column="organization_num" jdbcType="INTEGER"/>
+        <result property="activityId" column="activity_id" jdbcType="VARCHAR"/>
+        <result property="activityName" column="activity_name" jdbcType="VARCHAR"/>
+        <result property="activityDetail" column="activity_detail" jdbcType="VARCHAR"/>
+        <result property="activityBegintime" column="activity_begintime" jdbcType="TIMESTAMP"/>
+        <result property="activityEndtime" column="activity_endtime" jdbcType="TIMESTAMP"/>
+        <result property="activityLocation" column="activity_location" jdbcType="VARCHAR"/>
+        <result property="activityNeedpeople" column="activity_needpeople" jdbcType="INTEGER"/>
+        <result property="activityNotice" column="activity_notice" jdbcType="VARCHAR"/>
+        <result property="activityPublishtime" column="activity_publishtime" jdbcType="TIMESTAMP"/>
+        <result property="activitySignddl" column="activity_signddl" jdbcType="TIMESTAMP"/>
+        <result property="activityState" column="activity_state" jdbcType="VARCHAR"/>
+        <result property="activityCheckinCode" column="activity_checkin_code" jdbcType="VARCHAR"/>
+        <result property="activityLatitude" column="activity_latitude" jdbcType="DECIMAL"/>
+        <result property="activityLongitude" column="activity_longitude" jdbcType="DECIMAL"/>
+        <result property="activityRadius" column="activity_radius" jdbcType="INTEGER"/>
+        <result property="activitySkillNames" column="activity_skill_names" jdbcType="VARCHAR"/>
+        <result property="distanceMeters" column="distance_meters" jdbcType="INTEGER"/>
+        <result property="organizationHistoryCount" column="organization_history_count" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!--
+      查询志愿活动的匹配要素：
+      活动技能要求由 activity_skill 聚合，距离按 ST_Distance_Sphere 计算球面距离，
+      组织历史参与次数统计志愿者在该活动所属组织已报名（含待审核与候补）的活动数量。
+    -->
+    <select id="selectActivityMatches" resultMap="ActivityMatchResultMap">
+        select
+        a.activity_num,
+        a.organization_num,
+        a.activity_id,
+        a.activity_name,
+        a.activity_detail,
+        a.activity_begintime,
+        a.activity_endtime,
+        a.activity_location,
+        a.activity_needpeople,
+        a.activity_notice,
+        a.activity_publishtime,
+        a.activity_signddl,
+        a.activity_state,
+        a.activity_checkin_code,
+        a.activity_latitude,
+        a.activity_longitude,
+        a.activity_radius,
+        (select group_concat(s.skill_name order by s.skill_name separator ',')
+        from activity_skill s
+        where s.activity_num = a.activity_num) as activity_skill_names,
+        case
+        when a.activity_latitude is null or a.activity_longitude is null
+        or #{latitude,jdbcType=DECIMAL} is null or #{longitude,jdbcType=DECIMAL} is null then null
+        else round(st_distance_sphere(point(a.activity_longitude, a.activity_latitude),
+        point(#{longitude,jdbcType=DECIMAL}, #{latitude,jdbcType=DECIMAL})))
+        end as distance_meters,
+        (select count(*)
+        from participate p
+        join activity pa on pa.activity_num = p.activity_num
+        where p.volunteer_num = #{volunteerNum,jdbcType=INTEGER}
+        and p.participate_isdeleted = 0
+        and p.participate_applystate in ('0', '1', '3')
+        and pa.organization_num = a.organization_num) as organization_history_count
+        from activity a
+        where a.activity_isdeleted = 0
+        <if test="activityNum != null">
+            and a.activity_num = #{activityNum,jdbcType=INTEGER}
+        </if>
+        <if test="openOnly">
+            and a.activity_state = '1'
+            and (a.activity_signddl is null or a.activity_signddl &gt; now())
+            and (a.activity_endtime is null or a.activity_endtime &gt; now())
+            and not exists (select 1
+            from participate p2
+            where p2.activity_num = a.activity_num
+            and p2.volunteer_num = #{volunteerNum,jdbcType=INTEGER}
+            and p2.participate_isdeleted = 0)
+        </if>
+        order by a.activity_begintime asc
+    </select>
+
+    <!-- 查询志愿者已报名且尚未结束的活动，用于判断匹配活动与其是否时间冲突 -->
+    <select id="selectBusyActivities" resultMap="com.evolunteer.mapper.ActivityMapper.BaseResultMap">
+        select
+        a.activity_num,
+        a.activity_name,
+        a.activity_begintime,
+        a.activity_endtime
+        from participate p, activity a
+        where p.activity_num = a.activity_num
+        and p.volunteer_num = #{volunteerNum,jdbcType=INTEGER}
+        and p.participate_isdeleted = 0
+        and p.participate_applystate in ('0', '1', '3')
+        and a.activity_isdeleted = 0
+        and (a.activity_endtime is null or a.activity_endtime &gt; now())
+    </select>
+
+</mapper>

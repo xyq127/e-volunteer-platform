@@ -4,8 +4,10 @@ import com.evolunteer.entity.Activity;
 import com.evolunteer.entity.ApiResponse;
 import com.evolunteer.entity.Participation;
 import com.evolunteer.service.ActivityService;
+import com.evolunteer.service.MatchingService;
 import com.evolunteer.service.OrganizationService;
 import com.evolunteer.service.ParticipationService;
+import com.evolunteer.utils.MatchCalculator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -21,7 +23,8 @@ import java.util.List;
 /**
  * E志愿志愿者服务平台 V1.0
  * <p>
- * 志愿活动控制器：面向志愿者组织提供志愿活动的分状态查询、活动详情查询、活动删除以及活动报名人员查询等功能。
+ * 志愿活动控制器：面向志愿者组织提供志愿活动的分状态查询、活动详情查询、活动删除以及活动报名人员查询等功能，
+ * 查询报名人员时同时给出志愿者与本活动的匹配度，辅助志愿者组织审核报名。
  */
 @Slf4j
 @Controller
@@ -36,6 +39,9 @@ public class ActivityController {
 
     @Autowired
     ParticipationService participationService;
+
+    @Autowired
+    MatchingService matchingService;
 
     /**
      * 查询当前登录组织审核中的志愿活动
@@ -111,7 +117,7 @@ public class ActivityController {
     }
 
     /**
-     * 查询指定活动下已报名的志愿者
+     * 查询指定活动下已报名的志愿者，并给出志愿者与该活动的匹配度供报名审核参考
      *
      * @param activityNum 活动编号
      * @return 报名志愿者列表
@@ -119,7 +125,16 @@ public class ActivityController {
     @RequestMapping(value = "/volRecruit", method = RequestMethod.GET)
     @ResponseBody
     public ApiResponse volRecruit(@RequestParam(value = "activityNum") Integer activityNum) {
+
         List<Participation> volunteerList = participationService.getVolunteerList(activityNum);
+        for (Participation participation : volunteerList) {
+            MatchCalculator.MatchResult match = matchingService.matchForActivity(
+                    participation.getVolunteerNum(), activityNum);
+            if (match != null) {
+                participation.setMatchScore(match.getScore());
+                participation.setMatchReasons(String.join("、", match.getReasons()));
+            }
+        }
         return ApiResponse.success().add("volunteerList", volunteerList);
     }
 

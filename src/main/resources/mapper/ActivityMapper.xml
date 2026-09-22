@@ -24,6 +24,13 @@
         <result property="activityLeaderid" column="activity_leaderid" jdbcType="INTEGER"/>
         <result property="activityChecktime" column="activity_checktime" jdbcType="TIMESTAMP"/>
         <result property="activityRemark" column="activity_remark" jdbcType="VARCHAR"/>
+        <result property="activityCheckinCode" column="activity_checkin_code" jdbcType="VARCHAR"/>
+        <result property="activityLatitude" column="activity_latitude" jdbcType="DECIMAL"/>
+        <result property="activityLongitude" column="activity_longitude" jdbcType="DECIMAL"/>
+        <result property="activityRadius" column="activity_radius" jdbcType="INTEGER"/>
+        <result property="activityReasonCode" column="activity_reason_code" jdbcType="VARCHAR"/>
+        <result property="activityRevision" column="activity_revision" jdbcType="INTEGER"/>
+        <result property="activitySettleTime" column="activity_settle_time" jdbcType="TIMESTAMP"/>
         <result property="activityIsdeleted" column="activity_isdeleted" jdbcType="INTEGER"/>
     </resultMap>
 
@@ -34,7 +41,9 @@
         activity_notice,activity_publishtime,activity_signddl,
         activity_state,admin_num,activity_checkin,
         activity_leaderid,activity_checktime,activity_remark,
-        activity_isdeleted
+        activity_checkin_code,activity_latitude,activity_longitude,
+        activity_radius,activity_reason_code,activity_revision,
+        activity_settle_time,activity_isdeleted
     </sql>
 
     <!-- 调用数据库存储过程 organization_insert_activity 写入志愿者组织申报的志愿活动 -->
@@ -42,12 +51,16 @@
         {call organization_insert_activity(#{loginId,mode=IN,jdbcType=VARCHAR},
                                            #{activityName,mode=IN,jdbcType=VARCHAR},
                                            #{activityDetail,mode=IN,jdbcType=VARCHAR},
-                                           #{activityBegintime,mode=IN,jdbcType=DATE},
-                                           #{activityEndtime,mode=IN,jdbcType=DATE},
+                                           #{activityBegintime,mode=IN,jdbcType=TIMESTAMP},
+                                           #{activityEndtime,mode=IN,jdbcType=TIMESTAMP},
                                            #{activityLocation,mode=IN,jdbcType=VARCHAR},
                                            #{activityNeedpeople,mode=IN,jdbcType=INTEGER},
                                            #{activityNotice,mode=IN,jdbcType=VARCHAR},
-                                           #{activitySignddl,mode=IN,jdbcType=DATE},
+                                           #{activitySignddl,mode=IN,jdbcType=TIMESTAMP},
+                                           #{activitySkillNames,mode=IN,jdbcType=VARCHAR},
+                                           #{activityLatitude,mode=IN,jdbcType=DECIMAL},
+                                           #{activityLongitude,mode=IN,jdbcType=DECIMAL},
+                                           #{activityRadius,mode=IN,jdbcType=INTEGER},
                                            #{msg,mode=OUT,jdbcType=VARCHAR})
         }
     </insert>
@@ -57,8 +70,29 @@
         {call admin_check_activity(#{loginId,mode=IN,jdbcType=VARCHAR},
                                    #{activityNum,mode=IN,jdbcType=NUMERIC},
                                    #{isPass,mode=IN,jdbcType=NUMERIC},
+                                   #{reasonCode,mode=IN,jdbcType=VARCHAR},
                                    #{remark,mode=IN,jdbcType=VARCHAR},
                                    #{msg,mode=OUT,jdbcType=VARCHAR})
+        }
+    </insert>
+
+    <!-- 调用数据库存储过程 organization_revise_activity 将审核未通过的活动修改后重新提交审核 -->
+    <insert id="organization_revise_activity" statementType="CALLABLE">
+        {call organization_revise_activity(#{loginId,mode=IN,jdbcType=VARCHAR},
+                                           #{activityNum,mode=IN,jdbcType=NUMERIC},
+                                           #{activityName,mode=IN,jdbcType=VARCHAR},
+                                           #{activityDetail,mode=IN,jdbcType=VARCHAR},
+                                           #{activityBegintime,mode=IN,jdbcType=TIMESTAMP},
+                                           #{activityEndtime,mode=IN,jdbcType=TIMESTAMP},
+                                           #{activityLocation,mode=IN,jdbcType=VARCHAR},
+                                           #{activityNeedpeople,mode=IN,jdbcType=INTEGER},
+                                           #{activityNotice,mode=IN,jdbcType=VARCHAR},
+                                           #{activitySignddl,mode=IN,jdbcType=TIMESTAMP},
+                                           #{activitySkillNames,mode=IN,jdbcType=VARCHAR},
+                                           #{activityLatitude,mode=IN,jdbcType=DECIMAL},
+                                           #{activityLongitude,mode=IN,jdbcType=DECIMAL},
+                                           #{activityRadius,mode=IN,jdbcType=INTEGER},
+                                           #{msg,mode=OUT,jdbcType=VARCHAR})
         }
     </insert>
 
@@ -88,8 +122,7 @@
         select
         <include refid="Base_Column_List"/>
         from activity
-        where
-        activity_num = #{activityNum,jdbcType=NUMERIC}
+        where activity_num = #{activityNum,jdbcType=NUMERIC}
     </select>
 
     <!-- 按活动名称精确查询活动 -->
@@ -97,17 +130,22 @@
         select
         <include refid="Base_Column_List"/>
         from activity
-        where
-        activity_name = #{activityName,jdbcType=VARCHAR}
+        where activity_name = #{activityName,jdbcType=VARCHAR}
     </select>
 
     <select id="selectByActivityName" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
         from activity
-        where
-        activity_name = #{activityName,jdbcType=VARCHAR}
+        where activity_name = #{activityName,jdbcType=VARCHAR}
     </select>
+
+    <!-- 更新志愿活动的现场签到码 -->
+    <update id="updateActivityCheckinCode">
+        update activity
+        set activity_checkin_code = #{activityCheckinCode,jdbcType=VARCHAR}
+        where activity_num = #{activityNum,jdbcType=NUMERIC}
+    </update>
 
     <!-- 逻辑删除活动 -->
     <update id="updateActivityIsdeletedByActivityNum">
