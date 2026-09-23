@@ -1,4 +1,4 @@
-E志愿志愿者服务平台 V1.0                                                                 第 1 页
+E志愿志愿服务管理系统 V1.0                                                               第 1 页
 ================================================================================================
 源码文件 1：src/main/java/com/evolunteer/EVolunteerApplication.java（Java 源程序）
 ================================================================================================
@@ -49,7 +49,7 @@ public class MyBatisPlusConfig {
 
 ================================================================================================
 源码文件 3：src/main/java/com/evolunteer/config/WebSecurityConfig.java（Java 源程序）
-E志愿志愿者服务平台 V1.0                                                                 第 2 页
+E志愿志愿服务管理系统 V1.0                                                               第 2 页
 ================================================================================================
 package com.evolunteer.config;
 
@@ -100,7 +100,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .deleteCookies("JSESSIONID");
 
         http
-E志愿志愿者服务平台 V1.0                                                                 第 3 页
+E志愿志愿服务管理系统 V1.0                                                               第 3 页
                 .authorizeRequests()
 
                 .antMatchers("/portal/js/**", "/portal/css/**", "/portal/images/**", "/portal/fonts/**").permitAll()
@@ -151,7 +151,7 @@ import com.evolunteer.entity.Participation;
 import com.evolunteer.enums.AuditActionEnum;
 import com.evolunteer.service.ActivityService;
 import com.evolunteer.service.AuditLogService;
-E志愿志愿者服务平台 V1.0                                                                 第 4 页
+E志愿志愿服务管理系统 V1.0                                                               第 4 页
 import com.evolunteer.service.MatchingService;
 import com.evolunteer.service.OrganizationService;
 import com.evolunteer.service.ParticipationService;
@@ -202,7 +202,7 @@ public class ActivityController {
     }
 
     @RequestMapping(value = "/activityInfo", method = RequestMethod.GET)
-E志愿志愿者服务平台 V1.0                                                                 第 5 页
+E志愿志愿服务管理系统 V1.0                                                               第 5 页
     @ResponseBody
     public ApiResponse activityInfo(@RequestParam(value = "activityNum") Integer activityNum) {
         List<Activity> activityInfo = activityService.activityInfo(activityNum);
@@ -253,7 +253,7 @@ E志愿志愿者服务平台 V1.0                                               
                 participation.setMatchReasons(String.join("、", match.getReasons()));
             }
         }
-E志愿志愿者服务平台 V1.0                                                                 第 6 页
+E志愿志愿服务管理系统 V1.0                                                               第 6 页
         return PageSupport.toResponse(result);
     }
 
@@ -304,7 +304,7 @@ E志愿志愿者服务平台 V1.0                                               
     private ApiResponse changeState(Integer activityNum, String targetState,
                                     Authentication authentication, HttpServletRequest request) {
 
-E志愿志愿者服务平台 V1.0                                                                 第 7 页
+E志愿志愿服务管理系统 V1.0                                                               第 7 页
         User user = (User) authentication.getPrincipal();
         Map<Object, Object> result = activityService.changeActivityState(user.getUsername(), activityNum, targetState);
         String msg = (String) result.get("msg");
@@ -355,7 +355,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
-E志愿志愿者服务平台 V1.0                                                                 第 8 页
+E志愿志愿服务管理系统 V1.0                                                               第 8 页
 
 @Slf4j
 @Controller
@@ -406,7 +406,7 @@ public class AdminAccountController {
                                           HttpServletRequest request) {
 
         User user = (User) authentication.getPrincipal();
-E志愿志愿者服务平台 V1.0                                                                 第 9 页
+E志愿志愿服务管理系统 V1.0                                                               第 9 页
         String loginId = user.getUsername();
 
         Map<Object, Object> result = accountAdminService.createOrganization(
@@ -457,7 +457,7 @@ E志愿志愿者服务平台 V1.0                                               
         log.info("平台管理员重置账号密码，目标账号：{}，处理结果：{}", accountId, result.get("msg"));
 
         ApiResponse response = responseOf(result);
-E志愿志愿者服务平台 V1.0                                                                第 10 页
+E志愿志愿服务管理系统 V1.0                                                              第 10 页
         addPassword(response, result);
         return response;
     }
@@ -508,7 +508,7 @@ E志愿志愿者服务平台 V1.0                                               
         Object msg = result == null ? null : result.get("msg");
         return msg == null ? "操作处理失败，请稍后重试" : msg.toString();
     }
-E志愿志愿者服务平台 V1.0                                                                第 11 页
+E志愿志愿服务管理系统 V1.0                                                              第 11 页
 
     private String roleOf(Authentication authentication) {
         if (authentication == null || authentication.getAuthorities().isEmpty()) {
@@ -559,7 +559,7 @@ public class AdminAnnouncementController {
     public ApiResponse list(@RequestParam(value = "page", required = false) Integer page,
                             @RequestParam(value = "size", required = false) Integer size,
                             @RequestParam(value = "keyword", required = false) String keyword) {
-E志愿志愿者服务平台 V1.0                                                                第 12 页
+E志愿志愿服务管理系统 V1.0                                                              第 12 页
         return PageSupport.toResponse(announcementService.page(page, size, keyword));
     }
 
@@ -610,7 +610,7 @@ E志愿志愿者服务平台 V1.0                                               
     @ResponseBody
     public ApiResponse deleteFile(@RequestParam(value = "policyfileNum") Integer policyfileNum) {
         if (!announcementService.deleteFile(policyfileNum)) {
-E志愿志愿者服务平台 V1.0                                                                第 13 页
+E志愿志愿服务管理系统 V1.0                                                              第 13 页
             return ApiResponse.fail("该附件不存在或已被删除");
         }
         return ApiResponse.success("附件已删除");
@@ -661,7 +661,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.evolunteer.entity.ApiResponse;
 import com.evolunteer.entity.AuditActionView;
 import com.evolunteer.entity.AuditLog;
-E志愿志愿者服务平台 V1.0                                                                第 14 页
+E志愿志愿服务管理系统 V1.0                                                              第 14 页
 import com.evolunteer.enums.AuditActionEnum;
 import com.evolunteer.service.AuditLogService;
 import com.evolunteer.utils.PageSupport;
@@ -712,7 +712,7 @@ package com.evolunteer.controller;
 
 import com.evolunteer.entity.Activity;
 import com.evolunteer.entity.ApiResponse;
-E志愿志愿者服务平台 V1.0                                                                第 15 页
+E志愿志愿服务管理系统 V1.0                                                              第 15 页
 import com.evolunteer.enums.ActivityRejectReasonEnum;
 import com.evolunteer.enums.AuditActionEnum;
 import com.evolunteer.service.ActivityService;
@@ -763,7 +763,7 @@ public class AdminController {
                           @RequestParam(value = "remark", required = false) String remark,
                           Authentication authentication, HttpServletRequest request) {
 
-E志愿志愿者服务平台 V1.0                                                                第 16 页
+E志愿志愿服务管理系统 V1.0                                                              第 16 页
         Activity activity = activityService.selectAct(actName);
         if (activity == null) {
             log.warn("平台管理员审核的活动不存在，活动名称：{}", actName);
@@ -814,7 +814,7 @@ E志愿志愿者服务平台 V1.0                                               
     public ApiResponse checkManualHours(@RequestParam(value = "checkinNum") Integer checkinNum,
                                         @RequestParam(value = "isPass") Integer isPass,
                                         @RequestParam(value = "remark", required = false) String remark,
-E志愿志愿者服务平台 V1.0                                                                第 17 页
+E志愿志愿服务管理系统 V1.0                                                              第 17 页
                                         Authentication authentication, HttpServletRequest request) {
 
         String loginId = ((User) authentication.getPrincipal()).getUsername();
@@ -865,7 +865,7 @@ public class CertificateController {
         if (certificate == null) {
             log.warn("志愿服务证明校验失败，未找到志愿者：{}", volunteerId);
             return ApiResponse.fail("未找到该志愿者编号对应的服务记录");
-E志愿志愿者服务平台 V1.0                                                                第 18 页
+E志愿志愿服务管理系统 V1.0                                                              第 18 页
         }
         if (!certificate.isValid()) {
             log.warn("志愿服务证明校验码不正确，志愿者编号：{}", volunteerId);
@@ -916,7 +916,7 @@ public class CheckInController {
 
     @Autowired
     AuditLogService auditLogService;
-E志愿志愿者服务平台 V1.0                                                                第 19 页
+E志愿志愿服务管理系统 V1.0                                                              第 19 页
 
     @RequestMapping(value = "/in", method = RequestMethod.POST)
     @ResponseBody
@@ -967,7 +967,7 @@ E志愿志愿者服务平台 V1.0                                               
     }
 
     @RequestMapping(value = "/reviewList", method = RequestMethod.GET)
-E志愿志愿者服务平台 V1.0                                                                第 20 页
+E志愿志愿服务管理系统 V1.0                                                              第 20 页
     @ResponseBody
     public ApiResponse reviewList(@RequestParam(value = "activityNum") Integer activityNum,
                                   @RequestParam(value = "page", required = false) Integer page,
@@ -1018,7 +1018,7 @@ E志愿志愿者服务平台 V1.0                                               
     }
 
     @RequestMapping(value = "/code", method = RequestMethod.GET)
-E志愿志愿者服务平台 V1.0                                                                第 21 页
+E志愿志愿服务管理系统 V1.0                                                              第 21 页
     @ResponseBody
     public ApiResponse getCheckinCode(@RequestParam(value = "activityNum") Integer activityNum) {
         CheckinCodeView codeInfo = checkInService.currentCheckinCode(activityNum);
@@ -1069,7 +1069,7 @@ E志愿志愿者服务平台 V1.0                                               
         return volunteerService.getByLoginId(user.getUsername());
     }
 
-E志愿志愿者服务平台 V1.0                                                                第 22 页
+E志愿志愿服务管理系统 V1.0                                                              第 22 页
     private String operator(Authentication authentication) {
         return ((User) authentication.getPrincipal()).getUsername();
     }
@@ -1120,7 +1120,7 @@ public class FileController {
     @RequestMapping(value = "/download/{storedName}", method = RequestMethod.GET)
     @ResponseBody
     public ResponseEntity<Resource> download(@PathVariable(value = "storedName") String storedName) {
-E志愿志愿者服务平台 V1.0                                                                第 23 页
+E志愿志愿服务管理系统 V1.0                                                              第 23 页
 
         Resource resource;
         try {
@@ -1171,7 +1171,7 @@ public class LoginRegisterController {
                          @RequestParam(value = "signUpPassword") String signUpPassword) {
         String volunteerId = volunteerService.signUp(signUpName, signUpTel, signUpPassword);
         if (volunteerId == null || volunteerId.isEmpty()) {
-E志愿志愿者服务平台 V1.0                                                                第 24 页
+E志愿志愿服务管理系统 V1.0                                                              第 24 页
             log.warn("志愿者注册失败，手机号已被注册：{}", signUpTel);
             return "该手机号已被注册，请更换手机号后再试";
         }
@@ -1222,7 +1222,7 @@ public class OrgContentController {
     public ApiResponse trainings(@RequestParam(value = "activityNum", required = false) Integer activityNum,
                                  @RequestParam(value = "page", required = false) Integer page,
                                  @RequestParam(value = "size", required = false) Integer size,
-E志愿志愿者服务平台 V1.0                                                                第 25 页
+E志愿志愿服务管理系统 V1.0                                                              第 25 页
                                  Authentication authentication) {
         return PageSupport.toResponse(
                 trainingService.pageByActivity(loginIdOf(authentication), activityNum, page, size));
@@ -1273,7 +1273,7 @@ E志愿志愿者服务平台 V1.0                                               
     }
 
     @RequestMapping(value = "/training/situations", method = RequestMethod.GET)
-E志愿志愿者服务平台 V1.0                                                                第 26 页
+E志愿志愿服务管理系统 V1.0                                                              第 26 页
     @ResponseBody
     public ApiResponse situations(@RequestParam(value = "trainingNum") Integer trainingNum,
                                   @RequestParam(value = "page", required = false) Integer page,
@@ -1324,7 +1324,7 @@ E志愿志愿者服务平台 V1.0                                               
                                         @RequestParam(value = "detail") String detail,
                                         Authentication authentication) {
 
-E志愿志愿者服务平台 V1.0                                                                第 27 页
+E志愿志愿服务管理系统 V1.0                                                              第 27 页
         ActivityAnnouncement announcement = new ActivityAnnouncement();
         announcement.setActannouncementNum(announcementNum);
         announcement.setActivityNum(activityNum);
@@ -1375,7 +1375,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
-E志愿志愿者服务平台 V1.0                                                                第 28 页
+E志愿志愿服务管理系统 V1.0                                                              第 28 页
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -1426,7 +1426,7 @@ public class OrganizationController {
                         @RequestParam(value = "sign_ddl") String sign_ddl,
                         @RequestParam(value = "tags", required = false) String tags,
                         @RequestParam(value = "latitude", required = false) String latitude,
-E志愿志愿者服务平台 V1.0                                                                第 29 页
+E志愿志愿服务管理系统 V1.0                                                              第 29 页
                         @RequestParam(value = "longitude", required = false) String longitude,
                         @RequestParam(value = "radius", required = false) String radius,
                         Authentication authentication) {
@@ -1477,7 +1477,7 @@ E志愿志愿者服务平台 V1.0                                               
         map.put("activityLocation", location);
         map.put("activityNeedpeople", needPeople);
         map.put("activityNotice", affair);
-E志愿志愿者服务平台 V1.0                                                                第 30 页
+E志愿志愿服务管理系统 V1.0                                                              第 30 页
         map.put("activitySignddl", signDdl);
         map.put("activitySkillNames", tags);
         map.put("activityLatitude", activityLatitude);
@@ -1528,7 +1528,7 @@ E志愿志愿者服务平台 V1.0                                               
             return e.getMessage();
         } catch (RuntimeException e) {
             log.warn("志愿活动重新申报的招募人数格式不正确：{}", need);
-E志愿志愿者服务平台 V1.0                                                                第 31 页
+E志愿志愿服务管理系统 V1.0                                                              第 31 页
         }
         navigator.geolocation.getCurrentPosition(function (position) {
             $("#profile_latitude").val(position.coords.latitude);
@@ -1579,7 +1579,7 @@ E志愿志愿者服务平台 V1.0                                               
             alert("两次输入的新密码不一致");
             return;
         }
-E志愿志愿者服务平台 V1.0                                                                第 32 页
+E志愿志愿服务管理系统 V1.0                                                              第 32 页
         $.ajax({
             url: "/volunteer/password/change",
             type: "POST",
@@ -1620,7 +1620,7 @@ E志愿志愿者服务平台 V1.0                                               
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <link rel="shortcut icon" href="/console/assets/images/favicon.png" type="image/x-icon">
-    <title>志愿秀 - E志愿志愿者服务平台 V1.0</title>
+    <title>志愿秀 - E志愿志愿服务管理系统 V1.0</title>
 
     <link rel="stylesheet" type="text/css" href="/console/assets/css/fontawesome.css">
 
@@ -1630,7 +1630,7 @@ E志愿志愿者服务平台 V1.0                                               
 
     <link rel="stylesheet" type="text/css" href="/console/assets/css/flag-icon.css">
 
-E志愿志愿者服务平台 V1.0                                                                第 33 页
+E志愿志愿服务管理系统 V1.0                                                              第 33 页
     <link rel="stylesheet" type="text/css" href="/console/assets/css/feather-icon.css">
 
     <link rel="stylesheet" type="text/css" href="/console/assets/css/bootstrap.css">
@@ -1681,7 +1681,7 @@ E志愿志愿者服务平台 V1.0                                               
     <div class="page-body-wrapper sidebar-icon">
 
         <header class="main-nav">
-E志愿志愿者服务平台 V1.0                                                                第 34 页
+E志愿志愿服务管理系统 V1.0                                                              第 34 页
             <div class="sidebar-user text-center">
                 <a class="setting-primary" href="profile.html"><i data-feather="settings"></i></a>
                 <img class="img-90 rounded-circle" src="/console/assets/images/dashboard/1.png" alt="">
@@ -1732,7 +1732,7 @@ E志愿志愿者服务平台 V1.0                                               
                     <div class="right-arrow" id="right-arrow"><i data-feather="play"></i></div>
                 </div>
             </nav>
-E志愿志愿者服务平台 V1.0                                                                第 35 页
+E志愿志愿服务管理系统 V1.0                                                              第 35 页
         </header>
 
         <div class="page-body">
@@ -1783,7 +1783,7 @@ E志愿志愿者服务平台 V1.0                                               
                                 </a>
                             </div>
                             <div class="card-body">
-E志愿志愿者服务平台 V1.0                                                                第 36 页
+E志愿志愿服务管理系统 V1.0                                                              第 36 页
                                 <p class="text-muted small mb-2">仅展示本人发布的志愿秀，浏览数与点赞数由门户志愿秀广场的访问与点赞累计。</p>
                                 <div class="table-responsive">
                                     <table class="table table-striped table-bordernone">
@@ -1834,7 +1834,7 @@ E志愿志愿者服务平台 V1.0                                               
 
 <script src="/console/assets/js/icons/feather-icon/feather.min.js"></script>
 <script src="/console/assets/js/icons/feather-icon/feather-icon.js"></script>
-E志愿志愿者服务平台 V1.0                                                                第 37 页
+E志愿志愿服务管理系统 V1.0                                                              第 37 页
 
 <script src="/console/assets/js/sidebar-menu.js"></script>
 <script src="/console/assets/js/config.js"></script>
@@ -1885,7 +1885,7 @@ E志愿志愿者服务平台 V1.0                                               
             data: {page: 1, size: 100},
             success: function (result) {
                 if (!result || result.code !== 100 || !result.extend) {
-E志愿志愿者服务平台 V1.0                                                                第 38 页
+E志愿志愿服务管理系统 V1.0                                                              第 38 页
                     if (result && result.msg) {
                         alert(result.msg);
                     }
@@ -1936,7 +1936,7 @@ E志愿志愿者服务平台 V1.0                                               
     }
 
     function renderPager(total, current, pageSize) {
-E志愿志愿者服务平台 V1.0                                                                第 39 页
+E志愿志愿服务管理系统 V1.0                                                              第 39 页
         showTotal = Number(total);
         if (isNaN(showTotal) || showTotal < 0) {
             showTotal = 0;
@@ -1987,7 +1987,7 @@ E志愿志愿者服务平台 V1.0                                               
         loadShows();
     }
 
-E志愿志愿者服务平台 V1.0                                                                第 40 页
+E志愿志愿服务管理系统 V1.0                                                              第 40 页
     function resetShowForm() {
         $("#show_detail").val("");
         $("#show_activity").val("");
@@ -2038,7 +2038,7 @@ E志愿志愿者服务平台 V1.0                                               
         formData.append("showNum", showNum);
         formData.append("file", files[index]);
         $.ajax({
-E志愿志愿者服务平台 V1.0                                                                第 41 页
+E志愿志愿服务管理系统 V1.0                                                              第 41 页
             url: "/volunteer/content/show/picture",
             type: "POST",
             data: formData,
@@ -2087,9 +2087,9 @@ E志愿志愿者服务平台 V1.0                                               
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/console/assets/images/favicon.png" type="image/x-icon">
     <link rel="shortcut icon" href="/console/assets/images/favicon.png" type="image/x-icon">
-    <title>培训与公告 - E志愿志愿者服务平台 V1.0</title>
+    <title>培训与公告 - E志愿志愿服务管理系统 V1.0</title>
 
-E志愿志愿者服务平台 V1.0                                                                第 42 页
+E志愿志愿服务管理系统 V1.0                                                              第 42 页
     <link rel="stylesheet" type="text/css" href="/console/assets/css/fontawesome.css">
 
     <link rel="stylesheet" type="text/css" href="/console/assets/css/icofont.css">
@@ -2140,7 +2140,7 @@ E志愿志愿者服务平台 V1.0                                               
                                 data-feather="power"></i>退出登录</a></button>
                     </li>
                 </ul>
-E志愿志愿者服务平台 V1.0                                                                第 43 页
+E志愿志愿服务管理系统 V1.0                                                              第 43 页
             </div>
             <div class="d-lg-none mobile-toggle pull-right w-auto"><i data-feather="menu"></i></div>
         </div>
@@ -2191,7 +2191,7 @@ E志愿志愿者服务平台 V1.0                                               
                             <li class="dropdown"><a class="nav-link menu-title" href="show.html"><i
                                     data-feather="image"></i><span>志愿秀</span></a>
                             </li>
-E志愿志愿者服务平台 V1.0                                                                第 44 页
+E志愿志愿服务管理系统 V1.0                                                              第 44 页
                             <li class="dropdown"><a class="nav-link menu-title" href="certificate.html"><i
                                     data-feather="award"></i><span>志愿服务证明</span></a>
                             </li>
@@ -2242,7 +2242,7 @@ E志愿志愿者服务平台 V1.0                                               
                                                 <li class="page-item" id="train_prev"><a class="page-link" href="#!"
                                                         onclick="changeTrainPage(-1);return false;">上一页</a></li>
                                                 <li class="page-item disabled"><a class="page-link" href="#!"
-E志愿志愿者服务平台 V1.0                                                                第 45 页
+E志愿志愿服务管理系统 V1.0                                                              第 45 页
                                                         id="train_page_info">第 1 / 1 页</a></li>
                                                 <li class="page-item" id="train_next"><a class="page-link" href="#!"
                                                         onclick="changeTrainPage(1);return false;">下一页</a></li>
@@ -2293,7 +2293,7 @@ E志愿志愿者服务平台 V1.0                                               
                                         </nav>
                                     </div>
                                 </div>
-E志愿志愿者服务平台 V1.0                                                                第 46 页
+E志愿志愿服务管理系统 V1.0                                                              第 46 页
                             </div>
                         </div>
                     </div>
@@ -2344,7 +2344,7 @@ E志愿志愿者服务平台 V1.0                                               
 
     function loadProfile() {
         $.ajax({
-E志愿志愿者服务平台 V1.0                                                                第 47 页
+E志愿志愿服务管理系统 V1.0                                                              第 47 页
             url: "/volunteer/profile",
             type: "GET",
             success: function (result) {
@@ -2395,7 +2395,7 @@ E志愿志愿者服务平台 V1.0                                               
                     + "<td>" + (item.trainingName || "—") + "</td>"
                     + "<td>" + (item.trainingDetail || "—") + "</td>"
                     + "<td>" + formatTime(item.trainingBegintime) + "</td>"
-E志愿志愿者服务平台 V1.0                                                                第 48 页
+E志愿志愿服务管理系统 V1.0                                                              第 48 页
                     + "<td>" + formatTime(item.trainingEndtime) + "</td>"
                     + "<td>" + (item.trainingLocation || "—") + "</td>"
                     + "<td>" + (item.activityName || "—") + "</td>"
@@ -2446,7 +2446,7 @@ E志愿志愿者服务平台 V1.0                                               
                 html += "<tr>"
                     + "<td>" + (item.actannouncementName || "—") + "</td>"
                     + "<td>" + (item.actannouncementDetail || "—") + "</td>"
-E志愿志愿者服务平台 V1.0                                                                第 49 页
+E志愿志愿服务管理系统 V1.0                                                              第 49 页
                     + "<td>" + (item.activityName || "—") + "</td>"
                     + "</tr>";
             });
@@ -2497,7 +2497,7 @@ E志愿志愿者服务平台 V1.0                                               
 
 ================================================================================================
 源码文件 179：src/test/java/com/evolunteer/EVolunteerApplicationTests.java（单元测试）
-E志愿志愿者服务平台 V1.0                                                                第 50 页
+E志愿志愿服务管理系统 V1.0                                                              第 50 页
 ================================================================================================
 package com.evolunteer;
 
@@ -2548,7 +2548,7 @@ class ApiResponseTest {
         assertEquals(200, response.getCode());
         assertEquals("处理失败！", response.getMsg());
     }
-E志愿志愿者服务平台 V1.0                                                                第 51 页
+E志愿志愿服务管理系统 V1.0                                                              第 51 页
 
     @Test
     @DisplayName("添加业务数据后可被读取且支持连续追加")
@@ -2599,7 +2599,7 @@ class VolunteerStarEnumTest {
 
     @Test
     @DisplayName("下一星级在已达最高星级时为空")
-E志愿志愿者服务平台 V1.0                                                                第 52 页
+E志愿志愿服务管理系统 V1.0                                                              第 52 页
     void nextStarShouldBeNullForTopStar() {
         assertEquals(VolunteerStarEnum.ONE_STAR, VolunteerStarEnum.nextStar(99D));
         assertEquals(VolunteerStarEnum.FIVE_STAR, VolunteerStarEnum.nextStar(1200D));
@@ -2650,7 +2650,7 @@ class CertificateCodeUtilTest {
                 CertificateCodeUtil.code("another-secret", "vol_00001", 3.0, 1));
     }
 
-E志愿志愿者服务平台 V1.0                                                                第 53 页
+E志愿志愿服务管理系统 V1.0                                                              第 53 页
     @Test
     @DisplayName("累计时长为空时按 0 小时计算且不抛出异常")
     void codeShouldTolerateNullDuration() {
@@ -2701,7 +2701,7 @@ class CsvExporterTest {
     @DisplayName("空数据行只输出表头")
     void toCsvShouldHandleEmptyRows() {
         List<String> headers = Arrays.asList("活动编号", "活动名称");
-E志愿志愿者服务平台 V1.0                                                                第 54 页
+E志愿志愿服务管理系统 V1.0                                                              第 54 页
 
         assertEquals("\uFEFF活动编号,活动名称\r\n", CsvExporter.toCsv(headers, Collections.emptyList()));
     }
@@ -2752,7 +2752,7 @@ class DateTimeParserTest {
         assertThrows(IllegalArgumentException.class, () -> DateTimeParser.parse("2026-13-40"));
     }
 
-E志愿志愿者服务平台 V1.0                                                                第 55 页
+E志愿志愿服务管理系统 V1.0                                                              第 55 页
     private String format(Date date) {
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date);
     }
@@ -2803,7 +2803,7 @@ class MD5UtilTest {
     @Test
     @DisplayName("空明文在计算摘要前由调用方校验")
     void encodeShouldRejectNullPassword() {
-E志愿志愿者服务平台 V1.0                                                                第 56 页
+E志愿志愿服务管理系统 V1.0                                                              第 56 页
         assertThrows(NullPointerException.class, () -> MD5Util.encode(null));
     }
 }
@@ -2854,7 +2854,7 @@ class MatchCalculatorTest {
     }
 
     @Test
-E志愿志愿者服务平台 V1.0                                                                第 57 页
+E志愿志愿服务管理系统 V1.0                                                              第 57 页
     @DisplayName("缺少定位时距离维度按中性分值计算并说明原因")
     void calculateShouldUseNeutralScoreWhenDistanceUnknown() {
         MatchCalculator.MatchResult result = MatchCalculator.calculate(
@@ -2905,7 +2905,7 @@ import com.evolunteer.entity.ApiResponse;
 import com.evolunteer.entity.AuditLog;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-E志愿志愿者服务平台 V1.0                                                                第 58 页
+E志愿志愿服务管理系统 V1.0                                                              第 58 页
 
 import java.util.Arrays;
 import java.util.Map;
@@ -2956,7 +2956,7 @@ class PageSupportTest {
 源码文件 188：src/test/java/com/evolunteer/utils/RandomPasswordUtilTest.java（单元测试）
 ================================================================================================
 package com.evolunteer.utils;
-E志愿志愿者服务平台 V1.0                                                                第 59 页
+E志愿志愿服务管理系统 V1.0                                                              第 59 页
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -3007,7 +3007,7 @@ class SecurePasswordEncoderTest {
 
     private final SecurePasswordEncoder passwordEncoder = new SecurePasswordEncoder();
 
-E志愿志愿者服务平台 V1.0                                                                第 60 页
+E志愿志愿服务管理系统 V1.0                                                              第 60 页
     @Test
     @DisplayName("加盐摘要可以校验原始密码且密文格式带有算法与迭代次数")
     void encodeShouldProduceVerifiableCipher() {

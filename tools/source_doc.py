@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""E志愿志愿者服务平台 V1.0 源程序文档生成工具。
+"""E志愿志愿服务管理系统 V1.0 源程序文档生成工具。
 
 按计算机软件著作权登记对源程序提交格式的要求，把项目自身的源程序整理为
 一份连续文档：
@@ -29,7 +29,7 @@ import sys
 import unicodedata
 from pathlib import Path
 
-SOFTWARE_NAME = "E志愿志愿者服务平台"
+SOFTWARE_NAME = "E志愿志愿服务管理系统"
 SOFTWARE_VERSION = "V1.0"
 
 # 页眉与分隔线的显示宽度，按中日韩全角字符占两列计算

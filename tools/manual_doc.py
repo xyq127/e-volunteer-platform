@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""E志愿志愿者服务平台 V1.0 软件说明书排版工具。
+"""E志愿志愿服务管理系统 V1.0 软件说明书排版工具。
 
 把 Markdown 版软件说明书排版为 A4 页面的 HTML，再调用无头 Chromium 打印为 PDF：
 
@@ -25,7 +25,7 @@ import markdown
 
 import pdf_render
 
-SOFTWARE_NAME = "E志愿志愿者服务平台"
+SOFTWARE_NAME = "E志愿志愿服务管理系统"
 SOFTWARE_VERSION = "V1.0"
 
 # 页面参数，与下面的样式保持一致
@@ -53,6 +53,7 @@ html, body { margin: 0; padding: 0; background: #ffffff; }
 .sheet-body th, .sheet-body td { border: 0.5pt solid #888888; padding: 1mm 1.6mm;
                                  text-align: left; vertical-align: top; }
 .sheet-body th { background: #f2f2f2; }
+.sheet-body table:has(td:nth-child(2):last-child) td:first-child { white-space: nowrap; }
 .sheet-body pre { margin: 0 0 3mm; padding: 2mm; background: #f5f5f5; font-size: 8.5pt;
                   white-space: pre-wrap; word-break: break-all; }
 .sheet-body code { font-family: "DejaVu Sans Mono", "Liberation Mono", Consolas, monospace; }

@@ -1,10 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="196" height="44" viewBox="0 0 196 44"
-     role="img" aria-label="E志愿志愿者服务平台">
+<svg xmlns="http://www.w3.org/2000/svg" width="216" height="44" viewBox="0 0 216 44"
+     role="img" aria-label="E志愿志愿服务管理系统">
     <rect x="0" y="4" width="36" height="36" rx="9" fill="#24695c"/>
     <text x="18" y="29.5" font-family="Microsoft YaHei, PingFang SC, Heiti SC, sans-serif"
           font-size="20" font-weight="bold" fill="#ffffff" text-anchor="middle">E</text>
     <text x="46" y="23" font-family="Microsoft YaHei, PingFang SC, Heiti SC, sans-serif"
-          font-size="15" font-weight="bold" fill="#24695c">E志愿志愿者服务平台</text>
+          font-size="15" font-weight="bold" fill="#24695c">E志愿志愿服务管理系统</text>
     <text x="46" y="36" font-family="Arial, Helvetica, sans-serif"
           font-size="8" fill="#8a8a8a" letter-spacing="1.2">VOLUNTEER SERVICE PLATFORM</text>
 </svg>
