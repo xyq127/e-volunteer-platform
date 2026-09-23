@@ -102,7 +102,7 @@ e-volunteer-platform
 │   ├── 软件说明书.md / 软件说明书.pdf            软件使用说明书（PDF 每页页眉含软件名称、版本号与页码）
 │   ├── 软件著作权申请信息.md                    申请表所需软件信息
 │   ├── 源程序.txt / 源程序-提交.txt / .pdf       源程序清单、提交用文档与 PDF
-│   ├── E志愿.docx                             提交用文档的 Word 版
+│   ├── E志愿志愿服务管理系统.docx                提交用文档的 Word 版
 │   └── images                                 说明书插图（40 张）
 ├── tools
 │   ├── source_doc.py                          源程序文档生成工具（txt / PDF / Word）
@@ -225,7 +225,7 @@ mvn test
 
 | 材料 | 提交件 | 说明 |
 | --- | --- | --- |
-| 源程序鉴别材料 | [`docs/源程序-提交.pdf`](docs/源程序-提交.pdf) | 前 30 页 + 后 30 页共 60 页，每页 50 行，页眉为“E志愿志愿服务管理系统 V1.0”与页码；同内容提供 [`docs/源程序-提交.txt`](docs/源程序-提交.txt) 与 Word 版 [`docs/E志愿.docx`](docs/E志愿.docx)。前 30 页取正文开头 1500 行、后 30 页取正文结尾 1500 行，两个区块各自从页首起排，60 页页页排满 |
+| 源程序鉴别材料 | [`docs/源程序-提交.pdf`](docs/源程序-提交.pdf) | 前 30 页 + 后 30 页共 60 页，每页 50 行，页眉为“E志愿志愿服务管理系统 V1.0”与页码；同内容提供 [`docs/源程序-提交.txt`](docs/源程序-提交.txt) 与 Word 版 [`docs/E志愿志愿服务管理系统.docx`](docs/E志愿志愿服务管理系统.docx)。前 30 页取正文开头 1500 行、后 30 页取正文结尾 1500 行，两个区块各自从页首起排，60 页页页排满 |
 | 源程序全量清单 | [`docs/源程序.txt`](docs/源程序.txt) | 189 个源程序文件、27432 行（源码中不含注释），每页 50 行共 564 页，备查用 |
 | 软件说明书 | [`docs/软件说明书.pdf`](docs/软件说明书.pdf) | 22 页，每页 30 行以上，页眉含软件名称、版本号与页码；源文件 [`docs/软件说明书.md`](docs/软件说明书.md) 与 40 张界面截图（`docs/images/`）；不足 60 页，按“不足 60 页的全部提交”提交 |
 | 申请信息 | [`docs/软件著作权申请信息.md`](docs/软件著作权申请信息.md) | 汇总申请表所需的软件信息，含提交材料清单 |
@@ -236,7 +236,7 @@ mvn test
 ```bash
 python3 tools/source_doc.py --output docs/源程序.txt
 python3 tools/source_doc.py --output docs/源程序-提交.txt --head-tail 30 \
-    --pdf docs/源程序-提交.pdf --docx docs/E志愿.docx
+    --pdf docs/源程序-提交.pdf --docx docs/E志愿志愿服务管理系统.docx
 python3 tools/manual_doc.py
 ```
 

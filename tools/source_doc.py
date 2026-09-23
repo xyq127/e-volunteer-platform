@@ -18,7 +18,7 @@
     python3 tools/source_doc.py --output docs/源程序.txt
     python3 tools/source_doc.py --output docs/源程序-提交.txt --head-tail 30
     python3 tools/source_doc.py --output docs/源程序-提交.txt --head-tail 30 --pdf docs/源程序-提交.pdf
-    python3 tools/source_doc.py --output docs/源程序-提交.txt --head-tail 30 --docx docs/E志愿.docx
+    python3 tools/source_doc.py --output docs/源程序-提交.txt --head-tail 30 --docx docs/E志愿志愿服务管理系统.docx
     python3 tools/source_doc.py --keep-comments
 """
 
